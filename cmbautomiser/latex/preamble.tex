@@ -1,0 +1,305 @@
+\documentclass[a4paper,10pt]{article}
+% for cross linking references
+\usepackage{xr-hyper}
+\usepackage{hyperref}
+\usepackage{longtable,tabu} % for multipage tables
+\usepackage{lastpage} % obtain last page
+\usepackage[top=0.75in, bottom=1in, left=1in, right=0.5in]{geometry} % margins
+% for hyphenation
+\usepackage{hyphenat}
+\usepackage{xstring}
+\usepackage{forloop}
+% for setting footer
+\usepackage{fancyhdr}
+
+% Font settings
+% \usepackage{zlmtt}
+\renewcommand{\familydefault}{\ttdefault} % set default font family
+% \renewcommand{\familydefault}{\sfdefault} % set default font family
+
+$cmbexternaldocs$
+
+% tabular options
+\tabulinesep = 3pt
+
+% hyphenation options
+
+\sloppy
+
+% macro to add hyphenation break at +
+
+\newsavebox\MyBreakChar%
+\sbox\MyBreakChar{}% char to display the break after non char
+\newsavebox\MySpaceBreakChar%
+\sbox\MySpaceBreakChar{\hyp}% char to display the break after space
+\makeatletter%
+\newcommand*{\BreakableChar}[1][\MyBreakChar]{%
+  \leavevmode%
+  \prw@zbreak%
+  \discretionary{\usebox#1}{}{}%
+  \prw@zbreak%
+}%
+\makeatother
+
+\newcounter{index}%
+\newcommand{\AddBreakableChars}[1]{%
+  \StrLen{#1 }[\stringLength]%
+  \forloop[1]{index}{1}{\value{index}<\stringLength}{%
+    \StrChar{#1}{\value{index}}[\currentLetter]%
+    \IfStrEqCase{\currentLetter}{%
+        % All the characters where you don't want hypen
+        {*}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {/}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {+}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {-}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {,}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        % All the charactes where a break should have a hypen
+        %{ }{\currentLetter\BreakableChar[\MySpaceBreakChar]}%
+    }[\currentLetter]%
+  }%
+}%
+
+\newcommand{\AddBreakableNums}[1]{%
+  \StrLen{#1 }[\stringLength]%
+  \forloop[1]{index}{1}{\value{index}<\stringLength}{%
+    \StrChar{#1}{\value{index}}[\currentLetter]%
+    \IfStrEqCase{\currentLetter}{%
+        % All the characters where you don't want hypen
+        {.}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {1}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {2}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {3}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {4}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {5}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {6}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {7}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {8}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {9}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {0}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        % All the charactes where a break should have a hypen
+        %{ }{\currentLetter\BreakableChar[\MySpaceBreakChar]}%
+    }[\currentLetter]%
+  }%
+}%
+
+
+
+% page style
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{CPWA-23}
+\cfoot{\thepage}
+\rfoot{\emph{Measured by me | Varified by me}}
+
+% remove para indents
+\setlength\parindent{0pt}
+
+% invisible section
+\makeatletter
+\newcommand{\fakesection}[1]{%
+  % go to vertical mode and don't allow a page break here
+  \par\nopagebreak
+  % step up the counter
+  \refstepcounter{section}
+  % teach nameref the title
+  \def\@currentlabelname{#1}
+  % add to TOC
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}
+}
+\newcommand{\fakesubsection}[1]{%
+  \par\nopagebreak
+  \refstepcounter{subsection}
+%  \def\@currentlabelname{#1}
+  \addcontentsline{toc}{subsection}{\protect\numberline{\thesubsection}#1}
+}
+\newcommand{\fakesubsubsection}[1]{%
+  \par\nopagebreak
+  \refstepcounter{subsubsection}
+%  \def\@currentlabelname{#1}
+  \addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1}
+}
+\makeatother
+
+
+% global variables
+\newcommand{\cmbnameofwork}{$cmbnameofwork$}
+\newcommand{\cmbagency}{$cmbagency$}
+\newcommand{\cmbagmntno}{$cmbagmntno$}
+\newcommand{\cmbsituation}{$cmbsituation$}
+\newcommand{\cmbdateofstart}{$cmbdateofstart$}
+\newcommand{\cmbdateofstartasperagmnt}{$cmbdateofstartasperagmnt$}
+\newcommand{\cmbissuedto}{$cmbissuedto$}
+\newcommand{\cmbvarifyingauthority}{$cmbvarifyingauthority$}
+\newcommand{\cmbvarifyingauthorityoffice}{$cmbvarifyingauthorityoffice$}
+\newcommand{\cmbissuingauthority}{$cmbissuingauthority$}
+\newcommand{\cmbissuingauthorityoffice}{$cmbissuingauthorityoffice$}
+
+% Local Variables
+\newcommand{\cmbbookno}{$cmbbookno$}
+\newcommand{\cmbheading}{$cmbheading$}
+\newcommand{\cmbtotalpages}{\pageref{LastPage}}
+\newcommand{\cmbdateofcompletion}{}
+
+\begin{document}
+\noindent
+
+% starting page
+\begin{titlepage}
+    \vspace*{\fill}
+	\Large
+	\bigskip \bigskip \bigskip \bigskip
+	\begin{center}
+	    \cmbheading \\[1cm]
+	    MEASUREMENT BOOK \\[1cm]
+	    Book No. {\emph \cmbbookno} \\[1cm]
+	\end{center}
+	
+	\begin{longtabu} to \textwidth {X[10,l] X[1,l] X[30,l]}
+	    Name of Work & : & \emph \cmbnameofwork \\
+	    Agency & : & \emph \cmbagency \\
+	    Agreement No. & : & \emph \cmbagmntno \\[0.5cm]
+	\end{longtabu}
+	 
+	Certified that the measurement book contains {\emph \cmbtotalpages} pages. \\[2cm]
+	
+	\begin{longtabu} to \textwidth {X[10,l] X[30,c]}
+	         & \cmbvarifyingauthority \\
+	         & \cmbvarifyingauthorityoffice \\
+	\end{longtabu}
+    \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+
+% MB issue page
+\begin{titlepage}
+    \vspace*{\fill}
+	\Large
+	\bigskip \bigskip \bigskip \bigskip
+	\begin{center}
+	    DIV: {\emph \cmbissuingauthorityoffice} \\[1cm]
+	    SUB-DIV: {\emph \cmbvarifyingauthorityoffice} \\[1.5cm]
+	    MEASUREMENT BOOK \\[1cm]
+	    Book No. {\emph \cmbbookno} \\[1cm]
+	\end{center}
+	
+	\begin{longtabu} to \textwidth {X[10,l] X[1,l] X[30,l]}
+	    Issued to & : & \emph \cmbissuedto \\[1cm]
+	     & & Dated initials of the Clerk-in-charge \\[1cm]
+	\end{longtabu}
+	
+	\begin{longtabu} to \textwidth {X[10,l] X[30,c]}
+	         & \cmbissuingauthority \\
+	         & \cmbissuingauthorityoffice \\[1cm]
+	\end{longtabu}
+    
+    \begin{longtabu} to \textwidth {X[10,l] X[1,l] X[15,l]}
+	    Date of first entry & : & \\
+	    Date of first entry & : & \\
+	\end{longtabu}
+	
+    \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+
+% Review page I
+\begin{titlepage}
+    \vspace*{\fill}
+    \bf
+	\begin{center}
+	    REVIEW NOTES \\
+	    I - By Superior Officer of the Department \\
+	\end{center}
+	
+	\begin{longtabu} to \textwidth {|X[5,l]|X[10,l]|X[10,l]|X[10,l]|X[10,l]|}
+	    \hline
+	    Date & Progress recording measurement subjected to test-check & Value of measurements checked & Result of the check exercised & Dated initials and designation of the checking official \\
+	    \hline \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	    & & & & \\[0.2cm] \hline
+	\end{longtabu}
+	
+    \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+
+% Review page II
+\begin{titlepage}
+    \vspace*{\fill}
+    \bf
+	\begin{center}
+	    REVIEW NOTES \\
+	    II - By Divisional Accountant \\
+	\end{center}
+	
+	\begin{longtabu} to \textwidth {|X|X|X|X|X|X|}
+	    \hline
+	    Pages reviewed generally & \multicolumn{2}{p{\dimexpr 2\tabucolX+2\tabcolsep+\arrayrulewidth\relax}|}{Calculation selected by Divisional Officer for re-check}  & Defects, discrepancies etc. noticed & \multicolumn{2}{p{\dimexpr 2\tabucolX+2\tabcolsep+\arrayrulewidth\relax}|}{Dated initials and designation of} \\
+	    \hline
+	     & Pages & Dated Initials &  & Divil. Acctt & Divil. Officer \\
+	    \hline \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	    & & & & & \\[0.2cm] \hline
+	\end{longtabu}
+	
+    \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+\setcounter{page}{$cmbstartingpage$}
+\fakesection{$cmbbookno$} % for the purpose of referencing
+% measurement page
+
+\begin{center}
+    \textbf{$cmbtitle$} \\
+\end{center}
+
+% measurement/abstract title block block
+
+\begin{longtabu} to \textwidth {X[10,l] X[1,l] X[20,l]}
+    Name of Work & : & \emph \cmbnameofwork \\
+    Situation & : & \emph \cmbsituation \\
+    Agreement No. & : & \emph \cmbagmntno \\
+    Agency & : & \emph \cmbagency \\
+    Date of Start & : & \emph \cmbdateofstart \\
+    As per agreement & : & \emph \cmbdateofstartasperagmnt \\
+\end{longtabu}
+

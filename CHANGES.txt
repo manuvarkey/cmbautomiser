@@ -1,0 +1,6 @@
+From Ver.1.0
+
+* Added support for abstract measurements.
+* Added new custom bill types
+* Bug Fixes
+

@@ -1,0 +1,10 @@
+     % bill item block
+     $cmbitemno$ & $cmbdescription$ & & & & & &\\
+     $cmbexcessflag$
+      & \emph{TOTAL} & $cmbtotalqty$ & $cmbunit$ & & & &\\
+     & \emph{Below deviation limit of  $cmbexcesspercent$\%} & $cmbnormalqty$ & $cmbunit$ & $cmbrate$ & $cmbnormalpr$ & $cmbnormalamount$ & $cmbnormalsinceprevamount$\\
+     & \emph{Above deviation limit of  $cmbexcesspercent$\%} & $cmbexcessqty$ & $cmbunit$ & $cmbexcessrate$ & $cmbexcesspr$ & $cmbexcessamount$ & $cmbexcesssinceprevamount$ \\
+     \else
+      & \emph{TOTAL} & $cmbtotalqty$ & $cmbunit$ & $cmbrate$ & $cmbnormalpr$ & $cmbnormalamount$ & $cmbnormalsinceprevamount$ \\
+     \fi
+     & & & & & & &\\

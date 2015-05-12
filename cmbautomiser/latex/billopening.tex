@@ -1,0 +1,143 @@
+\documentclass[a4paper,9pt]{article}
+\usepackage{longtable,tabu} % for multipage tables
+\usepackage[top=0.5in, bottom=0.5in, left=0.5in, right=0.5in]{geometry} % margins
+% for hyphenation
+\usepackage{hyphenat}
+\usepackage{xstring}
+\usepackage{forloop}
+% for setting footer
+\usepackage{fancyhdr}
+
+% Font settings
+% \usepackage{zlmtt}
+\renewcommand{\familydefault}{\ttdefault} % set default font family
+% \renewcommand{\familydefault}{\sfdefault} % set default font family
+
+% tabular options
+\tabulinesep = 3pt
+
+% hyphenation options
+
+\sloppy
+
+% macro to add hyphenation break at +
+
+\newsavebox\MyBreakChar%
+\sbox\MyBreakChar{}% char to display the break after non char
+\newsavebox\MySpaceBreakChar%
+\sbox\MySpaceBreakChar{\hyp}% char to display the break after space
+\makeatletter%
+\newcommand*{\BreakableChar}[1][\MyBreakChar]{%
+  \leavevmode%
+  \prw@zbreak%
+  \discretionary{\usebox#1}{}{}%
+  \prw@zbreak%
+}%
+\makeatother
+
+\newcounter{index}%
+\newcommand{\AddBreakableChars}[1]{%
+  \StrLen{#1 }[\stringLength]%
+  \forloop[1]{index}{1}{\value{index}<\stringLength}{%
+    \StrChar{#1}{\value{index}}[\currentLetter]%
+    \IfStrEqCase{\currentLetter}{%
+        % All the characters where you don't want hypen
+        {*}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {/}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {+}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {-}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        {,}{\currentLetter\BreakableChar[\MyBreakChar]}%
+        % All the charactes where a break should have a hypen
+        %{ }{\currentLetter\BreakableChar[\MySpaceBreakChar]}%
+    }[\currentLetter]%
+  }%
+}%
+
+% page style
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+
+% remove para indents
+\setlength\parindent{0pt}
+
+% invisible section
+\makeatletter
+\newcommand{\fakesection}[1]{%
+  % go to vertical mode and don't allow a page break here
+  \par\nopagebreak
+  % step up the counter
+  \refstepcounter{section}
+  % teach nameref the title
+  \def\@currentlabelname{#1}
+  % add to TOC
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}
+}
+\newcommand{\fakesubsection}[1]{%
+  \par\nopagebreak
+  \refstepcounter{subsection}
+%  \def\@currentlabelname{#1}
+  \addcontentsline{toc}{subsection}{\protect\numberline{\thesubsection}#1}
+}
+\newcommand{\fakesubsubsection}[1]{%
+  \par\nopagebreak
+  \refstepcounter{subsubsection}
+%  \def\@currentlabelname{#1}
+  \addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1}
+}
+\makeatother
+
+
+% global variables
+\newcommand{\cmbnameofwork}{$cmbnameofwork$}
+\newcommand{\cmbagency}{$cmbagency$}
+\newcommand{\cmbagmntno}{$cmbagmntno$}
+\newcommand{\cmbsituation}{$cmbsituation$}
+\newcommand{\cmbdateofstart}{$cmbdateofstart$}
+\newcommand{\cmbdateofstartasperagmnt}{$cmbdateofstartasperagmnt$}
+\newcommand{\cmbissuedto}{$cmbissuedto$}
+\newcommand{\cmbvarifyingauthority}{$cmbvarifyingauthority$}
+\newcommand{\cmbvarifyingauthorityoffice}{$cmbvarifyingauthorityoffice$}
+\newcommand{\cmbissuingauthority}{$cmbissuingauthority$}
+\newcommand{\cmbissuingauthorityoffice}{$cmbissuingauthorityoffice$}
+
+% Local Variables
+\newcommand{\cmbbookno}{$cmbbookno$}
+\newcommand{\cmbheading}{$cmbheading$}
+\newcommand{\cmbtotalpages}{\pageref{LastPage}}
+\newcommand{\cmbdateofcompletion}{}
+
+
+\begin{document}
+\noindent
+
+\begin{center}
+    SCHEDULE OF RATES FOR \cmbheading\\
+\end{center}
+
+\begin{longtabu} to \textwidth {X[10,l] X[50,l]}
+    Name of Work: & \emph \cmbnameofwork \\
+\end{longtabu}
+\vspace{-0.5cm}
+\begin{longtabu} to \textwidth {X[10,l] X[10,r]}
+    Agmnt.No.: \emph \cmbagmntno & Agency: \emph \cmbagency \\
+\end{longtabu}
+
+% Bill Table heading
+\begin{longtabu} to \textwidth {X[2,c] X[15,l] X[4,r] X[2,l] X[5,r] X[5,r] X[5,r] X[5,r]}
+   \hline
+    \centering\textbf{Itm\newline No.} & 
+    \centering\textbf{Description} & 
+    \centering\textbf{Qty} & 
+    \centering\textbf{Unit} & 
+    \centering\textbf{Full Rate} & 
+    \centering\textbf{Part Rate} & 
+    \centering\textbf{Uptodate} &
+    \centering\textbf{Since Prev} \\
+   \hline
+    \endhead
