@@ -1144,11 +1144,12 @@ class MeasurementsView:
         self.cmbs = data
         for cmb in self.cmbs: # required since cutom object can be dynamic
             for meas in cmb:
-                for mitem in meas:
-                    if isinstance(mitem,MeasurementItemCustom) or isinstance(mitem,MeasurementItemAbstract):
-                        billedflag = mitem.get_billed_flag() # keep billed flag info. Not copied with set_modal
-                        mitem.set_model(mitem.get_model()) # refresh changes on disk
-                        mitem.set_billed_flag(billedflag)
+                if not isinstance(meas,Completion):
+                    for mitem in meas:
+                        if isinstance(mitem,MeasurementItemCustom) or isinstance(mitem,MeasurementItemAbstract):
+                            billedflag = mitem.get_billed_flag() # keep billed flag info. Not copied with set_modal
+                            mitem.set_model(mitem.get_model()) # refresh changes on disk
+                            mitem.set_billed_flag(billedflag)
         self.schedule = schedule
         self.update_store()
 
@@ -1272,7 +1273,7 @@ class MeasurementsView:
             if data != None: # if edited
                 return data
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             data = dialog.run()
             if data != None:
@@ -1304,7 +1305,7 @@ class MeasurementsView:
             if data != None: # if edited
                 return data
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             data = dialog.run()
             if data != None:
@@ -1335,7 +1336,7 @@ class MeasurementsView:
             if data != None: # if edited
                 return data
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             data = dialog.run()
             if data != None:
@@ -1367,7 +1368,7 @@ class MeasurementsView:
             if data != None: # if edited
                 return data
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             data = dialog.run()
             if data != None:
@@ -1407,7 +1408,7 @@ class MeasurementsView:
             if data is not None: # if edited
                 return data + [oldval[5]] + [itemtype]
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             data = dialog.run()
             if data is not None:
@@ -1434,7 +1435,7 @@ class MeasurementsView:
             if data is not None: # if edited
                 return data
             else: # if cancel pressed
-                return oldval
+                return None
         else: # if normal mode
             dialog = AbstractDialog(toplevel,[[],None,None], self, self.schedule)
             data = dialog.run()
@@ -1794,7 +1795,8 @@ class MeasurementsView:
         
         yield "Edit measurement items at '{}'".format(path)
         # Undo action
-        if oldval != None:
+        print oldval,newval
+        if oldval != None and newval != None:
             if len(path) == 1:
                 item.set_name(oldval)
             elif len(path) == 2:

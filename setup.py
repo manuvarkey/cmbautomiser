@@ -14,7 +14,7 @@ setup(
     # Packages
     packages=["cmbautomiser"],
     package_dir={'cmbautomiser': 'cmbautomiser'},
-    package_data={'cmbautomiser': ['latex/*','ezodf/*','interface/*']},
+    package_data={'cmbautomiser': ['latex/*','ezodf/*','interface/*','templates/*']},
 
     # Include additional files into the package
     include_package_data=True,
@@ -26,7 +26,7 @@ setup(
     # Details
     maintainer="Manu Varkey",
     maintainer_email="manuvarkey@gmail.com",
-    url="http:///",
+    url="https://github.com/manuvarkey/cmbautomiser",
     license="GPL-3.0",
     description="CPWD billing application using computerised measurement books.",
 

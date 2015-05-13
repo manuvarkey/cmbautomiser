@@ -45,8 +45,9 @@ class ScheduleItem:
         self.excess_rate_percent = excess_rate_percent
         # extended descritption of item
         self.extended_description = ''
+        self.extended_description_limited = ''
 
-    def set(self, itemno="", decription="", unit="", rate=0, qty=0, reference="", excess_rate_percent=30):
+    def set(self, itemno="", decription="", unit="", rate=0.0, qty=0.0, reference="", excess_rate_percent=30):
         self.itemno = itemno
         self.description = decription
         self.unit = unit
@@ -56,6 +57,7 @@ class ScheduleItem:
         self.excess_rate_percent = excess_rate_percent
 
         self.extended_description = ''
+        self.extended_description_limited = ''
 
     def get(self):
         return [self.itemno, self.description, self.unit, self.rate, self.qty, self.reference, self.excess_rate_percent]
@@ -180,6 +182,11 @@ class Schedule:
                 item.extended_description = extended_description + '\n' + item.description
             else:
                 item.extended_description = item.description
+            if len(item.extended_description) > CMB_DESCRIPTION_MAX_LENGTH:
+                item.extended_description_limited = item.extended_description[0:CMB_DESCRIPTION_MAX_LENGTH/2] + \
+                    ' ... ' + item.extended_description[:CMB_DESCRIPTION_MAX_LENGTH/2]
+            else:
+                item.extended_description_limited = item.extended_description
             iter += 1
 
     def print_item(self):
@@ -257,8 +264,6 @@ class ScheduleView:
                         rownum = len(rows) - 1
                     path = [rownum]
                     GLib.timeout_add(50, treeview.set_cursor, path, col, True)
-            elif keyname == Gdk.KEY_Insert:
-                GLib.timeout_add(50, treeview.set_cursor, path, colnum, True)
             elif keyname == Gdk.KEY_Escape:  # unselect all
                 self.tree.get_selection().unselect_all()
 
@@ -285,7 +290,7 @@ class ScheduleView:
             [model, paths] = selection.get_selected_rows()
             rows = []
             for i in range(0, len(itemlist)):
-                rows.append(paths[0].get_indices()[0] + i + 1)
+                rows.append(paths[0].get_indices()[0] + 1)
             self.insert_item_at_row(itemlist, rows)
         else:  # if no selection
             self.append_item(itemlist)
@@ -294,8 +299,8 @@ class ScheduleView:
     def insert_item_at_row(self, itemlist, rows):  # note needs rows to be sorted
         newrows = []
         for i in range(0, len(rows)):
-            self.schedule.insert_item_at_index(rows[i] - i - 1, itemlist[i])
-            newrows.append(rows[i] - 1)
+            self.schedule.insert_item_at_index(rows[i] + i - 1, itemlist[i])
+            newrows.append(rows[i] + i - 1)
         self.update_store()
 
         yield "Insert data items to schedule at rows '{}'".format(rows)
@@ -366,9 +371,10 @@ class ScheduleView:
                     selection = self.tree.get_selection()
                     if selection.count_selected_rows() != 0:  # if selection exists
                         [model, paths] = selection.get_selected_rows()
+                        index = paths[0].get_indices()[0]
                         rows = []
                         for i in range(0, len(itemlist)):
-                            rows.append(int(paths[0].get_indices()[0] + i + 1))
+                            rows.append(int(index + 1))
                         self.insert_item_at_row(itemlist, rows)
                     else:  # if no selection
                         self.append_item(itemlist)

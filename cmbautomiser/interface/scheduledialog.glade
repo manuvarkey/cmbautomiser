@@ -3,7 +3,7 @@
 <interface>
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkDialog" id="dialog">
-    <property name="width_request">800</property>
+    <property name="width_request">900</property>
     <property name="height_request">500</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Edit Item</property>
@@ -61,276 +61,280 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="scrolledwindow2">
+          <object class="GtkViewport" id="viewport1">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
+            <property name="can_focus">False</property>
             <child>
-              <object class="GtkViewport" id="viewport1">
+              <object class="GtkBox" id="box3">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkBox" id="box3">
+                  <object class="GtkScrolledWindow" id="scrolledwindow2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <property name="min_content_height">200</property>
+                    <child>
+                      <object class="GtkViewport" id="viewport2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkListBox" id="listbox_itemnos">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="selection_mode">none</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolbar" id="toolbar_schedule">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
+                    <property name="toolbar_style">both-horiz</property>
                     <child>
-                      <object class="GtkListBox" id="listbox_itemnos">
+                      <object class="GtkToolButton" id="toolbutton_schedule_add">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="selection_mode">none</property>
+                        <property name="tooltip_text" translatable="yes">Add item at selected location</property>
+                        <property name="halign">start</property>
+                        <property name="is_important">True</property>
+                        <property name="label" translatable="yes">Add</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-add</property>
+                        <signal name="clicked" handler="onButtonScheduleAddPressed" swapped="no"/>
+                        <accelerator key="i" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
+                        <property name="homogeneous">False</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolbar" id="toolbar_schedule">
+                      <object class="GtkToolButton" id="toolbutton_schedule_add_mult">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="toolbar_style">both-horiz</property>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_add">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Add item at selected location</property>
-                            <property name="halign">start</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Add</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-add</property>
-                            <signal name="clicked" handler="onButtonScheduleAddPressed" swapped="no"/>
-                            <accelerator key="i" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_add_mult">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Add multiple items at selected location</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Add Multiple</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-add</property>
-                            <signal name="clicked" handler="onButtonScheduleAddMultPressed" swapped="no"/>
-                            <accelerator key="i" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparatorToolItem" id="toolbutton_schedule_seperator2">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="halign">start</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_undo">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Undo Action</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Undo</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-undo</property>
-                            <signal name="clicked" handler="onUndoSchedule" swapped="no"/>
-                            <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_redo">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Redo Action</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Redo</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-redo</property>
-                            <signal name="clicked" handler="onRedoSchedule" swapped="no"/>
-                            <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparatorToolItem" id="separatortoolitem2">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="halign">start</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_copy">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Copy item</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Copy</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-copy</property>
-                            <signal name="clicked" handler="onCopySchedule" swapped="no"/>
-                            <accelerator key="c" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_paste">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Paste Item</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Paste</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-paste</property>
-                            <signal name="clicked" handler="onPasteSchedule" swapped="no"/>
-                            <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparatorToolItem" id="separatortoolitem3">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolItem" id="toolbutton_schedule_custom">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <child>
-                              <object class="GtkFileChooserButton" id="filechooserbutton_schedule">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="tooltip_text" translatable="yes">Select an ods file to import data</property>
-                                <property name="local_only">False</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_import">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Import Items from file</property>
-                            <property name="halign">start</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Import</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-open</property>
-                            <signal name="clicked" handler="onImportScheduleClicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparatorToolItem" id="toolbutton_schedule_seperator1">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="halign">start</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToolButton" id="toolbutton_schedule_delete">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Delete Selected Items</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Delete</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-delete</property>
-                            <signal name="clicked" handler="onButtonScheduleDeletePressed" swapped="no"/>
-                            <accelerator key="Delete" signal="clicked"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">False</property>
-                          </packing>
-                        </child>
+                        <property name="tooltip_text" translatable="yes">Add multiple items at selected location</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Add Multiple</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-add</property>
+                        <signal name="clicked" handler="onButtonScheduleAddMultPressed" swapped="no"/>
+                        <accelerator key="i" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
+                        <property name="homogeneous">False</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="scrolledwindow1">
+                      <object class="GtkSeparatorToolItem" id="toolbutton_schedule_seperator2">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="shadow_type">in</property>
-                        <property name="min_content_height">300</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_undo">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Undo Action</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Undo</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-undo</property>
+                        <signal name="clicked" handler="onUndoSchedule" swapped="no"/>
+                        <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_redo">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Redo Action</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Redo</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-redo</property>
+                        <signal name="clicked" handler="onRedoSchedule" swapped="no"/>
+                        <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorToolItem" id="separatortoolitem2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_copy">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Copy item</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Copy</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-copy</property>
+                        <signal name="clicked" handler="onCopySchedule" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_paste">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Paste Item</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Paste</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-paste</property>
+                        <signal name="clicked" handler="onPasteSchedule" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorToolItem" id="separatortoolitem3">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolItem" id="toolbutton_schedule_custom">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkTreeView" id="treeview_schedule">
+                          <object class="GtkFileChooserButton" id="filechooserbutton_schedule">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">True</property>
-                            <property name="rubber_banding">True</property>
-                            <property name="enable_grid_lines">both</property>
-                            <child internal-child="selection">
-                              <object class="GtkTreeSelection" id="treeview-selection">
-                                <property name="mode">multiple</property>
-                              </object>
-                            </child>
+                            <property name="can_focus">False</property>
+                            <property name="tooltip_text" translatable="yes">Select an ods file to import data</property>
+                            <property name="local_only">False</property>
                           </object>
                         </child>
                       </object>
                       <packing>
                         <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_import">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Import Items from file</property>
+                        <property name="halign">start</property>
+                        <property name="is_important">True</property>
+                        <property name="label" translatable="yes">Import</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-open</property>
+                        <signal name="clicked" handler="onImportScheduleClicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorToolItem" id="toolbutton_schedule_seperator1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton_schedule_delete">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Delete Selected Items</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Delete</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-delete</property>
+                        <signal name="clicked" handler="onButtonScheduleDeletePressed" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">False</property>
                       </packing>
                     </child>
                   </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolledwindow1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <property name="min_content_height">200</property>
+                    <child>
+                      <object class="GtkTreeView" id="treeview_schedule">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="rubber_banding">True</property>
+                        <property name="enable_grid_lines">both</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection">
+                            <property name="mode">multiple</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
+                  </packing>
                 </child>
               </object>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">0</property>
           </packing>

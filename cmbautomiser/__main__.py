@@ -26,6 +26,7 @@ import os
 import dill as pickle
 import urlparse
 import json
+import sys
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -349,23 +350,24 @@ class MainWindow:
             for row in range(0, rowcount):
                 item = ScheduleItem()
                 for col in range(0, colcount):
-                    cell = sheet[row, col].value
-                    # Get formated string input
-                    if cell is None:
-                        cell_formated = ""
-                    else:
-                        try:  # try evaluating string
-                            cell_formated = str(cell)
-                        except:
+                    if col<7:
+                        cell = sheet[row, col].value
+                        # Get formated string input
+                        if cell is None:
                             cell_formated = ""
-                    # Try adding to item
-                    if isinstance(item[col], str):
-                        item[col] = cell_formated
-                    elif isinstance(item[col], float):
-                        try:
-                            item[col] = float(cell_formated)
-                        except:
-                            item[col] = ScheduleItem()[col]
+                        else:
+                            try:  # try evaluating string
+                                cell_formated = str(cell)
+                            except:
+                                cell_formated = ""
+                        # Try adding to item
+                        if col in [0,1,2,5]:
+                            item[col] = cell_formated
+                        elif col in [3,4,6]:
+                            try:
+                                item[col] = float(cell_formated)
+                            except:
+                                item[col] = ScheduleItem()[col]
                 # Hack for proper formating of AgmntNos
                 try:
                     agmntno_float = float(item[0])
@@ -604,6 +606,8 @@ class MainWindow:
 
 
 def main():
+    reload(sys)
+    sys.setdefaultencoding('utf8')
     MainWindow().run()  # initialise main window
     Gtk.main()  # loop
     return 0

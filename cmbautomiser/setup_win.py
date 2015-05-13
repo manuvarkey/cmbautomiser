@@ -24,12 +24,12 @@ setup(
     name="CMBAutomiser",
 
     # Version number (initial):
-    version="0.9.5",
+    version="2.0.0",
 
     # Application author details:
     author="Manu Varkey",
     author_email="manuvarkey@gmail.com",
-    windows=['main.py'],
+    windows=['__main__.py'],
     data_files = [("Microsoft.VC90.CRT", ['winlibs\\msvcr90.dll'])],
     options={ 
     'py2exe': { 
@@ -41,7 +41,7 @@ setup(
     # Details
     maintainer="Manu Varkey",
     maintainer_email="manuvarkey@gmail.com",
-    url="http:///",
+    url="https://github.com/manuvarkey/cmbautomiser",
     license="GPL-3.0",
     description="CPWD billing application using computerised measurement books.",
 

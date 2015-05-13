@@ -48,13 +48,14 @@ MEAS_COLOR_SELECTED = '#729FCF'
 LATEX_TIMEOUT = 5
 # Item description wrap-width for screen purpose
 CMB_DESCRIPTION_WIDTH = 60
+CMB_DESCRIPTION_MAX_LENGTH = 1000
         
 # List of units which will be considered as integer values
 INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',
              'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each',
              'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
 # String used for checking file version
-PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_0'
+PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_2'
 
 # Item codes for cmb
 global_vars = ['$cmbnameofwork$', '$cmbagency$', '$cmbagmntno$', '$cmbsituation$', '$cmbdateofstart$',

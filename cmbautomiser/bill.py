@@ -274,7 +274,7 @@ class Bill:
 
                 # add all values to substitution dict
                 item_local_vars['$cmbitemno$'] = str(item.itemno)
-                item_local_vars['$cmbdescription$'] = str(item.extended_description)
+                item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
@@ -353,7 +353,7 @@ class Bill:
 
                 # add all values to substitution dict
                 item_local_vars['$cmbitemno$'] = str(item.itemno)
-                item_local_vars['$cmbdescription$'] = str(item.extended_description)
+                item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)

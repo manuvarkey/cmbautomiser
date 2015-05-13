@@ -22,6 +22,8 @@
 #  
 #  
 
+import copy
+
 from gi.repository import Gtk, Gdk, GLib
 
 from undo import *
@@ -321,8 +323,6 @@ class ScheduleDialog:
                             rownum = len(rows) - 1
                         path = [rownum]
                         GLib.timeout_add(50, treeview.set_cursor, path, col, True)
-                elif keyname == Gdk.KEY_Insert:
-                    GLib.timeout_add(50, treeview.set_cursor, path, col, True)
                 elif keyname in [Gdk.KEY_Control_L,Gdk.KEY_Control_R]:  # unselect all
                     self.tree.get_selection().unselect_all()
 
@@ -352,7 +352,7 @@ class ScheduleDialog:
             [model, paths] = selection.get_selected_rows()
             rows = []
             for i in range(0, len(itemlist)):
-                rows.append(paths[0].get_indices()[0] + i + 1)
+                rows.append(paths[0].get_indices()[0] + 1)
             self.insert_item_at_row(itemlist, rows)
         else:  # if no selection
             self.append_item(itemlist)
@@ -361,8 +361,8 @@ class ScheduleDialog:
     def insert_item_at_row(self, itemlist, rows):  # note needs rows to be sorted
         newrows = []
         for i in range(0, len(rows)):
-            self.schedule.insert_item_at_index(rows[i] - i - 1, itemlist[i])
-            newrows.append(rows[i] - 1)
+            self.schedule.insert_item_at_index(rows[i] + i - 1, itemlist[i])
+            newrows.append(rows[i] + i - 1)
         self.update_store()
 
         yield "Insert data items to schedule at rows '{}'".format(rows)
@@ -435,7 +435,7 @@ class ScheduleDialog:
                         [model, paths] = selection.get_selected_rows()
                         rows = []
                         for i in range(0, len(itemlist)):
-                            rows.append(int(paths[0].get_indices()[0] + i + 1))
+                            rows.append(int(paths[0].get_indices()[0] + 1))
                         self.insert_item_at_row(itemlist, rows)
                     else:  # if no selection
                         self.append_item(itemlist)
@@ -465,7 +465,7 @@ class ScheduleDialog:
 
         self.schedule.clear()
         for record in data[2]:
-            self.schedule.append_item(ScheduleItemGeneric(record))
+            self.schedule.append_item(copy.deepcopy(ScheduleItemGeneric(record)))
         self.remark_cell.set_text(data[3])
         for cell, text in zip(self.item_remarks_cell, data[4]):
             cell.set_text(text)
@@ -622,7 +622,8 @@ class ScheduleDialog:
 
             if columntype == MEAS_NO:
                 cell.set_property("editable", True)
-                column.props.fixed_width = 75
+                column.props.min_width = 50
+                column.props.fixed_width = 50
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedNum, i)
                     cell.connect("editing_started", self.onEditStarted, i)
@@ -630,6 +631,7 @@ class ScheduleDialog:
                     cell.connect("edited", render_func, i)
             elif columntype == MEAS_L:
                 cell.set_property("editable", True)
+                column.props.min_width = 50
                 column.props.fixed_width = 75
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedNum, i)
@@ -639,8 +641,7 @@ class ScheduleDialog:
             elif columntype == MEAS_DESC:
                 cell.set_property("editable", True)
                 column.props.fixed_width = 200
-                column.props.min_width = 200
-                column.props.max_width = 300
+                column.props.min_width = 100
                 column.props.expand = True
                 cell.props.wrap_width = 500
                 cell.props.wrap_mode = 2
@@ -651,10 +652,10 @@ class ScheduleDialog:
                     cell.connect("edited", render_func, i)
             elif columntype == MEAS_CUST:
                 cell.set_property("editable", False)
-                column.props.fixed_width = 100
-                column.props.min_width = 100
-                column.props.max_width = 200
-                cell.props.wrap_width = 500
+                # column.props.fixed_width = 100
+                column.props.min_width = 50
+                cell.props.wrap_width = 200
+                cell.props.wrap_mode = 2
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedText, i)
                     cell.connect("editing_started", self.onEditStarted, i)
