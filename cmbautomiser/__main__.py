@@ -556,8 +556,7 @@ class MainWindow:
         file_names = [f for f in os.listdir(abs_path('templates'))]
         module_names = []
         for f in file_names:
-            if f.find('__init__') == -1 and f.find('pyc') == -1 \
-                 and f.find('~') == -1 and f.find('.py') != -1:
+            if f[:3] == '.py':
                 module_names.append(f[:-3])
         self.custom_menus = []
         popupmenu = self.builder.get_object("popupmenu_meas")
