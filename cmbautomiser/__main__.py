@@ -556,7 +556,7 @@ class MainWindow:
         file_names = [f for f in os.listdir(abs_path('templates'))]
         module_names = []
         for f in file_names:
-            if f[:3] == '.py':
+            if f[-3:] == '.py' and f != '__init__.py':
                 module_names.append(f[:-3])
         self.custom_menus = []
         popupmenu = self.builder.get_object("popupmenu_meas")
@@ -595,7 +595,7 @@ class MainWindow:
         self.builder.get_object("tree_schedule_percent").connect("edited", self.schedule_view.onScheduleCellEditedRates,
                                                                  6)
         # setup infobar
-        self.builder.get_object("infobar_main").hide()\
+        self.builder.get_object("infobar_main").hide()
 
         # setup class for intra process communication
         self.manage_resources = ManageResourses(self.schedule_view,self.measurements_view,self.bill_view)

@@ -623,7 +623,7 @@ class ScheduleDialog:
             if columntype == MEAS_NO:
                 cell.set_property("editable", True)
                 column.props.min_width = 50
-                column.props.fixed_width = 50
+                column.props.fixed_width = 75
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedNum, i)
                     cell.connect("editing_started", self.onEditStarted, i)
