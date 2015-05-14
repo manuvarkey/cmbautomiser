@@ -78,6 +78,9 @@ class BillDialog:
         def callback_rate(value, row):
             return str(populated_items[row][4])
 
+        def callback_flag(value, row):
+            return str(populated_items[row][5])
+
         if self.data.bill_type == BILL_NORMAL:
             self.evaluate_qtys()
             for item_index in range(self.schedule.length()):
@@ -86,10 +89,15 @@ class BillDialog:
                 description = item.description
                 unit = item.unit
                 rate = item.rate
-                populated_items.append([item_index, itemno, description, unit, rate])
-            captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Excess Rate', 'P.R.(%)', 'Excess P.R(%)']
-            columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L]
-            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
+                if self.item_excess_qty[item_index] > 0:
+                    flag = 'EXCEEDED'
+                else:
+                    flag = ''
+                populated_items.append([item_index, itemno, description, unit, rate, flag])
+            captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Excess Rate', 'P.R.(%)', 'Excess P.R(%)','Excess ?']
+            columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L,MEAS_CUST]
+            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
+                            [None] * 3 + [callback_flag]
         elif self.data.bill_type == BILL_CUSTOM:
             for item_index in range(self.schedule.length()):
                 item = self.schedule.get_item_by_index(item_index)
@@ -121,7 +129,7 @@ class BillDialog:
                 x = self.data.item_excess_rates[item[0]]
                 y = self.data.item_part_percentage[item[0]]
                 z = self.data.item_excess_part_percentage[item[0]]
-                records.append(['', '', '', '', str(x), str(y), str(z)])
+                records.append(['', '', '', '', str(x), str(y), str(z),''])
             elif self.data.bill_type == BILL_CUSTOM:
                 x = self.data.item_qty[item[0]][0]
                 y = self.data.item_normal_amount[item[0]]
