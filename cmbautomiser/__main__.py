@@ -31,8 +31,8 @@ import sys
 from gi.repository import Gtk, Gdk, GLib
 
 from undo import *
-import ezodf
 import appdirs
+from openpyxl import Workbook, load_workbook
 
 # local files import
 from globalconstants import *
@@ -340,44 +340,43 @@ class MainWindow:
 
     def onImportScheduleClicked(self, button):
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = ezodf.opendoc(filename)
-        if spreadsheet.doctype == 'ods':
-            sheet = spreadsheet.sheets[0]
-            # get count of rows
-            rowcount = sheet.nrows()
-            colcount = sheet.ncols()
-            items = []
-            for row in range(0, rowcount):
-                item = ScheduleItem()
-                for col in range(0, colcount):
-                    if col<7:
-                        cell = sheet[row, col].value
-                        # Get formated string input
-                        if cell is None:
-                            cell_formated = ""
-                        else:
-                            try:  # try evaluating string
-                                cell_formated = str(cell)
-                            except:
-                                cell_formated = ""
-                        # Try adding to item
-                        if col in [0,1,2,5]:
-                            item[col] = cell_formated
-                        elif col in [3,4,6]:
-                            try:
-                                item[col] = float(cell_formated)
-                            except:
-                                item[col] = ScheduleItem()[col]
-                # Hack for proper formating of AgmntNos
-                try:
-                    agmntno_float = float(item[0])
-                    agmntno_int = int(agmntno_float)
-                    if float(agmntno_int) == agmntno_float:
-                        item[0] = str(agmntno_int)
-                except ValueError:
-                    pass
-                items.append(item)
-            self.schedule_view.insert_item_at_selection(items)
+        spreadsheet = load_workbook(filename)
+        sheet = spreadsheet.active
+        # get count of rows
+        rowcount = len(sheet.columns)
+        items = []
+        for row in range(0, rowcount):
+            item = ScheduleItem()
+            for col in range(0, 7):
+                cell = sheet.cell(row = row+1, column = col+1).value
+                # Get formated string input
+                if cell is None:
+                    cell_formated = ""
+                else:
+                    try:  # try evaluating string
+                        cell_formated = str(cell)
+                    except:
+                        cell_formated = ""
+                # Try adding to item
+                if col in [0,1,2,5]:
+                    item[col] = cell_formated
+                elif col in [3,4,6]:
+                    try:
+                        item[col] = float(cell_formated)
+                    except:
+                        item[col] = ScheduleItem()[col]
+            # Hack for proper formating of AgmntNos
+            try:
+                agmntno_float = float(item[0])
+                agmntno_int = int(agmntno_float)
+                if float(agmntno_int) == agmntno_float:
+                    item[0] = str(agmntno_int)
+            except ValueError:
+                pass
+            items.append(item)
+        self.schedule_view.insert_item_at_selection(items)
+
+
 
     # Measuremets signal handlers
 

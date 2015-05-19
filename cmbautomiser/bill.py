@@ -2,25 +2,25 @@
 # -*- coding: utf-8 -*-
 #
 # bill.py
-#  
+#
 #  Copyright 2014 Manu Varkey <manuvarkey@gmail.com>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#
+#
 
 import pickle
 import copy
@@ -37,6 +37,9 @@ from cmb import *
 from bill_dialog import *
 from misc import *
 
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.cell import get_column_letter
 
 # Data structure for Bill Class
 class BillData:
@@ -390,17 +393,17 @@ class Bill:
         return latex_buffer
 
     def export_ods_bill(self,filename):
-        spreadsheet = ezodf.newdoc(doctype="ods", filename=filename)
-        sheets = spreadsheet.sheets
-        sheets.append(ezodf.Table('Sheet1'))
-        sheet = sheets[0]
+        spreadsheet = Workbook()
+        sheet = spreadsheet.active
         sheet_head = ['Agmnt.No','Description','Unit','Total Qty','Below Dev Qty',
                       'Above Dev Qty','Agmnt FR','Agmnt PR','Excess FR','Excess FR',
                       'Total Bel Dev','Total Above Dev',
                       'Since Prev below Dev','Since Prev Above Dev','Dev Limit']
-        sheet.reset(size=(self.schedule.length()+1, len(sheet_head)))
+
         for c,head in enumerate(sheet_head):
-            sheet[0,c].set_value(head)
+            sheet.cell(row=1,column=c+1).value = head
+            sheet.cell(row=1,column=c+1).font = Font(bold=True)
+            sheet.cell(row=1,column=c+1).alignment = Alignment(wrap_text=True, vertical='center')
         for count in range(self.schedule.length()):
             if self.prev_bill is not None:
                 sprev_item_normal_amount = self.item_normal_amount[count] - \
@@ -412,26 +415,30 @@ class Bill:
                 sprev_item_excess_amount = self.item_excess_amount[count]
 
             item = self.schedule.get_item_by_index(count)
-            sheet[count+1,0].set_value(item.itemno)
-            sheet[count+1,1].set_value(item.description)
-            sheet[count+1,2].set_value(item.unit)
-            sheet[count+1,3].set_value(sum(self.item_qty[count]))
-            sheet[count+1,4].set_value(self.item_normal_qty[count])
-            sheet[count+1,5].set_value(self.item_excess_qty[count])
-            sheet[count+1,6].set_value(item.rate)
-            sheet[count+1,7].set_value(round(self.data.item_part_percentage[count] *
-                                             0.01 * self.schedule[count].rate, 2))
-            sheet[count+1,8].set_value(self.data.item_excess_rates[count])
-            sheet[count+1,9].set_value(round(self.data.item_excess_part_percentage[count] *
-                                             0.01 * self.data.item_excess_rates[count], 2))
-            sheet[count+1,10].set_value(self.item_normal_amount[count])
-            sheet[count+1,11].set_value(self.item_excess_amount[count])
-            sheet[count+1,12].set_value(sprev_item_normal_amount)
-            sheet[count+1,13].set_value(sprev_item_excess_amount)
-            sheet[count+1,14].set_value(item.excess_rate_percent)
+            sheet.cell(row= count+2, column=1).value = item.itemno
 
+            sheet.cell(row= count+2, column=2).value = item.description
+            sheet.cell(row= count+2, column=2).alignment = Alignment(wrap_text=True)
+
+            sheet.cell(row= count+2, column=3).value = item.unit
+            sheet.cell(row= count+2, column=4).value = sum(self.item_qty[count])
+            sheet.cell(row= count+2, column=5).value = self.item_normal_qty[count]
+            sheet.cell(row= count+2, column=6).value = self.item_excess_qty[count]
+            sheet.cell(row= count+2, column=7).value = item.rate
+            sheet.cell(row= count+2, column=8).value = round(self.data.item_part_percentage[count] *
+                                             0.01 * self.schedule[count].rate, 2)
+            sheet.cell(row= count+2, column=9).value = self.data.item_excess_rates[count]
+            sheet.cell(row= count+2, column=10).value = round(self.data.item_excess_part_percentage[count] *
+                                             0.01 * self.data.item_excess_rates[count], 2)
+            sheet.cell(row= count+2, column=11).value = self.item_normal_amount[count]
+            sheet.cell(row= count+2, column=12).value = self.item_excess_amount[count]
+            sheet.cell(row= count+2, column=13).value = sprev_item_normal_amount
+            sheet.cell(row= count+2, column=14).value = sprev_item_excess_amount
+            sheet.cell(row= count+2, column=15).value = item.excess_rate_percent
+        # sheet formatings
+        sheet.column_dimensions['B'].width = 50
         # Save Document
-        spreadsheet.save()
+        spreadsheet.save(filename)
 
     def get_text(self):
         total = [self.bill_total_amount, self.bill_since_prev_amount]
@@ -659,7 +666,7 @@ class BillView:
         else:
             return [CMB_WARNING, 'Please select a Bill for rendering']
 
-    def render(self, folder, replacement_dict, path, recursive=True):
+    def render(self, folder, replacement_dict, path, recursive=False):
         if self.bills[path[0]].data.bill_type == BILL_NORMAL:  # render only if normal bill
             bill = self.bills[path[0]]
             # fill in latex buffer
@@ -694,7 +701,7 @@ class BillView:
             file_latex_bill.write(latex_buffer_bill)
             file_latex_bill.close()
 
-            filename_bill_ods = posix_path(folder, 'bill_' + str(path[0] + 1) + '.ods')
+            filename_bill_ods = posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
 
             # run latex on file and dependencies
             if recursive:  # if recursive call
@@ -717,7 +724,6 @@ class BillView:
             code_bill = run_latex(posix_path(folder), filename_bill)
             if code_bill == CMB_ERROR:
                 return [CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed']
-            bill.export_ods_bill(filename_bill_ods)
 
             # Render all cmbs again to rebuild indexes on recursive run
             if recursive:  # if recursive call
@@ -726,6 +732,8 @@ class BillView:
                         code = self.measurement_view.render(folder, replacement_dict, self.bills, [cmb_ref], False)
                         if code[0] == CMB_ERROR:
                             return code
+            else: # no need to regenerate bill ods
+                bill.export_ods_bill(filename_bill_ods)
 
             return [CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully']
         else:

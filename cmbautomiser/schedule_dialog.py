@@ -32,6 +32,7 @@ from undo import *
 from globalconstants import *
 from schedule import *
 from misc import *
+from openpyxl import Workbook, load_workbook
 
 
 # class storing individual items in schedule of work
@@ -216,37 +217,33 @@ class ScheduleDialog:
 
     def onImportScheduleClicked(self, button):
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = ezodf.opendoc(filename)
-        sheet = spreadsheet.sheets[0]
+        spreadsheet = load_workbook(filename)
+        sheet = spreadsheet.active
         # get count of rows
-        rowcount = sheet.nrows()
-        colcount = sheet.ncols()
+        rowcount = len(sheet.columns)
         items = []
         for row in range(1, rowcount):
             cells = []
             skip = 0  # no of columns to be skiped ex. breakup, total etc...
             for column_type, i in zip(self.columntypes, range(len(self.columntypes))):
-                if i-skip < colcount:
-                    cell = sheet[row, i - skip].value
-                    if cell is None:
-                        cell_formated = ""
-                    else:
-                        try:  # try evaluating string
-                            if column_type == MEAS_DESC:
-                                cell_formated = str(cell)
-                            elif column_type == MEAS_L:
-                                cell_formated = str(float(cell))
-                            elif column_type == MEAS_NO:
-                                cell_formated = str(int(cell))
-                            else:
-                                cell_formated = ''
-                        except:
-                            cell_formated = ''
-                    if column_type == MEAS_CUST:
-                        skip = skip + 1
-                    cells.append(cell_formated)
+                cell = sheet.cell(row = row + 1, column = i - skip + 1).value
+                if cell is None:
+                    cell_formated = ""
                 else:
-                    cells.append("")
+                    try:  # try evaluating string
+                        if column_type == MEAS_DESC:
+                            cell_formated = str(cell)
+                        elif column_type == MEAS_L:
+                            cell_formated = str(float(cell))
+                        elif column_type == MEAS_NO:
+                            cell_formated = str(int(cell))
+                        else:
+                            cell_formated = ''
+                    except:
+                        cell_formated = ''
+                if column_type == MEAS_CUST:
+                    skip = skip + 1
+                cells.append(cell_formated)
             item = ScheduleItemGeneric(cells)
             items.append(item)
 
