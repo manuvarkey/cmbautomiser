@@ -30,7 +30,7 @@ Python Modules:
 undo - included along with application.
 ezodf - included along with application.
 libxml - Not included
-dill - Not included
+dill - included along with application
 
 Latex Modules:
 xr-hyper, hyperref, longtable, tabu, lastpage, geometry, hyphenat, 

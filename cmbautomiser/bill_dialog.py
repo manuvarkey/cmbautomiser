@@ -76,7 +76,10 @@ class BillDialog:
             return populated_items[row][3]
 
         def callback_rate(value, row):
-            return str(populated_items[row][4])
+            if populated_items[row][4] != 0:
+                return str(populated_items[row][4])
+            else:
+                return ''
 
         def callback_flag(value, row):
             return str(populated_items[row][5])

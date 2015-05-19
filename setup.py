@@ -14,7 +14,7 @@ setup(
     # Packages
     packages=["cmbautomiser"],
     package_dir={'cmbautomiser': 'cmbautomiser'},
-    package_data={'cmbautomiser': ['latex/*','ezodf/*','interface/*','templates/*']},
+    package_data={'cmbautomiser': ['latex/*.tex','ezodf/*.py','dill/*.py','interface/*.glade','templates/*.py']},
 
     # Include additional files into the package
     include_package_data=True,
