@@ -604,8 +604,6 @@ class MainWindow:
 
 
 def main():
-    reload(sys)
-    sys.setdefaultencoding('utf8')
     MainWindow().run()  # initialise main window
     Gtk.main()  # loop
     return 0
