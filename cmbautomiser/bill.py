@@ -743,7 +743,7 @@ class BillView:
         else:
             return [CMB_WARNING, 'Please select a Bill for rendering']
 
-    def render(self, folder, replacement_dict, path, recursive=False):
+    def render(self, folder, replacement_dict, path, recursive=True):
         if self.bills[path[0]].data.bill_type == BILL_NORMAL:  # render only if normal bill
             bill = self.bills[path[0]]
             # fill in latex buffer
@@ -809,7 +809,6 @@ class BillView:
                         code = self.measurement_view.render(folder, replacement_dict, self.bills, [cmb_ref], False)
                         if code[0] == CMB_ERROR:
                             return code
-            else: # no need to regenerate bill ods
                 bill.export_ods_bill(filename_bill_ods,replacement_dict)
 
             return [CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully']
