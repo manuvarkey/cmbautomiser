@@ -49,6 +49,8 @@ LATEX_TIMEOUT = 5
 # Item description wrap-width for screen purpose
 CMB_DESCRIPTION_WIDTH = 60
 CMB_DESCRIPTION_MAX_LENGTH = 1000
+# Deviation statement
+DEV_LIMIT_STATEMENT = 10
         
 # List of units which will be considered as integer values
 INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',

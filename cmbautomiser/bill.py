@@ -37,7 +37,7 @@ from cmb import *
 from bill_dialog import *
 from misc import *
 
-from openpyxl import Workbook, load_workbook
+from openpyxl import Workbook, load_workbook, worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
 from openpyxl.cell import get_column_letter
 
@@ -392,14 +392,16 @@ class Bill:
 
         return latex_buffer
 
-    def export_ods_bill(self,filename):
+    def export_ods_bill(self,filename,project_settings_dict):
         spreadsheet = Workbook()
+
+        # Sheet 1
         sheet = spreadsheet.active
+        sheet.title = 'Data'
         sheet_head = ['Agmnt.No','Description','Unit','Total Qty','Below Dev Qty',
                       'Above Dev Qty','Agmnt FR','Agmnt PR','Excess FR','Excess FR',
                       'Total Bel Dev','Total Above Dev',
                       'Since Prev below Dev','Since Prev Above Dev','Dev Limit']
-
         for c,head in enumerate(sheet_head):
             sheet.cell(row=1,column=c+1).value = head
             sheet.cell(row=1,column=c+1).font = Font(bold=True)
@@ -415,28 +417,103 @@ class Bill:
                 sprev_item_excess_amount = self.item_excess_amount[count]
 
             item = self.schedule.get_item_by_index(count)
-            sheet.cell(row= count+2, column=1).value = item.itemno
-
-            sheet.cell(row= count+2, column=2).value = item.description
-            sheet.cell(row= count+2, column=2).alignment = Alignment(wrap_text=True)
-
-            sheet.cell(row= count+2, column=3).value = item.unit
-            sheet.cell(row= count+2, column=4).value = sum(self.item_qty[count])
-            sheet.cell(row= count+2, column=5).value = self.item_normal_qty[count]
-            sheet.cell(row= count+2, column=6).value = self.item_excess_qty[count]
-            sheet.cell(row= count+2, column=7).value = item.rate
-            sheet.cell(row= count+2, column=8).value = round(self.data.item_part_percentage[count] *
+            sheet.cell(row=count+2, column=1).value = item.itemno
+            sheet.cell(row=count+2, column=2).value = item.description
+            sheet.cell(row=count+2, column=2).alignment = Alignment(wrap_text=True)
+            sheet.cell(row=count+2, column=3).value = item.unit
+            sheet.cell(row=count+2, column=4).value = sum(self.item_qty[count])
+            sheet.cell(row=count+2, column=5).value = self.item_normal_qty[count]
+            sheet.cell(row=count+2, column=6).value = self.item_excess_qty[count]
+            sheet.cell(row=count+2, column=7).value = item.rate
+            sheet.cell(row=count+2, column=8).value = round(self.data.item_part_percentage[count] *
                                              0.01 * self.schedule[count].rate, 2)
-            sheet.cell(row= count+2, column=9).value = self.data.item_excess_rates[count]
-            sheet.cell(row= count+2, column=10).value = round(self.data.item_excess_part_percentage[count] *
+            sheet.cell(row=count+2, column=9).value = self.data.item_excess_rates[count]
+            sheet.cell(row=count+2, column=10).value = round(self.data.item_excess_part_percentage[count] *
                                              0.01 * self.data.item_excess_rates[count], 2)
-            sheet.cell(row= count+2, column=11).value = self.item_normal_amount[count]
-            sheet.cell(row= count+2, column=12).value = self.item_excess_amount[count]
-            sheet.cell(row= count+2, column=13).value = sprev_item_normal_amount
-            sheet.cell(row= count+2, column=14).value = sprev_item_excess_amount
-            sheet.cell(row= count+2, column=15).value = item.excess_rate_percent
+            sheet.cell(row=count+2, column=11).value = self.item_normal_amount[count]
+            sheet.cell(row=count+2, column=12).value = self.item_excess_amount[count]
+            sheet.cell(row=count+2, column=13).value = sprev_item_normal_amount
+            sheet.cell(row=count+2, column=14).value = sprev_item_excess_amount
+            sheet.cell(row=count+2, column=15).value = item.excess_rate_percent
         # sheet formatings
         sheet.column_dimensions['B'].width = 50
+        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
+        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_LEGAL
+        sheet.page_setup.fitToHeight = 99
+        sheet.page_setup.fitToWidth = 1
+
+        # Sheet 2 Deviation statement
+        sheet2 = spreadsheet.create_sheet()
+        sheet2.title = 'Deviation'
+        template = load_workbook(filename = abs_path('ods_templates','dev.xlsx'))
+        rowend = 12
+        colend = 18
+        rowend_end = 3
+        # Copy all from dev start
+        template_start_sheet = template.get_sheet_by_name('start')
+        for row in range(1,rowend+1):
+            for column in range(1,colend+1):
+                sheet2.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
+                sheet2.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                sheet2.cell(row=row, column=column).font = template_start_sheet.cell(row=row, column=column).font
+                sheet2.cell(row=row, column=column).alignment = template_start_sheet.cell(row=row, column=column).alignment
+        # copy all values
+        for count in range(self.schedule.length()):
+            item = self.schedule.get_item_by_index(count)
+            sheet2.cell(row=count+rowend+1, column=2).value = item.itemno
+            sheet2.cell(row=count+rowend+1, column=3).value = item.description
+            sheet2.cell(row=count+rowend+1, column=3).alignment = Alignment(wrap_text=True)
+            if item.qty > 0:
+                percent_dev = round((sum(self.item_qty[count]) - item.qty)/item.qty*100,2) if item.qty != 0 else 0
+                # Fill in values
+                sheet2.cell(row=count+rowend+1, column=4).value = item.unit
+                sheet2.cell(row=count+rowend+1, column=5).value = item.qty
+                sheet2.cell(row=count+rowend+1, column=6).value = sum(self.item_qty[count])
+                sheet2.cell(row=count+rowend+1, column=7).value = sum(self.item_qty[count]) - item.qty
+                sheet2.cell(row=count+rowend+1, column=8).value = percent_dev
+                if self.item_normal_qty[count]-item.qty > 0:
+                    sheet2.cell(row=count+rowend+1, column=9).value = self.item_normal_qty[count] - item.qty
+                if self.item_excess_qty[count] > 0:
+                    sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[count]
+                if abs(percent_dev) > DEV_LIMIT_STATEMENT:
+                    sheet2.cell(row=count+rowend+1, column=11).value = self.item_normal_qty[count] - item.qty
+                sheet2.cell(row=count+rowend+1, column=12).value = item.rate
+                sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[count]
+                # Fill in formulas
+                sheet2.cell(row=count+rowend+1, column=13).value = \
+                    '=INDIRECT(ADDRESS(ROW(),11))*INDIRECT(ADDRESS(ROW(),12))'
+                sheet2.cell(row=count+rowend+1, column=14).value = '=INDIRECT(ADDRESS(ROW(),10))'
+                sheet2.cell(row=count+rowend+1, column=16).value = \
+                    '=INDIRECT(ADDRESS(ROW(),14))*INDIRECT(ADDRESS(ROW(),15))'
+                sheet2.cell(row=count+rowend+1, column=17).value = \
+                    '=ABS(INDIRECT(ADDRESS(ROW(),13)))+ABS(INDIRECT(ADDRESS(ROW(),16)))'
+         # Copy all from dev end
+        template_end_sheet = template.get_sheet_by_name('end')
+        for row,row_ in zip(range(rowend+self.schedule.length()+1,rowend+self.schedule.length()+rowend_end+1),range(1,rowend_end+1)):
+            for column,column_ in zip(range(1,colend+1),range(1,colend+1)):
+                sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
+                sheet2.cell(row=row, column=column).style = template_end_sheet.cell(row=row_, column=column_).style
+                sheet2.cell(row=row, column=column).font = template_end_sheet.cell(row=row_, column=column_).font
+                sheet2.cell(row=row, column=column).alignment = template_end_sheet.cell(row=row_, column=column_).alignment
+        sheet2.cell(row=rowend+self.schedule.length()+1, column=colend-1).value = \
+            '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
+            str(rowend+self.schedule.length())+')'
+        # sheet2 formatings
+        for column in range(1,colend+1):
+            # copy coumn widths
+            sheet2.column_dimensions[get_column_letter(column)].width = \
+                template_start_sheet.column_dimensions[get_column_letter(column)].width
+        sheet2.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
+        sheet2.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_LEGAL
+        sheet2.page_setup.fitToHeight = 99
+        sheet2.page_setup.fitToWidth = 1
+        sheet2.print_options.horizontalCentered = True
+
+        # Copy all data
+        sheet2['C3'] = project_settings_dict["$cmbnameofwork$"]
+        sheet2['C4'] = project_settings_dict["$cmbagency$"]
+        sheet2['C5'] = project_settings_dict["$cmbagmntno$"]
+
         # Save Document
         spreadsheet.save(filename)
 
@@ -733,7 +810,7 @@ class BillView:
                         if code[0] == CMB_ERROR:
                             return code
             else: # no need to regenerate bill ods
-                bill.export_ods_bill(filename_bill_ods)
+                bill.export_ods_bill(filename_bill_ods,replacement_dict)
 
             return [CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully']
         else:
