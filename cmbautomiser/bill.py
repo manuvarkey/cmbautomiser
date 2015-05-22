@@ -435,6 +435,7 @@ class Bill:
             sheet.cell(row=count+2, column=13).value = sprev_item_normal_amount
             sheet.cell(row=count+2, column=14).value = sprev_item_excess_amount
             sheet.cell(row=count+2, column=15).value = item.excess_rate_percent
+
         # sheet formatings
         sheet.column_dimensions['B'].width = 50
         sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
@@ -455,14 +456,12 @@ class Bill:
             for column in range(1,colend+1):
                 sheet2.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
                 sheet2.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
-                sheet2.cell(row=row, column=column).font = template_start_sheet.cell(row=row, column=column).font
-                sheet2.cell(row=row, column=column).alignment = template_start_sheet.cell(row=row, column=column).alignment
         # copy all values
         for count in range(self.schedule.length()):
             item = self.schedule.get_item_by_index(count)
+            sheet2.cell(row=count+rowend+1, column=1).value = '=IF(INDIRECT(ADDRESS(ROW(),5))<>0,MAX(INDIRECT("A$12:" & ADDRESS(ROW()-1,1)))+1,"")'
             sheet2.cell(row=count+rowend+1, column=2).value = item.itemno
             sheet2.cell(row=count+rowend+1, column=3).value = item.description
-            sheet2.cell(row=count+rowend+1, column=3).alignment = Alignment(wrap_text=True)
             if item.qty > 0:
                 percent_dev = round((sum(self.item_qty[count]) - item.qty)/item.qty*100,2) if item.qty != 0 else 0
                 # Fill in values
@@ -475,8 +474,9 @@ class Bill:
                     sheet2.cell(row=count+rowend+1, column=9).value = self.item_normal_qty[count] - item.qty
                 if self.item_excess_qty[count] > 0:
                     sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[count]
-                if abs(percent_dev) > DEV_LIMIT_STATEMENT:
-                    sheet2.cell(row=count+rowend+1, column=11).value = self.item_normal_qty[count] - item.qty
+                sheet2.cell(row=count+rowend+1, column=11).value = \
+                        '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(DEV_LIMIT_STATEMENT) + ',' + \
+                        str(self.item_normal_qty[count] - item.qty) + ',0)'
                 sheet2.cell(row=count+rowend+1, column=12).value = item.rate
                 sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[count]
                 # Fill in formulas
@@ -487,14 +487,16 @@ class Bill:
                     '=INDIRECT(ADDRESS(ROW(),14))*INDIRECT(ADDRESS(ROW(),15))'
                 sheet2.cell(row=count+rowend+1, column=17).value = \
                     '=ABS(INDIRECT(ADDRESS(ROW(),13)))+ABS(INDIRECT(ADDRESS(ROW(),16)))'
+            # formatings
+            sheet2.cell(row=count+rowend+1, column=1).alignment = Alignment(horizontal='center')
+            sheet2.cell(row=count+rowend+1, column=2).alignment = Alignment(horizontal='center')
+            sheet2.cell(row=count+rowend+1, column=3).alignment = Alignment(wrap_text=True)
          # Copy all from dev end
         template_end_sheet = template.get_sheet_by_name('end')
         for row,row_ in zip(range(rowend+self.schedule.length()+1,rowend+self.schedule.length()+rowend_end+1),range(1,rowend_end+1)):
             for column,column_ in zip(range(1,colend+1),range(1,colend+1)):
                 sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
                 sheet2.cell(row=row, column=column).style = template_end_sheet.cell(row=row_, column=column_).style
-                sheet2.cell(row=row, column=column).font = template_end_sheet.cell(row=row_, column=column_).font
-                sheet2.cell(row=row, column=column).alignment = template_end_sheet.cell(row=row_, column=column_).alignment
         sheet2.cell(row=rowend+self.schedule.length()+1, column=colend-1).value = \
             '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
             str(rowend+self.schedule.length())+')'
