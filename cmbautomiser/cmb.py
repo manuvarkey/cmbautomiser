@@ -25,7 +25,6 @@
 from gi.repository import Gtk, Gdk, GLib
 
 import pickle
-import ezodf
 import os.path
 import copy
 

@@ -1547,6 +1547,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1557,6 +1559,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">1</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1567,6 +1571,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">2</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1577,6 +1583,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">3</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1587,6 +1595,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">4</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1599,6 +1609,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1611,6 +1623,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">1</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1623,6 +1637,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">2</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1635,6 +1651,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">3</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1647,6 +1665,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">4</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1659,6 +1679,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">5</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1671,6 +1693,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">6</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1683,6 +1707,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">8</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1695,6 +1721,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">9</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1707,6 +1735,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">7</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1719,6 +1749,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">10</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1729,6 +1761,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">5</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1739,6 +1773,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">6</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1749,6 +1785,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">7</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1759,6 +1797,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">9</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1769,6 +1809,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">8</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
             <child>
@@ -1779,6 +1821,8 @@ Central Public Works Department</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">10</property>
+                <property name="width">1</property>
+                <property name="height">1</property>
               </packing>
             </child>
           </object>

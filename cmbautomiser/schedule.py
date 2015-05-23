@@ -27,7 +27,6 @@ import pickle
 from gi.repository import Gtk, Gdk, GLib
 
 from undo import *
-import ezodf
 
 # local files import
 from globalconstants import *

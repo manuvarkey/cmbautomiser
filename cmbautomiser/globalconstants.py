@@ -45,7 +45,7 @@ MEAS_COLOR_LOCKED = '#BABDB6'
 MEAS_COLOR_NORMAL = '#FFFFFF'
 MEAS_COLOR_SELECTED = '#729FCF'
 # Timeout for killing Latex subprocess
-LATEX_TIMEOUT = 5
+LATEX_TIMEOUT = 25
 # Item description wrap-width for screen purpose
 CMB_DESCRIPTION_WIDTH = 60
 CMB_DESCRIPTION_MAX_LENGTH = 1000

@@ -3,6 +3,7 @@ recursive-include cmbautomiser/interface *
 recursive-include cmbautomiser/templates *
 recursive-include cmbautomiser/latex *
 recursive-include cmbautomiser/ods_templates *
+recursive-include cmbautomiser/openpyxl *
 recursive-include bin *
 recursive-include applications *
 recursive-include pixmaps *
