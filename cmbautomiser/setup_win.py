@@ -29,7 +29,7 @@ setup(
     # Application author details:
     author="Manu Varkey",
     author_email="manuvarkey@gmail.com",
-    windows=['__main__.py'],
+    windows=['__init__.py'],
     data_files = [("Microsoft.VC90.CRT", ['winlibs\\msvcr90.dll'])],
     options={ 
     'py2exe': { 
