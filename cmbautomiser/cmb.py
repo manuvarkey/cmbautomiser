@@ -382,8 +382,9 @@ class MeasurementItemNLBH(MeasurementItem):
         return [total]
     
     def get_text(self):
-        return "Item No.<b>" + str(self.itemnos) + "    |NLBH|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(self.get_total()) + "</b>"
-    
+        total = ['{:.1f}'.format(x) for x in self.get_total()]
+        return "Item No.<b>" + str(self.itemnos) + "    |NLBH|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
+
     def get_tooltip(self):
         if self.remark != "":
             return "Remark: " + self.remark
@@ -509,7 +510,8 @@ class MeasurementItemLLLLL(MeasurementItem):
         return total
     
     def get_text(self):
-        return "Item No.<b>" + str(self.itemnos) + "    |LLLLL|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(self.get_total()) + "</b>"
+        total = ['{:.1f}'.format(x) for x in self.get_total()]
+        return "Item No.<b>" + str(self.itemnos) + "    |LLLLL|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -625,7 +627,8 @@ class MeasurementItemNNNNNNNN(MeasurementItem):
         return total
     
     def get_text(self):
-        return "Item No.<b>" + str(self.itemnos) + "    |NNNNNNNN|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(self.get_total()) + "</b>"
+        total = ['{:.1f}'.format(x) for x in self.get_total()]
+        return "Item No.<b>" + str(self.itemnos) + "    |NNNNNNNN|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -740,7 +743,8 @@ class MeasurementItemnnnnnT(MeasurementItem):
         return [total]
     
     def get_text(self):
-        return "Item No.<b>" + str(self.itemnos) + "    |nnnnnT|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(self.get_total()) + "</b>"
+        total = ['{:.1f}'.format(x) for x in self.get_total()]
+        return "Item No.<b>" + str(self.itemnos) + "    |nnnnnT|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -983,8 +987,9 @@ class MeasurementItemCustom(MeasurementItem):
             return []
 
     def get_text(self):
+        total = ['{:.1f}'.format(x) for x in self.get_total()]
         return "Item No.<b>" + str(self.itemnos) + "    |Custom: " + self.name + "|</b>    # of records: <b>" + \
-               str(self.length()) + "</b>, Total: <b>" + str(self.get_total()) + "</b>"
+               str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
 
     def get_tooltip(self):
         if self.remark != "":
