@@ -183,7 +183,7 @@ class Schedule:
                 item.extended_description = item.description
             if len(item.extended_description) > CMB_DESCRIPTION_MAX_LENGTH:
                 item.extended_description_limited = item.extended_description[0:CMB_DESCRIPTION_MAX_LENGTH/2] + \
-                    ' ... ' + item.extended_description[:CMB_DESCRIPTION_MAX_LENGTH/2]
+                    ' ... ' + item.extended_description[-CMB_DESCRIPTION_MAX_LENGTH/2:]
             else:
                 item.extended_description_limited = item.extended_description
             iter += 1
