@@ -1360,7 +1360,7 @@ class MeasurementsView:
         itemnos = [None]
         captions = ['Description','N1','N2','N3','N4','N5','Total']
         columntypes = [MEAS_DESC,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_CUST]
-        callback_total = lambda values,row:str(RecordnnnnnT(*values[1:7]).find_total())
+        callback_total = lambda values,row:str(RecordnnnnnT(*values[0:6]).find_total())
         cellrenderers = [None] + [None]*5 + [callback_total]
         item_schedule = self.schedule
         
