@@ -148,13 +148,13 @@ class BillDialog:
             records = data[2]
             for count, item in enumerate(populated_items):
                 if self.data.bill_type == BILL_NORMAL:
-                    self.data.item_excess_rates[item[0]] = float(records[count][4])
-                    self.data.item_part_percentage[item[0]] = float(records[count][5])
-                    self.data.item_excess_part_percentage[item[0]] = float(records[count][6])
+                    self.data.item_excess_rates[item[0]] = float(eval(records[count][4]))
+                    self.data.item_part_percentage[item[0]] = float(eval(records[count][5]))
+                    self.data.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
                 elif self.data.bill_type == BILL_CUSTOM:
-                    self.data.item_qty[item[0]][0] = float(records[count][4])
-                    self.data.item_normal_amount[item[0]] = float(records[count][5])
-                    self.data.item_excess_amount[item[0]] = float(records[count][6])
+                    self.data.item_qty[item[0]][0] = float(eval(records[count][4]))
+                    self.data.item_normal_amount[item[0]] = float(eval(records[count][5]))
+                    self.data.item_excess_amount[item[0]] = float(eval(records[count][6]))
 
     def onToggleCellRendererToggle(self, toggle, path_str):
         path_obj = Gtk.TreePath.new_from_string(path_str)
@@ -209,7 +209,8 @@ class BillDialog:
 
         # fill in from Prev Bill
         if self.prev_bill is not None:
-            for item_index, item_qty in enumerate(self.prev_bill.item_qty):
+            for item_index, item_qty in enumerate(self.item_qty):
+                print item_index,item_qty
                 self.item_cmb_ref[item_index].append(-1)  # use -1 as marker for prev abstract
                 self.item_qty[item_index].append(sum(item_qty))  # add total qty from previous bill
 
