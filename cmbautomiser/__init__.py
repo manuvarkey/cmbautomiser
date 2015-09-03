@@ -253,6 +253,7 @@ class MainWindow:
             pickle.dump(data, fileobj)
             fileobj.close()
             self.display_info("Project successfully saved")
+            self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
         # create a filechooserdialog to open:
