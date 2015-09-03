@@ -211,16 +211,16 @@ class BillDialog:
         if self.prev_bill is not None:
             for item_index, item_qty in enumerate(self.item_qty):
                 self.item_cmb_ref[item_index].append(-1)  # use -1 as marker for prev abstract
-                self.item_qty[item_index].append(sum(item_qty))  # add total qty from previous bill
+                self.item_qty[item_index].append(sum(self.prev_bill.item_qty[item_index]))  # add total qty from previous bill
 
         # Evaluate remaining variables from above data
         for item_index in range(sch_len):
             item = self.schedule[item_index]
             # determine total qty
             total_qty = sum(self.item_qty[item_index])
-            # determin items above and at normal rates
+            # determine items above and at normal rates
             if total_qty > item.qty * (1 + 0.01 * item.excess_rate_percent):
-                if item.unit in INT_ITEMS:
+                if item.unit.lower() in INT_ITEMS:
                     self.item_normal_qty[item_index] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
                 else:
                     self.item_normal_qty[item_index] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
