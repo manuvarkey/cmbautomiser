@@ -210,7 +210,6 @@ class BillDialog:
         # fill in from Prev Bill
         if self.prev_bill is not None:
             for item_index, item_qty in enumerate(self.item_qty):
-                print item_index,item_qty
                 self.item_cmb_ref[item_index].append(-1)  # use -1 as marker for prev abstract
                 self.item_qty[item_index].append(sum(item_qty))  # add total qty from previous bill
 

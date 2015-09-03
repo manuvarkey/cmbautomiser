@@ -20,8 +20,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #  
-#  
+#
 
+# Program name
+PROGRAM_NAME = 'CMB Automiser'
 # Item codes for schedule dialog
 MEAS_NO = 1
 MEAS_L = 2

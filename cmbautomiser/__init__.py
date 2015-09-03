@@ -218,6 +218,8 @@ class MainWindow:
                         os.path.split(self.filename)[0]))
                     self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
                         os.path.split(self.filename)[0]))
+                    # setup window name
+                    self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
                 else:
                     self.display_error("Project could not be opened: Wrong file type selected")
