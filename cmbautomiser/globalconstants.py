@@ -56,7 +56,8 @@ DEV_LIMIT_STATEMENT = 10
         
 # List of units which will be considered as integer values
 INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',
-             'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each',
+             'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each','job','jobs','set','sets',
+             'pair','pairs',
              'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
 # String used for checking file version
 PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_2'

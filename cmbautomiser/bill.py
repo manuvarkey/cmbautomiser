@@ -171,7 +171,7 @@ class Bill:
                 total_qty = sum(self.item_qty[item_index])
                 # determin items above and at normal rates
                 if total_qty > item.qty * (1 + 0.01 * item.excess_rate_percent):
-                    if item.unit in INT_ITEMS:
+                    if item.unit.lower() in INT_ITEMS:
                         self.item_normal_qty[item_index] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
                     else:
                         self.item_normal_qty[item_index] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
