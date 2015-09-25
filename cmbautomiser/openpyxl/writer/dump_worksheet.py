@@ -21,6 +21,7 @@ from openpyxl.writer.comments import CommentWriter
 from .relations import write_rels
 from .worksheet import (
     write_autofilter,
+    write_datavalidation,
     write_cell,
     write_cols,
     write_format,
@@ -33,8 +34,12 @@ from openpyxl.xml.constants import (
     MAX_ROW,
     PACKAGE_XL
 )
-from openpyxl.xml.functions import xmlfile, Element, SubElement
-
+from openpyxl.xml.functions import (
+    xmlfile,
+    Element,
+    SubElement,
+    tostring,
+)
 
 DESCRIPTORS_CACHE_SIZE = 50
 ALL_TEMP_FILES = []
@@ -125,9 +130,15 @@ class DumpWorksheet(Worksheet):
                             xf.write(r)
                     except GeneratorExit:
                         pass
+                if self.protection.sheet:
+                    prot = Element('sheetProtection', dict(self.protection))
+                    xf.write(prot)
                 af = write_autofilter(self)
                 if af is not None:
                     xf.write(af)
+                dv = write_datavalidation(self)
+                if dv is not None:
+                    xf.write(dv)
                 if self._comments:
                     comments = Element('legacyDrawing', {'{%s}id' % REL_NS: 'commentsvml'})
                     xf.write(comments)
@@ -242,7 +253,7 @@ class ExcelDumpWriter(ExcelWriter):
 
             # write comments
             if sheet._comments:
-                rels = write_rels(sheet, drawing_id, comments_id)
+                rels = write_rels(sheet, drawing_id, comments_id, False)
                 archive.writestr( PACKAGE_WORKSHEETS +
                                   '/_rels/sheet%d.xml.rels' % i, tostring(rels) )
 
