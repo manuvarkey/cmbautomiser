@@ -346,18 +346,18 @@ class MainWindow:
         spreadsheet = load_workbook(filename)
         sheet = spreadsheet.active
         # get count of rows
-        rowcount = len(sheet.columns)
+        rowcount = len(sheet.rows)
         items = []
         for row in range(0, rowcount):
             item = ScheduleItem()
             for col in range(0, 7):
                 cell = sheet.cell(row = row+1, column = col+1).value
-                # Get formated string input
+                # Get formatted string input
                 if cell is None:
                     cell_formated = ""
                 else:
-                    try:  # try evaluating string
-                        cell_formated = str(cell)
+                    try:  # try evaluating unicode
+                        cell_formated = unicode(cell)
                     except:
                         cell_formated = ""
                 # Try adding to item
