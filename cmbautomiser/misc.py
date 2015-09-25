@@ -44,7 +44,7 @@ def posix_path(*args):
             path = os.path.normpath(posixpath.join(*args))
         else:
             path = os.path.normpath(args[0])
-        # remove any leading slash (vestige from URLLIB)
+        # remove any leading slash
         if path[0] == '\\':
             return path[1:]
         else:

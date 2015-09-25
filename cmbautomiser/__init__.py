@@ -22,11 +22,9 @@
 #  
 #  
 
-import os
+import subprocess,os
 import dill as pickle
-import urlparse
 import json
-import sys
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -141,6 +139,13 @@ class MainWindow:
         response = self.about_dialog.run()
         if response == Gtk.ResponseType.CANCEL :
             self.about_dialog.hide()
+
+    def onHelpClick(self, button):
+        if platform.system() == 'Linux':
+            subprocess.call(('xdg-open', 'documentation/cmbautomisermanual.pdf'))
+        elif platform.system() == 'Windows':
+            os.startfile('documentation/cmbautomisermanual.pdf')
+
 
     # Main Window
 
@@ -415,9 +420,8 @@ class MainWindow:
 
     def OnMeasRenderClicked(self, button):
         filechooserbutton_meas = self.builder.get_object("filechooserbutton_meas")
-        folder_uri = filechooserbutton_meas.get_uri()
-        if folder_uri <> None:
-            folder = urlparse.urlparse(folder_uri).path
+        if filechooserbutton_meas.get_file() <> None:
+            folder = filechooserbutton_meas.get_file().get_path()
             code = self.measurements_view.render_selection(folder, self.project_settings_dict, self.bill_view.bills)
             self.display_status(code)
             # remove temporary files
@@ -425,6 +429,8 @@ class MainWindow:
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
                 os.remove(posix_path(folder,f))
+        else:
+            self.display_error('Please select an output directory for rendering')
 
     def OnMeasUndoClicked(self, button):
         self.measurements_view.undo()
@@ -462,9 +468,8 @@ class MainWindow:
 
     def OnBillRenderClicked(self, button):
         filechooserbutton_bill = self.builder.get_object("filechooserbutton_bill")
-        folder_uri = filechooserbutton_bill.get_uri()
-        if folder_uri <> None:
-            folder = urlparse.urlparse(folder_uri).path
+        if filechooserbutton_bill.get_file() <> None:
+            folder = filechooserbutton_bill.get_file().get_path()
             code = self.bill_view.render_selected(folder, self.project_settings_dict)
             self.display_status(code)
             # remove temporary files
@@ -472,6 +477,8 @@ class MainWindow:
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
                 os.remove(posix_path(folder,f))
+        else:
+            self.display_error('Please select an output directory for rendering')
 
     def OnBillUndoClicked(self, button):
         self.bill_view.undo()
