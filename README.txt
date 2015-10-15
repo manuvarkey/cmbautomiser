@@ -28,7 +28,7 @@ following extra dependencies.
 
 Python Modules:
 undo - included along with application.
-ezodf - included along with application.
+openpyxl - included along with application.
 libxml - Not included
 dill - included along with application
 
