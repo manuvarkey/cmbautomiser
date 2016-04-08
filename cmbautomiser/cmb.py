@@ -1564,6 +1564,13 @@ class MeasurementsView:
         # Update all measurement flags
         ManageResourses().update_billed_flags()
 
+        # Get selection
+        selection = self.tree.get_selection()
+        old_path = []
+        if selection.count_selected_rows() != 0: # if selection exists
+            [model, paths] = selection.get_selected_rows()
+            old_path = paths[0].get_indices()
+
         # Update StoreView
         self.store.clear()
         for cmb in self.cmbs:
@@ -1577,6 +1584,30 @@ class MeasurementsView:
                     pass
         self.tree.expand_all()
         setstack(self.stack) # select schedule undo stack
+
+        # Set selection
+        if old_path != []:
+            if len(old_path) > 0 and len(self.cmbs) > 0:
+                if len(self.cmbs) <= old_path[0]:
+                    old_path[0] = len(self.cmbs)-1
+                cmb = self.cmbs[old_path[0]]
+                if len(old_path) > 1 and len(cmb.items) > 0:
+                    if len(cmb.items) <= old_path[1]:
+                        old_path[1] = len(cmb.items)-1
+                    item = cmb.items[old_path[1]]
+                    if isinstance(item,Measurement) and len(old_path) == 3 and len(item.items) > 0:
+                        if len(item.items) <= old_path[2]:
+                            old_path[2] = len(item.items)-1
+                    else:
+                        old_path = old_path[0:2]
+                else:
+                    old_path = [old_path[0]]
+            else:
+                old_path = []
+
+            if old_path != []:
+                path = Gtk.TreePath.new_from_indices(old_path)
+                self.tree.set_cursor(path)
 
     def render_selection(self,folder,replacement_dict,bills):
         # get selection
