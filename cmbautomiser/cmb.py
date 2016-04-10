@@ -1127,8 +1127,8 @@ class MeasurementsView:
     # Callback functions
     
     def onKeyPressTreeview(self, treeview, event):
-        keyname = Gdk.keyval_name(event.keyval)
-        self.tree.get_selection().unselect_all()
+        if event.keyval == Gdk.KEY_Escape:  # unselect all
+            self.tree.get_selection().unselect_all()
 
     def undo(self):
         setstack(self.stack) # select schedule undo stack

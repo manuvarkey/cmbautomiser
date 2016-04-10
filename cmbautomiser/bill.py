@@ -617,7 +617,7 @@ class BillView:
                 self.edit_item_at_row(new_data, row)
 
     @undoable
-    def edit_item_at_row(self, data, row):  # note needs rows to be sorted
+    def edit_item_at_row(self, data, row):
         if row is not None:
             old_data = copy.deepcopy(self.bills[row].get_modal())
             self.bills[row].set_modal(data)
@@ -667,15 +667,45 @@ class BillView:
         if text is not None:
             try:
                 data = pickle.loads(text)  # recover item from string
-                data.mitems = []  # clear measured items
                 if isinstance(data, BillData):
                     selection = self.tree.get_selection()
                     if selection.count_selected_rows() != 0:  # if selection exists copy at selection
                         [model, paths] = selection.get_selected_rows()
                         path = paths[0].get_indices()
                         row = path[0]
+                        
+                        # Handle different bill types
+                        if self.bills[row].data.bill_type == BILL_CUSTOM:
+                            if data.bill_type == BILL_NORMAL:
+                                # create duplicate bill
+                                bill = Bill(self)
+                                bill.set_modal(data)
+                                bill.update_values()
+                                # Fill in values for custom bill from duplicate bill
+                                data.item_normal_amount = bill.item_normal_amount
+                                data.item_excess_amount = bill.item_excess_amount
+                                data.item_qty = []
+                                for qtys in bill.item_qty:
+                                    data.item_qty.append([sum(qtys)])
+                                # clear items for normal bill
+                                data.mitems = []
+                                data.item_part_percentage = []  # part rate for exess rate items
+                                data.item_excess_part_percentage = []  # part rate for exess rate items
+                                data.item_excess_rates = []  # list of excess rates above excess_percentage
+                                # set bill type
+                                data.bill_type = BILL_CUSTOM
+                        else:
+                            data.mitems = []  # clear measured items
+                            # clear additional elements for custom bill
+                            data.item_qty = []  # qtys of items b/f
+                            data.item_normal_amount = []  # total item amount for qty at normal rate
+                            data.item_excess_amount = []  # amounts for qty at excess rate
+                            # set bill type
+                            data.bill_type = BILL_NORMAL
+                            
                         self.edit_item_at_row(data, row)
                     else:  # if selection do not exist paste at end
+                        data.mitems = []  # clear measured items
                         bill = Bill(self)
                         bill.set_modal(data)
                         self.insert_item_at_row(bill, None)

@@ -437,6 +437,10 @@ class MainWindow:
 
     def OnMeasRedoClicked(self, button):
         self.measurements_view.redo()
+        
+    def OnMeasClickEvent(self, button, event):
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.measurements_view.edit_selected_row()
 
     def OnMeasEditClicked(self, button):
         self.measurements_view.edit_selected_row()
@@ -485,6 +489,10 @@ class MainWindow:
 
     def OnBillRedoClicked(self, button):
         self.bill_view.redo()
+        
+    def OnBillClickEvent(self, button, event):
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.bill_view.edit_selected_row()
 
     def OnBillEditClicked(self, button):
         self.bill_view.edit_selected_row()
