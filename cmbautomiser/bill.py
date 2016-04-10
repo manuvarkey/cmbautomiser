@@ -633,10 +633,21 @@ class BillView:
     def delete_selected_row(self):
         # get rows to delete
         selection = self.tree.get_selection()
-        [model, path] = selection.get_selected_rows()
-        row = path[0].get_indices()[0]
-        # delete row
-        self.delete_row(row)
+        if selection.count_selected_rows() != 0:
+            [model, path] = selection.get_selected_rows()
+            row = path[0].get_indices()[0]
+            # delete row
+            self.delete_row(row)
+            if len(self.store) > 0:
+                if row == 0:
+                    path = Gtk.TreePath.new_from_indices([0])
+                    self.tree.set_cursor(path)
+                elif row >= len(self.store):
+                    path = Gtk.TreePath.new_from_indices([len(self.store)-1])
+                    self.tree.set_cursor(path)
+                else:
+                    path = Gtk.TreePath.new_from_indices([row-1])
+                    self.tree.set_cursor(path)
 
     @undoable
     def delete_row(self, row):
