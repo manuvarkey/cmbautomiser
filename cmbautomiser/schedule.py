@@ -272,7 +272,6 @@ class ScheduleView:
     @undoable
     def append_item(self, itemlist):
         newrows = []
-
         for item in itemlist:
             self.schedule.append_item(item)
             newrows.append(self.schedule.length() - 1)
@@ -289,18 +288,20 @@ class ScheduleView:
             [model, paths] = selection.get_selected_rows()
             rows = []
             for i in range(0, len(itemlist)):
-                rows.append(paths[0].get_indices()[0] + 1)
+                rows.append(paths[0].get_indices()[0])
             self.insert_item_at_row(itemlist, rows)
         else:  # if no selection
             self.append_item(itemlist)
 
     @undoable
-    def insert_item_at_row(self, itemlist, rows):  # note needs rows to be sorted
+    def insert_item_at_row(self, itemlist, rows, itemlist_bill = None):  # note needs rows to be sorted
         newrows = []
         for i in range(0, len(rows)):
-            self.schedule.insert_item_at_index(rows[i] + i - 1, itemlist[i])
-            newrows.append(rows[i] + i - 1)
+            self.schedule.insert_item_at_index(rows[i], itemlist[i])
+            newrows.append(rows[i] + i)
         self.update_store()
+        # Update bill schedule
+        ManageResourses().update_bill_schedule_insert_item_at_row(itemlist_bill,rows)
 
         yield "Insert data items to schedule at rows '{}'".format(rows)
         # Undo action
@@ -322,17 +323,18 @@ class ScheduleView:
     def delete_row(self, rows):
         newrows = []
         items = []
-
         rows.sort()
         for i in range(0, len(rows)):
             items.append(self.schedule[rows[i] - i])
-            newrows.append(rows[i] + i + 1)
+            newrows.append(rows[i])
             self.schedule.remove_item_at_index(rows[i] - i)
         self.update_store()
+        # Update bill schedule
+        itemlist_bill = ManageResourses().update_bill_schedule_delete_row(rows)
 
         yield "Delete data items from schedule at rows '{}'".format(rows)
         # Undo action
-        self.insert_item_at_row(items, newrows)
+        self.insert_item_at_row(items, newrows, itemlist_bill)
         self.update_store()
 
     @undoable
@@ -373,7 +375,7 @@ class ScheduleView:
                         index = paths[0].get_indices()[0]
                         rows = []
                         for i in range(0, len(itemlist)):
-                            rows.append(int(index + 1))
+                            rows.append(int(index))
                         self.insert_item_at_row(itemlist, rows)
                     else:  # if no selection
                         self.append_item(itemlist)

@@ -64,6 +64,45 @@ class ManageResourses:
             ManageResourses.measurements_view = measurements_view
             ManageResourses.bills_view = bills_view
 
+    def update_bill_schedule_insert_item_at_row(self,itemlist,rows):
+        if itemlist == None:
+            itemlist = [[[100,100,0,[0],0,0]]*len(rows)]*len(self.bills_view.bills)
+        print itemlist,rows
+        for bill,item in zip(self.bills_view.bills,itemlist):
+            for i in range(0, len(rows)):
+                print item[i], rows[i]
+                bill.data.item_part_percentage.insert(rows[i], item[i][0])
+                bill.data.item_excess_part_percentage.insert(rows[i], item[i][1])
+                bill.data.item_excess_rates.insert(rows[i], item[i][2])
+                bill.data.item_qty.insert(rows[i], item[i][3])
+                bill.data.item_normal_amount.insert(rows[i], item[i][4])
+                bill.data.item_excess_amount.insert(rows[i], item[i][5])
+
+    def update_bill_schedule_delete_row(self,rows):
+        print rows
+        items_top = []
+        rows.sort()
+        for bill in self.bills_view.bills:
+            items = []
+            for i in range(0, len(rows)):
+                d1 = bill.data.item_part_percentage[rows[i] - i]
+                d2 = bill.data.item_excess_part_percentage[rows[i] - i]
+                d3 = bill.data.item_excess_rates[rows[i] - i]
+                d4 = bill.data.item_qty[rows[i] - i]
+                d5 = bill.data.item_normal_amount[rows[i] - i]
+                d6 = bill.data.item_excess_amount[rows[i] - i]
+                # Add to items
+                items = items + [[d1,d2,d3,d4,d5,d6]]
+                # Delete elements
+                del bill.data.item_part_percentage[rows[i] - i]
+                del bill.data.item_excess_part_percentage[rows[i] - i]
+                del bill.data.item_excess_rates[rows[i] - i]
+                del bill.data.item_qty[rows[i] - i]
+                del bill.data.item_normal_amount[rows[i] - i]
+                del bill.data.item_excess_amount[rows[i] - i]
+            items_top += [items]
+        return items_top
+
     def update_billed_flags(self):
         # Update cmb measured flags. Also manages abstract in Measurements view
 

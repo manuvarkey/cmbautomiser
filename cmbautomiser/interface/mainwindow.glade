@@ -396,7 +396,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_add">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add item at selected location</property>
+                        <property name="tooltip_markup" translatable="yes">Add item at selected location &lt;i&gt;(Ctrl+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Add</property>
@@ -414,7 +414,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_add_mult">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add multiple items at selected location</property>
+                        <property name="tooltip_markup" translatable="yes">Add multiple items at selected location &lt;i&gt;(Ctrl+Shift+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Add Multiple</property>
                         <property name="use_underline">True</property>
@@ -442,7 +442,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_undo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Undo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Undo</property>
                         <property name="use_underline">True</property>
@@ -459,7 +459,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_redo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Redo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Redo</property>
                         <property name="use_underline">True</property>
@@ -487,12 +487,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Copy item</property>
+                        <property name="tooltip_markup" translatable="yes">Copy item &lt;i&gt;(Ctrl+Shift+c)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Copy</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-copy</property>
                         <signal name="clicked" handler="onCopySchedule" swapped="no"/>
+                        <accelerator key="c" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -503,12 +504,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_paste">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Paste Item</property>
+                        <property name="tooltip_markup" translatable="yes">Paste Item &lt;i&gt;(Ctrl+Shift+v)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Paste</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-paste</property>
                         <signal name="clicked" handler="onPasteSchedule" swapped="no"/>
+                        <accelerator key="v" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -578,12 +580,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_delete">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Delete Selected Items</property>
+                        <property name="tooltip_markup" translatable="yes">Delete Selected Items &lt;i&gt;(Shift+Del)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-delete</property>
                         <signal name="clicked" handler="onButtonScheduleDeletePressed" swapped="no"/>
+                        <accelerator key="Delete" signal="clicked" modifiers="GDK_SHIFT_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -784,7 +787,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Measurement type</property>
+                            <property name="tooltip_markup" translatable="yes">Measurement type &lt;i&gt;(Ctrl+i)&lt;/i&gt;</property>
                             <property name="halign">start</property>
                             <property name="popup">popupmenu_meas</property>
                             <child>
@@ -794,6 +797,7 @@
                                 <property name="stock">gtk-add</property>
                               </object>
                             </child>
+                            <accelerator key="i" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                           </object>
                         </child>
                       </object>
@@ -806,12 +810,13 @@
                       <object class="GtkToolButton" id="toolbutton_meas_edit">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Edit selected item</property>
+                        <property name="tooltip_markup" translatable="yes">Edit selected item &lt;i&gt;(Ctrl+e)&lt;/i&gt;</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Edit</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-edit</property>
                         <signal name="clicked" handler="OnMeasEditClicked" swapped="no"/>
+                        <accelerator key="e" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -822,12 +827,13 @@
                       <object class="GtkToolButton" id="toolbutton_meas_properties">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Edit selected item</property>
+                        <property name="tooltip_markup" translatable="yes">Edit selected item &lt;i&gt;(Ctrl+p)&lt;/i&gt;</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Parameters</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-properties</property>
                         <signal name="clicked" handler="OnMeasPropertiesClicked" swapped="no"/>
+                        <accelerator key="p" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -848,7 +854,7 @@
                       <object class="GtkToolButton" id="toolbutton_meas_undo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Undo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Undo</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-undo</property>
@@ -864,7 +870,7 @@
                       <object class="GtkToolButton" id="toolbutton_meas_redo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Redo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Redo</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-redo</property>
@@ -890,7 +896,7 @@
                       <object class="GtkToolButton" id="toolbutton_meas_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Copy item</property>
+                        <property name="tooltip_markup" translatable="yes">Copy item &lt;i&gt;(Ctrl+c)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Copy</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-copy</property>
@@ -906,7 +912,7 @@
                       <object class="GtkToolButton" id="toolbutton_meas_paste">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Paste Item</property>
+                        <property name="tooltip_markup" translatable="yes">Paste Item &lt;i&gt;(Ctrl+v)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Paste</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-paste</property>
@@ -981,7 +987,7 @@
                       <object class="GtkToolButton" id="toolbutton_meas_delete">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Delete Selected Items</property>
+                        <property name="tooltip_markup" translatable="yes">Delete Selected Items &lt;i&gt;(Del)&lt;/i&gt;</property>
                         <property name="halign">end</property>
                         <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
@@ -1092,7 +1098,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_add">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add new bill from measurement</property>
+                        <property name="tooltip_markup" translatable="yes">Add new bill from measurement &lt;i&gt;(Ctrl+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Add</property>
@@ -1110,14 +1116,14 @@
                       <object class="GtkToolButton" id="toolbutton_bill_add_custom">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add a custom bill</property>
+                        <property name="tooltip_markup" translatable="yes">Add a custom bill &lt;i&gt;(Ctrl+Shift+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Add Custom</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-add</property>
                         <signal name="clicked" handler="onAddBillCustomClicked" swapped="no"/>
-                        <accelerator key="i" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                        <accelerator key="i" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -1128,12 +1134,13 @@
                       <object class="GtkToolButton" id="toolbutton_meas_edi">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Edit bill</property>
+                        <property name="tooltip_markup" translatable="yes">Edit bill &lt;i&gt;(Ctrl+e)&lt;/i&gt;</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Edit</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-edit</property>
                         <signal name="clicked" handler="OnBillEditClicked" swapped="no"/>
+                        <accelerator key="e" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -1154,7 +1161,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_undo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Undo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Undo</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-undo</property>
@@ -1170,7 +1177,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_redo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Redo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Redo</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-redo</property>
@@ -1196,7 +1203,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Copy item</property>
+                        <property name="tooltip_markup" translatable="yes">Copy item &lt;i&gt;(Ctrl+c)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Copy</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-copy</property>
@@ -1212,7 +1219,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_paste">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Paste Item</property>
+                        <property name="tooltip_markup" translatable="yes">Paste Item &lt;i&gt;(Ctrl+v)&lt;/i&gt;</property>
                         <property name="label" translatable="yes">Paste</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-paste</property>
@@ -1284,7 +1291,7 @@
                       <object class="GtkToolButton" id="toolbutton_bill_delete">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Delete Last Bill</property>
+                        <property name="tooltip_markup" translatable="yes">Delete Last Bill &lt;i&gt;(Del)&lt;/i&gt;</property>
                         <property name="halign">end</property>
                         <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
@@ -1454,7 +1461,7 @@
     <property name="transient_for">window_main</property>
     <property name="attached_to">window_main</property>
     <property name="program_name">CMB Automiser</property>
-    <property name="version">Version 2.1.3</property>
+    <property name="version">Version 2.2</property>
     <property name="copyright" translatable="yes">Copyright © 2015 Manu Varkey</property>
     <property name="comments" translatable="yes">CMB Automiser is a CPWD billing application using computerised measurement books. CMB Automiser has been developed in hope of being useful and as time saver for CPWD staff and contractors working in CPWD.</property>
     <property name="website">https://github.com/manuvarkey/cmbautomiser</property>
