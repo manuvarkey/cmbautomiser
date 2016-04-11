@@ -340,7 +340,7 @@ class ScheduleView:
     @undoable
     def cell_renderer_text(self, row, column, newvalue):
         oldvalue = self.schedule[row][column]
-        self.schedule[row][column] = newvalue
+        self.schedule[row][column] = unicode(newvalue,'utf-8','replace')
         self.schedule.itemnos[row] = self.schedule[row][0]  # update agmntnos
         self.update_store()
         yield "Change data item at row:'{}' and column:'{}'".format(row, column)

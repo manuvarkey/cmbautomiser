@@ -503,7 +503,7 @@ class ScheduleDialog:
                 try:
                     if item_elem != "" or columntype == MEAS_CUST:
                         if columntype == MEAS_CUST:
-                            display_item.append(unicode(render_func(item, row)))
+                            display_item.append(render_func(item, row))
                         if columntype == MEAS_DESC:
                             display_item.append(item_elem)
                         elif columntype == MEAS_NO:
