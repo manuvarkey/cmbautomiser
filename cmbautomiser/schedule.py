@@ -424,10 +424,10 @@ class ScheduleView:
             self.store[row][0] = item.itemno
             self.store[row][1] = item.description
             self.store[row][2] = item.unit
-            self.store[row][3] = str(round(item.rate, 2)) if item.rate != 0 else ''
-            self.store[row][4] = str(round(item.qty, 2)) if item.qty != 0 else ''
-            self.store[row][5] = item.reference
-            self.store[row][6] = str(round(item.excess_rate_percent)) \
+            self.store[row][3] = unicode(round(item.rate, 2)) if item.rate != 0 else ''
+            self.store[row][4] = unicode(round(item.qty, 2)) if item.qty != 0 else ''
+            self.store[row][5] = item.reference.decode(encoding='UTF-8',errors='replace')
+            self.store[row][6] = unicode(round(item.excess_rate_percent)) \
                                     if item.excess_rate_percent != 0 else ''
         setstack(self.stack)  # select undo stack
 
