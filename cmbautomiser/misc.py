@@ -88,7 +88,7 @@ class ManageResourses:
                                     try:
                                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                                     except:
-                                        print('Error found in meas-abstract: Item No.' + str(item) + '. Item Removed')
+                                        print('Error found in meas-abstract: Item No.' + unicode(item) + '. Item Removed')
                                         mitem.m_items.remove(item)
 
             # Set Billed flag for all items included in bill
@@ -97,7 +97,7 @@ class ManageResourses:
                     try:
                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                     except:
-                        print('Error found in ' + str(item) + ' in bill ' + bill.data.title + '. Item Removed')
+                        print('Error found in ' + unicode(item) + ' in bill ' + bill.data.title + '. Item Removed')
                         bill.data.mitems.remove(item)
 
 def abs_path(*args):

@@ -225,13 +225,13 @@ class Bill:
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbtitle$'] = 'ABSTRACT OF COST'
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
-        bill_local_vars['$cmbstartingpage$'] = str(self.data.starting_page)
-        bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
+        bill_local_vars['$cmbstartingpage$'] = unicode(self.data.starting_page)
+        bill_local_vars['$cmbbilltotalamount$'] = unicode(self.bill_total_amount)
         if self.prev_bill is not None:
-            bill_local_vars['$cmbbillprevamount$'] = str(self.prev_bill.bill_total_amount)
+            bill_local_vars['$cmbbillprevamount$'] = unicode(self.prev_bill.bill_total_amount)
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
-        bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
+        bill_local_vars['$cmbbillsinceprevamount$'] = unicode(self.bill_since_prev_amount)
 
         sch_len = self.schedule.length()
         for count, qty_items, cmb_refs, item_paths in zip(range(sch_len), self.item_qty, self.item_cmb_ref,
@@ -250,16 +250,16 @@ class Bill:
                     if qty_item != 0:
                         # setup variables
                         item_record_vars = {}
-                        item_record_vars['$cmbqtybf$'] = str(qty_item)
-                        item_record_vars['$cmbunit$'] = str(item.unit)
+                        item_record_vars['$cmbqtybf$'] = unicode(qty_item)
+                        item_record_vars['$cmbunit$'] = unicode(item.unit)
                         if cmb_ref != -1:  # if not prev abstract
-                            path_str = str([item_path[0], item_path[1], item_path[2]]) + ':' + str(item_path[3] + 1)
+                            path_str = unicode([item_path[0], item_path[1], item_path[2]]) + ':' + unicode(item_path[3] + 1)
                             item_record_vars['$cmbbf$'] = 'ref:meas:' + path_str
                             item_record_vars['$cmblabel$'] = 'ref:abs:' + path_str
                             item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                         else:  # if prev abstract
                             if self.prev_bill.data.bill_type == BILL_NORMAL:
-                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, count])
+                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + unicode([self.data.prev_bill, count])
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                             elif self.prev_bill.data.bill_type == BILL_CUSTOM:
@@ -276,22 +276,22 @@ class Bill:
                         latex_records += latex_record
 
                 # add all values to substitution dict
-                item_local_vars['$cmbitemno$'] = str(item.itemno)
-                item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
-                item_local_vars['$cmbunit$'] = str(item.unit)
-                item_local_vars['$cmbrate$'] = str(item.rate)
-                item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
-                item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[count])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[count])
-                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[count])
-                item_local_vars['$cmbnormalpr$'] = str(
+                item_local_vars['$cmbitemno$'] = unicode(item.itemno)
+                item_local_vars['$cmbdescription$'] = unicode(item.extended_description_limited)
+                item_local_vars['$cmbunit$'] = unicode(item.unit)
+                item_local_vars['$cmbrate$'] = unicode(item.rate)
+                item_local_vars['$cmbexcesspercent$'] = unicode(item.excess_rate_percent)
+                item_local_vars['$cmbtotalqty$'] = unicode(sum(qty_items))
+                item_local_vars['$cmbnormalqty$'] = unicode(self.item_normal_qty[count])
+                item_local_vars['$cmbexcessqty$'] = unicode(self.item_excess_qty[count])
+                item_local_vars['$cmbexcessrate$'] = unicode(self.data.item_excess_rates[count])
+                item_local_vars['$cmbnormalpr$'] = unicode(
                     round(self.data.item_part_percentage[count] * 0.01 * self.schedule[count].rate, 2))
-                item_local_vars['$cmbexcesspr$'] = str(
+                item_local_vars['$cmbexcesspr$'] = unicode(
                     round(self.data.item_excess_part_percentage[count] * 0.01 * self.data.item_excess_rates[count], 2))
-                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[count])
-                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[count])
-                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + str(thisbillpath + [count])
+                item_local_vars['$cmbnormalamount$'] = unicode(self.item_normal_amount[count])
+                item_local_vars['$cmbexcessamount$'] = unicode(self.item_excess_amount[count])
+                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + unicode(thisbillpath + [count])
 
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
                 item_local_vars_vanilla['$cmbrecords$'] = latex_records
@@ -325,12 +325,12 @@ class Bill:
         bill_local_vars = {}  # bill substitution dictionary
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
-        bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
+        bill_local_vars['$cmbbilltotalamount$'] = unicode(self.bill_total_amount)
         if self.prev_bill is not None:
-            bill_local_vars['$cmbbillprevamount$'] = str(self.prev_bill.bill_total_amount)
+            bill_local_vars['$cmbbillprevamount$'] = unicode(self.prev_bill.bill_total_amount)
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
-        bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
+        bill_local_vars['$cmbbillsinceprevamount$'] = unicode(self.bill_since_prev_amount)
 
         sch_len = self.schedule.length()
         for count, qty_items, item_paths in zip(range(sch_len), self.item_qty,
@@ -355,23 +355,23 @@ class Bill:
                     excess_flag = '\iffalse'
 
                 # add all values to substitution dict
-                item_local_vars['$cmbitemno$'] = str(item.itemno)
-                item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
-                item_local_vars['$cmbunit$'] = str(item.unit)
-                item_local_vars['$cmbrate$'] = str(item.rate)
-                item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
-                item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[count])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[count])
-                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[count])
-                item_local_vars['$cmbnormalpr$'] = str(
+                item_local_vars['$cmbitemno$'] = unicode(item.itemno)
+                item_local_vars['$cmbdescription$'] = unicode(item.extended_description_limited)
+                item_local_vars['$cmbunit$'] = unicode(item.unit)
+                item_local_vars['$cmbrate$'] = unicode(item.rate)
+                item_local_vars['$cmbexcesspercent$'] = unicode(item.excess_rate_percent)
+                item_local_vars['$cmbtotalqty$'] = unicode(sum(qty_items))
+                item_local_vars['$cmbnormalqty$'] = unicode(self.item_normal_qty[count])
+                item_local_vars['$cmbexcessqty$'] = unicode(self.item_excess_qty[count])
+                item_local_vars['$cmbexcessrate$'] = unicode(self.data.item_excess_rates[count])
+                item_local_vars['$cmbnormalpr$'] = unicode(
                     round(self.data.item_part_percentage[count] * 0.01 * self.schedule[count].rate, 2))
-                item_local_vars['$cmbexcesspr$'] = str(
+                item_local_vars['$cmbexcesspr$'] = unicode(
                     round(self.data.item_excess_part_percentage[count] * 0.01 * self.data.item_excess_rates[count], 2))
-                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[count])
-                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[count])
-                item_local_vars['$cmbnormalsinceprevamount$'] = str(sprev_item_normal_amount)
-                item_local_vars['$cmbexcesssinceprevamount$'] = str(sprev_item_excess_amount)
+                item_local_vars['$cmbnormalamount$'] = unicode(self.item_normal_amount[count])
+                item_local_vars['$cmbexcessamount$'] = unicode(self.item_excess_amount[count])
+                item_local_vars['$cmbnormalsinceprevamount$'] = unicode(sprev_item_normal_amount)
+                item_local_vars['$cmbexcesssinceprevamount$'] = unicode(sprev_item_excess_amount)
 
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
 
@@ -475,8 +475,8 @@ class Bill:
                 if self.item_excess_qty[count] > 0:
                     sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[count]
                 sheet2.cell(row=count+rowend+1, column=11).value = \
-                        '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(DEV_LIMIT_STATEMENT) + ',' + \
-                        str(self.item_normal_qty[count] - item.qty) + ',0)'
+                        '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + unicode(DEV_LIMIT_STATEMENT) + ',' + \
+                        unicode(self.item_normal_qty[count] - item.qty) + ',0)'
                 sheet2.cell(row=count+rowend+1, column=12).value = item.rate
                 sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[count]
                 # Fill in formulas
@@ -498,8 +498,8 @@ class Bill:
                 sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
                 sheet2.cell(row=row, column=column).style = template_end_sheet.cell(row=row_, column=column_).style
         sheet2.cell(row=rowend+self.schedule.length()+1, column=colend-1).value = \
-            '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
-            str(rowend+self.schedule.length())+')'
+            '=SUM('+get_column_letter(colend-1)+unicode(rowend+1)+':'+get_column_letter(colend-1)+\
+            unicode(rowend+self.schedule.length())+')'
         # sheet2 formatings
         for column in range(1,colend+1):
             # copy coumn widths
@@ -523,11 +523,11 @@ class Bill:
         total = [self.bill_total_amount, self.bill_since_prev_amount]
         if self.data.bill_type == BILL_NORMAL:
             return '<b>' + clean_markup(self.data.title) + '</b> | CMB.No.<b>' + clean_markup(
-                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
+                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + unicode(
                 total) + '</b>'
         if self.data.bill_type == BILL_CUSTOM:
             return '<span foreground="red"><b>' + clean_markup(self.data.title) + '</b> | CMB.No.<b>' + clean_markup(
-                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
+                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + unicode(
                 total) + '</b></span>'
 
 
@@ -770,7 +770,7 @@ class BillView:
         self.store.clear()
         for count, bill in enumerate(self.bills):
             self.store.append()
-            self.store[count][0] = str(count + 1)
+            self.store[count][0] = unicode(count + 1)
             self.store[count][1] = bill.get_text()
         setstack(self.stack)  # select undo stack
 
@@ -804,24 +804,24 @@ class BillView:
             external_docs = ''
             for cmbpath in bill.cmb_ref:
                 if cmbpath != -1:
-                    external_docs += '\externaldocument{cmb_' + str(cmbpath + 1) + '}\n'
+                    external_docs += '\externaldocument{cmb_' + unicode(cmbpath + 1) + '}\n'
                 elif bill.data.prev_bill is not None: # prev abstract
-                    external_docs += '\externaldocument{abs_' + str(bill.data.prev_bill + 1) + '}\n'
+                    external_docs += '\externaldocument{abs_' + unicode(bill.data.prev_bill + 1) + '}\n'
             replacement_dict_cmbs['$cmbexternaldocs$'] = external_docs
             latex_buffer = replace_all_vanilla(latex_buffer, replacement_dict_cmbs)
 
             # write output
-            filename = posix_path(folder, 'abs_' + str(path[0] + 1) + '.tex')
+            filename = posix_path(folder, 'abs_' + unicode(path[0] + 1) + '.tex')
             file_latex = open(filename, 'w')
-            file_latex.write(latex_buffer)
+            file_latex.write(latex_buffer.encode(encoding='UTF-8',errors='replace'))
             file_latex.close()
 
-            filename_bill = posix_path(folder, 'bill_' + str(path[0] + 1) + '.tex')
+            filename_bill = posix_path(folder, 'bill_' + unicode(path[0] + 1) + '.tex')
             file_latex_bill = open(filename_bill, 'w')
-            file_latex_bill.write(latex_buffer_bill)
+            file_latex_bill.write(latex_buffer_bill.encode(encoding='UTF-8',errors='replace'))
             file_latex_bill.close()
 
-            filename_bill_ods = posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
+            filename_bill_ods = posix_path(folder, 'bill_' + unicode(path[0] + 1) + '.xlsx')
 
             # run latex on file and dependencies
             if recursive:  # if recursive call

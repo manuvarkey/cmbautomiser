@@ -232,11 +232,11 @@ class ScheduleDialog:
                 else:
                     try:  # try evaluating string
                         if column_type == MEAS_DESC:
-                            cell_formated = str(cell)
+                            cell_formated = unicode(cell)
                         elif column_type == MEAS_L:
-                            cell_formated = str(float(cell))
+                            cell_formated = unicode(float(cell))
                         elif column_type == MEAS_NO:
-                            cell_formated = str(int(cell))
+                            cell_formated = unicode(int(cell))
                         else:
                             cell_formated = ''
                     except:
@@ -503,13 +503,13 @@ class ScheduleDialog:
                 try:
                     if item_elem != "" or columntype == MEAS_CUST:
                         if columntype == MEAS_CUST:
-                            display_item.append(str(render_func(item, row)))
+                            display_item.append(unicode(render_func(item, row)))
                         if columntype == MEAS_DESC:
-                            display_item.append(str(item_elem))
+                            display_item.append(item_elem)
                         elif columntype == MEAS_NO:
-                            display_item.append(str(int(round(eval(item_elem)))))
+                            display_item.append(unicode(int(round(eval(item_elem)))))
                         elif columntype == MEAS_L:
-                            value = str(round(eval(item_elem), 2)) if item_elem != '0' else ''
+                            value = unicode(round(eval(item_elem), 2)) if item_elem != '0' else ''
                             display_item.append(value)
                     else:
                         display_item.append("")
