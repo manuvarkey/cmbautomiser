@@ -1,4 +1,4 @@
-CMB Automiser Ver 2.1
+CMB Automiser Ver 2.2
 =====================
 
 
