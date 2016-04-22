@@ -1,6 +1,36 @@
 From Ver.1.0
+============
+Bug Fixes:
+    Lots and Lots
+New features:
+    Added support for abstract measurements.
+    Added new custom bill types
 
-* Added support for abstract measurements.
-* Added new custom bill types
-* Bug Fixes
+Ver 2.1
+=======
+Bug fixes:
+    Partial import of .xlsx files into schedule view.
+    Items with special characters are not imported while importing from .xlsx file.
+    Unable to render CMBs and Bills to locations having spaces in path name.
+    Broken nnnnnT item.
+    Error opening bill properties window when custom bill is selected as the previous bill.
+    Total quantities displayed in measurements view are not rounded.
+    File name not displayed in title bar.
+New features:
+    Added a usage manual for CMB Automiser. The manual can be accessed from Help->Help.The usage manual also includes an introduction to public works quantity accounting using computerised measurement books for the uninitiated.
+    New installer for windows. Now installing the CMB Automiser is easier than ever. 
+    Full backwards compatibility with project files created with CMB Automiser Ver 2.1.0. 
 
+Ver 2.2
+=======
+Bug Fixes:
+    Long tables fails to render
+    Latex fails due to small timeout value
+    Partial hack for Unicode support
+    Minor cleanup
+    Help file fails to launch on windows when program run from shortcut
+    Bill breaks when schedule items are edited
+New features:
+    Items in measurements view and bills can now be edited by double clicking.
+    Measurements view now remembers cursor position during additions, edits and deletions.
+    Regular bill can now be copied as custom bill.
