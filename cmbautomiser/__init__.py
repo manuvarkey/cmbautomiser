@@ -144,7 +144,7 @@ class MainWindow:
         if platform.system() == 'Linux':
             subprocess.call(('xdg-open', 'documentation/cmbautomisermanual.pdf'))
         elif platform.system() == 'Windows':
-            os.startfile('documentation/cmbautomisermanual.pdf')
+            os.startfile('documentation\\cmbautomisermanual.pdf')
 
 
     # Main Window
