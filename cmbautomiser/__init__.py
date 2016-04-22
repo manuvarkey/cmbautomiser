@@ -22,7 +22,7 @@
 #  
 #  
 
-import subprocess,os
+import subprocess,os,sys,tempfile
 import dill as pickle
 import json
 
@@ -39,6 +39,10 @@ from cmb import *
 from bill import *
 from misc import *
 import globalvars
+
+# redirect stdout to tempfile for logging
+sys.stdout = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_o_',delete=False)
+sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
 
 class MainWindow:
     # General Methods
@@ -142,9 +146,9 @@ class MainWindow:
 
     def onHelpClick(self, button):
         if platform.system() == 'Linux':
-            subprocess.call(('xdg-open', 'documentation/cmbautomisermanual.pdf'))
+            subprocess.call(('xdg-open', abs_path('documentation/cmbautomisermanual.pdf')))
         elif platform.system() == 'Windows':
-            os.startfile('documentation\\cmbautomisermanual.pdf')
+            os.startfile(abs_path('documentation\\cmbautomisermanual.pdf'))
 
 
     # Main Window
