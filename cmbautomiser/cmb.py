@@ -61,7 +61,7 @@ class Cmb:
         cmb_local_vars['$cmbbookno$'] = self.name
         cmb_local_vars['$cmbheading$'] = ' '
         cmb_local_vars['$cmbtitle$'] = 'DETAILS OF MEASUREMENTS'
-        cmb_local_vars['$cmbstartingpage$'] = unicode(1)
+        cmb_local_vars['$cmbstartingpage$'] = str(1)
         latex_buffer = replace_all(latex_buffer,cmb_local_vars)
         for count,item in enumerate(self.items):
             newpath = list(path) + [count]
@@ -100,7 +100,7 @@ class Cmb:
         return None
     
     def print_item(self):
-        print "CMB " + self.name
+        print("CMB " + self.name)
         for item in self.items:
             item.print_item()
         
@@ -167,7 +167,7 @@ class Measurement:
         self.cmb = cmb_
     
     def print_item(self):
-        print "  " + "Measurement dated " + self.date
+        print("  " + "Measurement dated " + self.date)
         for item in self.items:
             item.print_item()
         
@@ -238,7 +238,7 @@ class MeasurementItemHeading(MeasurementItem):
         MeasurementItem.__init__(self,itemnos=[],items=[],records=[],remark=remark,item_remarks = None)
 
     def print_item(self):
-        print "    " + self.remark
+        print("    " + self.remark)
         
     def get_latex_buffer(self,path):
         file_measheading = open(abs_path('latex','measheading.tex'),'r')
@@ -297,14 +297,14 @@ class RecordNLBH:
         breakup = "["
         for x in self.data_str:
             if x != "" and x!= '0':
-                breakup = breakup + unicode(x) + ","
+                breakup = breakup + str(x) + ","
             else:
                 breakup = breakup + ','      
         breakup = breakup[:-1] + "]"
         return breakup
     
     def print_item(self):
-        print "      " + unicode([self.desc,self.breakup,self.data,self.total])
+        print("      " + str([self.desc,self.breakup,self.data,self.total]))
         
 # record format [description,breakup,no,l,b,h,total]
 class MeasurementItemNLBH(MeasurementItem):
@@ -344,22 +344,22 @@ class MeasurementItemNLBH(MeasurementItem):
         data_str = [None]*4
         for slno,record in enumerate(self.records):
             for i in range(4): # evaluate string of data entries, suppress zero.
-                data_str[i] = unicode(record.data[i]) if record.data[i] != 0 else ''
-            latex_records += '        ' + unicode(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + '\\AddBreakableChars{'+record.breakup+'}' + ' & ' + data_str[0] + ' & ' + \
-                            data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + unicode(record.total) + '\\\\ \n'
+                data_str[i] = str(record.data[i]) if record.data[i] != 0 else ''
+            latex_records += '        ' + str(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + '\\AddBreakableChars{'+record.breakup+'}' + ' & ' + data_str[0] + ' & ' + \
+                            data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + str(record.total) + '\\\\ \n'
             
         # replace local variables
         measnlbh_local_vars = {}
         try:
-            measnlbh_local_vars['$cmbitemno$'] = unicode(self.itemnos[0])
-            measnlbh_local_vars['$cmbitemdesc$'] = unicode(self.items[0].extended_description)
+            measnlbh_local_vars['$cmbitemno$'] = str(self.itemnos[0])
+            measnlbh_local_vars['$cmbitemdesc$'] = str(self.items[0].extended_description)
         except:
             measnlbh_local_vars['$cmbitemno$'] = 'ERROR'
             measnlbh_local_vars['$cmbitemdesc$'] = ''
-        measnlbh_local_vars['$cmbtotal$'] = unicode(sum(self.get_total()))
-        measnlbh_local_vars['$cmbcarriedover$'] = 'ref:abs:'+unicode(path) + ':1'
-        measnlbh_local_vars['$cmblabel$'] = 'ref:meas:'+unicode(path) + ':1'
-        measnlbh_local_vars['$cmbremark$'] = unicode(self.remark)
+        measnlbh_local_vars['$cmbtotal$'] = str(sum(self.get_total()))
+        measnlbh_local_vars['$cmbcarriedover$'] = 'ref:abs:'+str(path) + ':1'
+        measnlbh_local_vars['$cmblabel$'] = 'ref:meas:'+str(path) + ':1'
+        measnlbh_local_vars['$cmbremark$'] = str(self.remark)
         latex_buffer = replace_all(latex_buffer,measnlbh_local_vars)
         
         # fill in records - vanilla function used since latex_records contains latex code
@@ -370,10 +370,10 @@ class MeasurementItemNLBH(MeasurementItem):
         return latex_buffer
                 
     def print_item(self):
-        print "    Item No." + unicode(self.itemnos[0])
+        print("    Item No." + str(self.itemnos[0]))
         for i in range(self.length()):
             self[i].print_item()
-        print "    " + "Total: " + unicode(self.get_total())
+        print("    " + "Total: " + str(self.get_total()))
     
     def get_total(self):
         total = 0
@@ -383,7 +383,7 @@ class MeasurementItemNLBH(MeasurementItem):
     
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + unicode(self.itemnos) + "    |NLBH|</b>    # of records: <b>" + unicode(self.length()) + "</b>, Total: <b>" + unicode(total) + "</b>"
+        return "Item No.<b>" + str(self.itemnos) + "    |NLBH|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
 
     def get_tooltip(self):
         if self.remark != "":
@@ -418,14 +418,14 @@ class RecordLLLLL:
         breakup = "["
         for x in self.data_str:
             if x != "" and x != 0:
-                breakup = breakup + unicode(x) + ","
+                breakup = breakup + str(x) + ","
             else:
                 breakup = breakup + ','            
         breakup = breakup[:-1] + "]"
         return breakup
     
     def print_item(self):
-        print "      " + unicode([self.desc,self.breakup,self.data])
+        print("      " + str([self.desc,self.breakup,self.data]))
 
 # record format [description,breakup,l1,l2,l3,l4,l5]
 class MeasurementItemLLLLL(MeasurementItem):
@@ -465,8 +465,8 @@ class MeasurementItemLLLLL(MeasurementItem):
         data_str = [None]*5
         for slno,record in enumerate(self.records):
             for i in range(5): # evaluate string of data entries, suppress zero.
-                data_str[i] = unicode(record.data[i]) if record.data[i] != 0 else ''
-            latex_records += '        ' + unicode(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + '\\AddBreakableChars{'+record.breakup+'}' + ' & ' + data_str[0] + ' & ' + \
+                data_str[i] = str(record.data[i]) if record.data[i] != 0 else ''
+            latex_records += '        ' + str(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + '\\AddBreakableChars{'+record.breakup+'}' + ' & ' + data_str[0] + ' & ' + \
                             data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + data_str[4] + '\\\\ \n'
             
         # replace local variables
@@ -474,20 +474,20 @@ class MeasurementItemLLLLL(MeasurementItem):
         measlllll_local_vars_vannilla = {}
         for i in range(0,5):
             try:
-                measlllll_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = unicode(self.items[i].extended_description)
-                measlllll_local_vars['$cmbitemno' + unicode(i+1) + '$'] = unicode(self.itemnos[i])
-                measlllll_local_vars['$cmbtotal' + unicode(i+1) + '$'] = unicode(self.get_total()[i])
-                measlllll_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = unicode(self.item_remarks[i])
-                measlllll_local_vars['$cmbcarriedover' + unicode(i+1) + '$'] = 'ref:abs:'+unicode(path)+':'+unicode(i+1)
-                measlllll_local_vars['$cmblabel' + unicode(i+1) + '$'] = 'ref:meas:'+unicode(path)+':'+unicode(i+1)
-                measlllll_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iftrue'
+                measlllll_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description)
+                measlllll_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
+                measlllll_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
+                measlllll_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
+                measlllll_local_vars['$cmbcarriedover' + str(i+1) + '$'] = 'ref:abs:'+str(path)+':'+str(i+1)
+                measlllll_local_vars['$cmblabel' + str(i+1) + '$'] = 'ref:meas:'+str(path)+':'+str(i+1)
+                measlllll_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iftrue'
             except:
-                measlllll_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = ''
-                measlllll_local_vars['$cmbitemno' + unicode(i+1) + '$'] = 'ERROR'
-                measlllll_local_vars['$cmbtotal' + unicode(i+1) + '$'] = ''
-                measlllll_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = ''
-                measlllll_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iffalse'
-        measlllll_local_vars['$cmbremark$'] = unicode(self.remark)
+                measlllll_local_vars['$cmbitemdesc' + str(i+1) + '$'] = ''
+                measlllll_local_vars['$cmbitemno' + str(i+1) + '$'] = 'ERROR'
+                measlllll_local_vars['$cmbtotal' + str(i+1) + '$'] = ''
+                measlllll_local_vars['$cmbitemremark' + str(i+1) + '$'] = ''
+                measlllll_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iffalse'
+        measlllll_local_vars['$cmbremark$'] = str(self.remark)
         latex_buffer = replace_all(latex_buffer,measlllll_local_vars)
         
         # fill in records - vanilla function used since latex_records contains latex code
@@ -497,10 +497,10 @@ class MeasurementItemLLLLL(MeasurementItem):
         return latex_buffer
                 
     def print_item(self):
-        print "    Item No." + unicode(self.itemnos[0])
+        print("    Item No." + str(self.itemnos[0]))
         for i in range(self.length()):
             self[i].print_item()
-        print "    " + "Total: " + unicode(self.get_total())
+        print("    " + "Total: " + str(self.get_total()))
     
     def get_total(self):
         total = [0]*5
@@ -511,7 +511,7 @@ class MeasurementItemLLLLL(MeasurementItem):
     
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + unicode(self.itemnos) + "    |LLLLL|</b>    # of records: <b>" + unicode(self.length()) + "</b>, Total: <b>" + unicode(total) + "</b>"
+        return "Item No.<b>" + str(self.itemnos) + "    |LLLLL|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -541,7 +541,7 @@ class RecordNNNNNNNN:
         return data
     
     def print_item(self):
-        print "      " + unicode([self.desc,self.data])
+        print("      " + str([self.desc,self.data]))
         
 # record format [description,n1,n2,n3,n4,n5,n6,n7,n8]
 class MeasurementItemNNNNNNNN(MeasurementItem):
@@ -581,8 +581,8 @@ class MeasurementItemNNNNNNNN(MeasurementItem):
         data_str = [None]*8
         for slno,record in enumerate(self.records):
             for i in range(8): # evaluate string of data entries, suppress zero.
-                data_str[i] = unicode(record.data[i]) if record.data[i] != 0 else ''
-            latex_records += '        ' + unicode(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + data_str[0] + ' & ' + \
+                data_str[i] = str(record.data[i]) if record.data[i] != 0 else ''
+            latex_records += '        ' + str(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + data_str[0] + ' & ' + \
                             data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + data_str[4] + '&' + \
                             data_str[5] + ' & ' + data_str[6] + ' & ' + data_str[7] + '\\\\ \n'
             
@@ -591,20 +591,20 @@ class MeasurementItemNNNNNNNN(MeasurementItem):
         measnnnnnnnn_local_vars_vannilla = {}
         for i in range(0,8):
             try:
-                measnnnnnnnn_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = unicode(self.items[i].extended_description)
-                measnnnnnnnn_local_vars['$cmbitemno' + unicode(i+1) + '$'] = unicode(self.itemnos[i])
-                measnnnnnnnn_local_vars['$cmbtotal' + unicode(i+1) + '$'] = unicode(self.get_total()[i])
-                measnnnnnnnn_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = unicode(self.item_remarks[i])
-                measnnnnnnnn_local_vars['$cmbcarriedover' + unicode(i+1) + '$'] = 'ref:abs:'+unicode(path)+':'+unicode(i+1)
-                measnnnnnnnn_local_vars['$cmblabel' + unicode(i+1) + '$'] = 'ref:meas:'+unicode(path)+':'+unicode(i+1)
-                measnnnnnnnn_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iftrue'
+                measnnnnnnnn_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description)
+                measnnnnnnnn_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
+                measnnnnnnnn_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
+                measnnnnnnnn_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
+                measnnnnnnnn_local_vars['$cmbcarriedover' + str(i+1) + '$'] = 'ref:abs:'+str(path)+':'+str(i+1)
+                measnnnnnnnn_local_vars['$cmblabel' + str(i+1) + '$'] = 'ref:meas:'+str(path)+':'+str(i+1)
+                measnnnnnnnn_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iftrue'
             except:
-                measnnnnnnnn_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = ''
-                measnnnnnnnn_local_vars['$cmbitemno' + unicode(i+1) + '$'] = 'ERROR'
-                measnnnnnnnn_local_vars['$cmbtotal' + unicode(i+1) + '$'] = ''
-                measnnnnnnnn_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = ''
-                measnnnnnnnn_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iffalse'
-        measnnnnnnnn_local_vars['$cmbremark$'] = unicode(self.remark)
+                measnnnnnnnn_local_vars['$cmbitemdesc' + str(i+1) + '$'] = ''
+                measnnnnnnnn_local_vars['$cmbitemno' + str(i+1) + '$'] = 'ERROR'
+                measnnnnnnnn_local_vars['$cmbtotal' + str(i+1) + '$'] = ''
+                measnnnnnnnn_local_vars['$cmbitemremark' + str(i+1) + '$'] = ''
+                measnnnnnnnn_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iffalse'
+        measnnnnnnnn_local_vars['$cmbremark$'] = str(self.remark)
         latex_buffer = replace_all(latex_buffer,measnnnnnnnn_local_vars)
         
         # fill in records - vanilla function used since latex_records contains latex code
@@ -614,10 +614,10 @@ class MeasurementItemNNNNNNNN(MeasurementItem):
         return latex_buffer
                 
     def print_item(self):
-        print "    Item No." + unicode(self.itemnos[0])
+        print("    Item No." + str(self.itemnos[0]))
         for i in range(self.length()):
             self[i].print_item()
-        print "    " + "Total: " + unicode(self.get_total())
+        print("    " + "Total: " + str(self.get_total()))
     
     def get_total(self):
         total = [0]*8
@@ -628,7 +628,7 @@ class MeasurementItemNNNNNNNN(MeasurementItem):
     
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + unicode(self.itemnos) + "    |NNNNNNNN|</b>    # of records: <b>" + unicode(self.length()) + "</b>, Total: <b>" + unicode(total) + "</b>"
+        return "Item No.<b>" + str(self.itemnos) + "    |NNNNNNNN|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -665,7 +665,7 @@ class RecordnnnnnT:
         return total
     
     def print_item(self):
-        print "      " + unicode([self.desc,self.data,self.total])
+        print("      " + str([self.desc,self.data,self.total]))
         
 # record format [description,n1,n2,n3,n4,n5,total]
 class MeasurementItemnnnnnT(MeasurementItem):
@@ -705,22 +705,22 @@ class MeasurementItemnnnnnT(MeasurementItem):
         data_str = [None]*5
         for slno,record in enumerate(self.records):
             for i in range(5): # evaluate string of data entries, suppress zero.
-                data_str[i] = unicode(record.data[i]) if record.data[i] != 0 else ''
-            latex_records += '        ' + unicode(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + data_str[0] + ' & ' + \
-                            data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + data_str[4] + ' & ' + unicode(record.total) + '\\\\ \n'
+                data_str[i] = str(record.data[i]) if record.data[i] != 0 else ''
+            latex_records += '        ' + str(slno+1) + ' & ' + clean_latex(record.desc) + ' & ' + data_str[0] + ' & ' + \
+                            data_str[1] + ' & ' + data_str[2] + ' & ' + data_str[3] + ' & ' + data_str[4] + ' & ' + str(record.total) + '\\\\ \n'
             
         # replace local variables
         measnnnnnt_local_vars = {}
         try:
-            measnnnnnt_local_vars['$cmbitemno$'] = unicode(self.itemnos[0])
-            measnnnnnt_local_vars['$cmbitemdesc$'] = unicode(self.items[0].extended_description)
+            measnnnnnt_local_vars['$cmbitemno$'] = str(self.itemnos[0])
+            measnnnnnt_local_vars['$cmbitemdesc$'] = str(self.items[0].extended_description)
         except:
             measnnnnnt_local_vars['$cmbitemno$'] = 'ERROR'
             measnnnnnt_local_vars['$cmbitemdesc$'] = ''
-        measnnnnnt_local_vars['$cmbtotal$'] = unicode(sum(self.get_total()))
-        measnnnnnt_local_vars['$cmbcarriedover$'] = 'ref:abs:'+unicode(path) + ':1'
-        measnnnnnt_local_vars['$cmblabel$'] = 'ref:meas:'+unicode(path) + ':1'
-        measnnnnnt_local_vars['$cmbremark$'] = unicode(self.remark)
+        measnnnnnt_local_vars['$cmbtotal$'] = str(sum(self.get_total()))
+        measnnnnnt_local_vars['$cmbcarriedover$'] = 'ref:abs:'+str(path) + ':1'
+        measnnnnnt_local_vars['$cmblabel$'] = 'ref:meas:'+str(path) + ':1'
+        measnnnnnt_local_vars['$cmbremark$'] = str(self.remark)
         latex_buffer = replace_all(latex_buffer,measnnnnnt_local_vars)
         
         # fill in records - vanilla function used since latex_records contains latex code
@@ -731,10 +731,10 @@ class MeasurementItemnnnnnT(MeasurementItem):
         return latex_buffer
                 
     def print_item(self):
-        print "    Item No." + unicode(self.itemnos[0])
+        print("    Item No." + str(self.itemnos[0]))
         for i in range(self.length()):
             self[i].print_item()
-        print "    " + "Total: " + unicode(self.get_total())
+        print("    " + "Total: " + str(self.get_total()))
     
     def get_total(self):
         total = 0
@@ -744,7 +744,7 @@ class MeasurementItemnnnnnT(MeasurementItem):
     
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + unicode(self.itemnos) + "    |nnnnnT|</b>    # of records: <b>" + unicode(self.length()) + "</b>, Total: <b>" + unicode(total) + "</b>"
+        return "Item No.<b>" + str(self.itemnos) + "    |nnnnnT|</b>    # of records: <b>" + str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
     
     def get_tooltip(self):
         if self.remark != "":
@@ -794,7 +794,7 @@ class RecordCustom:
         return self.cust_funcs[index](self.data)
 
     def print_item(self):
-        print "      " + unicode([self.data_str,self.total])
+        print("      " + str([self.data_str,self.total]))
 
 
 # record format [As per file read]
@@ -917,27 +917,27 @@ class MeasurementItemCustom(MeasurementItem):
             for i,columntype in enumerate(self.columntypes): # evaluate string of data entries, suppress zero.
                 if columntype == MEAS_CUST:
                     try:
-                        value =  unicode(record.cust_funcs[cust_iter](record.get(),slno))
+                        value =  str(record.cust_funcs[cust_iter](record.get(),slno))
                         data_str[i] = value if value not in ['0','0.0'] else ''
                     except:
                         data_str[i] = ''
                     cust_iter += 1
                 elif columntype == MEAS_DESC:
                     try:
-                        data_str[i] = unicode(record.data_str[i-cust_iter])
+                        data_str[i] = str(record.data_str[i-cust_iter])
                     except:
                         data_str[i] = ''
                 else:
                     try:
-                        data_str[i] = unicode(record.data[i-cust_iter]) if record.data[i-cust_iter] != 0 else ''
+                        data_str[i] = str(record.data[i-cust_iter]) if record.data[i-cust_iter] != 0 else ''
                     except:
                         data_str[i] = ''
                 # Check for carry over item possibly contains code
                 if columntype == MEAS_DESC and data_str[i].find('Qty B/F') != -1:
-                    meascustom_rec_vars_van['$data' + unicode(i+1) + '$'] = data_str[i]
+                    meascustom_rec_vars_van['$data' + str(i+1) + '$'] = data_str[i]
                 else:
-                    meascustom_rec_vars['$data' + unicode(i+1) + '$'] = data_str[i]
-            meascustom_rec_vars['$slno$'] = unicode(slno+1)
+                    meascustom_rec_vars['$data' + str(i+1) + '$'] = data_str[i]
+            meascustom_rec_vars['$slno$'] = str(slno+1)
             latex_record = self.latex_record[:]
             latex_record = replace_all_vanilla(latex_record,meascustom_rec_vars_van)
             latex_record = replace_all(latex_record,meascustom_rec_vars)
@@ -948,20 +948,20 @@ class MeasurementItemCustom(MeasurementItem):
         meascustom_local_vars_vannilla = {}
         for i in range(0,self.item_width()):
             try:
-                meascustom_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = unicode(self.items[i].extended_description)
-                meascustom_local_vars['$cmbitemno' + unicode(i+1) + '$'] = unicode(self.itemnos[i])
-                meascustom_local_vars['$cmbtotal' + unicode(i+1) + '$'] = unicode(self.get_total()[i])
-                meascustom_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = unicode(self.item_remarks[i])
-                meascustom_local_vars['$cmbcarriedover' + unicode(i+1) + '$'] = 'ref:abs:'+unicode(path)+':'+unicode(i+1)
-                meascustom_local_vars['$cmblabel' + unicode(i+1) + '$'] = 'ref:meas:'+unicode(path)+':'+unicode(i+1)
-                meascustom_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iftrue'
+                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description)
+                meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
+                meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
+                meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
+                meascustom_local_vars['$cmbcarriedover' + str(i+1) + '$'] = 'ref:abs:'+str(path)+':'+str(i+1)
+                meascustom_local_vars['$cmblabel' + str(i+1) + '$'] = 'ref:meas:'+str(path)+':'+str(i+1)
+                meascustom_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iftrue'
             except:
-                meascustom_local_vars['$cmbitemdesc' + unicode(i+1) + '$'] = ''
-                meascustom_local_vars['$cmbitemno' + unicode(i+1) + '$'] = 'ERROR'
-                meascustom_local_vars['$cmbtotal' + unicode(i+1) + '$'] = ''
-                meascustom_local_vars['$cmbitemremark' + unicode(i+1) + '$'] = ''
-                meascustom_local_vars_vannilla['$cmbitemexist' + unicode(i+1) + '$'] = '\\iffalse'
-        meascustom_local_vars['$cmbremark$'] = unicode(self.remark)
+                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = ''
+                meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = 'ERROR'
+                meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = ''
+                meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = ''
+                meascustom_local_vars_vannilla['$cmbitemexist' + str(i+1) + '$'] = '\\iffalse'
+        meascustom_local_vars['$cmbremark$'] = str(self.remark)
         if isabstract:
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iftrue'
         else:
@@ -975,10 +975,10 @@ class MeasurementItemCustom(MeasurementItem):
         return self.latex_postproc_func(self.records,self.user_data,latex_buffer,isabstract)
 
     def print_item(self):
-        print "    Item No." + unicode(self.itemnos)
+        print("    Item No." + str(self.itemnos))
         for i in range(self.length()):
             self[i].print_item()
-        print "    " + "Total: " + unicode(self.get_total())
+        print("    " + "Total: " + str(self.get_total()))
 
     def get_total(self):
         if self.total_func is not None:
@@ -988,8 +988,8 @@ class MeasurementItemCustom(MeasurementItem):
 
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + unicode(self.itemnos) + "    |Custom: " + self.name + "|</b>    # of records: <b>" + \
-               unicode(self.length()) + "</b>, Total: <b>" + unicode(total) + "</b>"
+        return "Item No.<b>" + str(self.itemnos) + "    |Custom: " + self.name + "|</b>    # of records: <b>" + \
+               str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
 
     def get_tooltip(self):
         if self.remark != "":
@@ -1033,7 +1033,7 @@ class MeasurementItemAbstract(MeasurementItem):
             return self.int_m_item.get_latex_buffer(path,True)
 
     def print_item(self):
-        print '    Abstract Item'
+        print('    Abstract Item')
         self.int_m_item.print_item()
 
     def get_total(self):
@@ -1088,7 +1088,7 @@ class Completion:
         return None
 
     def print_item(self):
-        print "  " + "Completion recorded on " + self.date
+        print("  " + "Completion recorded on " + self.date)
 
 # Measurements object
 class MeasurementsView:
@@ -1132,12 +1132,12 @@ class MeasurementsView:
 
     def undo(self):
         setstack(self.stack) # select schedule undo stack
-        print self.stack.undotext()
+        print(self.stack.undotext())
         self.stack.undo()
 
     def redo(self):
         setstack(self.stack) # select schedule undo stack
-        print self.stack.redotext()
+        print(self.stack.redotext())
         self.stack.redo()
 
     def get_data_object(self):
@@ -1264,8 +1264,8 @@ class MeasurementsView:
         itemnos = [None]
         captions = ['Description','Breakup','Nos','L','B','H','Total']
         columntypes = [MEAS_DESC,MEAS_CUST,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_CUST]
-        callback_total = lambda values,row:unicode(RecordNLBH(*values[1:6]).find_total())
-        callback_breakup = lambda values,row:unicode(RecordNLBH(*values[1:6]).find_breakup())
+        callback_total = lambda values,row:str(RecordNLBH(*values[1:6]).find_total())
+        callback_breakup = lambda values,row:str(RecordNLBH(*values[1:6]).find_breakup())
         cellrenderers = [None] + [callback_breakup] + [None]*4 + [callback_total]
         item_schedule = self.schedule
         
@@ -1297,7 +1297,7 @@ class MeasurementsView:
         itemnos = [None]*5
         captions = ['Description','Breakup','L1','L2','L3','L4','L5']
         columntypes = [MEAS_DESC,MEAS_CUST,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_L]
-        callback_breakup = lambda values,row:unicode(RecordLLLLL(*values[1:7]).find_breakup()) # check later
+        callback_breakup = lambda values,row:str(RecordLLLLL(*values[1:7]).find_breakup()) # check later
         cellrenderers = [None] + [callback_breakup] + [None]*5
         item_schedule = self.schedule
         
@@ -1360,7 +1360,7 @@ class MeasurementsView:
         itemnos = [None]
         captions = ['Description','N1','N2','N3','N4','N5','Total']
         columntypes = [MEAS_DESC,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_CUST]
-        callback_total = lambda values,row:unicode(RecordnnnnnT(*values[0:6]).find_total())
+        callback_total = lambda values,row:str(RecordnnnnnT(*values[0:6]).find_total())
         cellrenderers = [None] + [None]*5 + [callback_total]
         item_schedule = self.schedule
         
@@ -1632,14 +1632,14 @@ class MeasurementsView:
         replacement_dict_bills = {}
         external_docs = ''
         for count,bill in enumerate(bills):
-            external_docs += '\externaldocument{abs_' + unicode(count+1) + '}\n'
+            external_docs += '\externaldocument{abs_' + str(count+1) + '}\n'
         replacement_dict_bills['$cmbexternaldocs$'] = external_docs
         latex_buffer = replace_all_vanilla(latex_buffer,replacement_dict_bills)
 
         # write output
-        filename = posix_path(folder,'cmb_' + unicode(path[0]+1) + '.tex')
+        filename = posix_path(folder,'cmb_' + str(path[0]+1) + '.tex')
         file_latex = open(filename,'w')
-        file_latex.write(latex_buffer.encode(encoding='UTF-8',errors='replace'))
+        file_latex.write(latex_buffer)
         file_latex.close()
 
         # run latex on file and dependencies
@@ -1767,11 +1767,11 @@ class MeasurementsView:
             cell = userEntry.get_text()
             try:  # try evaluating string
                 if column_type == MEAS_DESC:
-                    cell_formated = unicode(cell)
+                    cell_formated = str(cell)
                 elif column_type == MEAS_L:
-                    cell_formated = unicode(float(cell))
+                    cell_formated = str(float(cell))
                 elif column_type == MEAS_NO:
-                    cell_formated = unicode(int(cell))
+                    cell_formated = str(int(cell))
                 else:
                     cell_formated = ''
             except:
@@ -1830,7 +1830,7 @@ class MeasurementsView:
         
         yield "Edit measurement items at '{}'".format(path)
         # Undo action
-        print oldval,newval
+        print(oldval,newval)
         if oldval != None and newval != None:
             if len(path) == 1:
                 item.set_name(oldval)

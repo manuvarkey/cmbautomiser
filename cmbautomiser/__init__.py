@@ -29,7 +29,6 @@ import json
 from gi.repository import Gtk, Gdk, GLib
 
 from undo import *
-import appdirs
 from openpyxl import Workbook, load_workbook
 
 # local files import
@@ -200,7 +199,7 @@ class MainWindow:
             self.filename = open_dialog.get_filename()
             fileobj = open(self.filename, 'rb')
             if fileobj == None:
-                print("Error opening file " + self.filename)
+                print(("Error opening file " + self.filename))
                 self.display_error("Project could not be opened: Error opening file")
             else:
                 data = pickle.load(fileobj)  # load data structure
@@ -257,7 +256,7 @@ class MainWindow:
             # try to open file
             fileobj = open(self.filename, 'wb')
             if fileobj == None:
-                print "Error opening file " + self.filename
+                print("Error opening file " + self.filename)
                 self.display_error("Project file could not be opened for saving")
             pickle.dump(data, fileobj)
             fileobj.close()
@@ -300,7 +299,7 @@ class MainWindow:
                 os.path.split(self.filename)[0]))
         # if response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
-            print "cancelled: FileChooserAction.OPEN"
+            print("cancelled: FileChooserAction.OPEN")
         # destroy dialog
         open_dialog.destroy()
 
@@ -308,11 +307,11 @@ class MainWindow:
         widget.hide()
 
     def onRedo(self, button):
-        print stack().redotext()
+        print(stack().redotext())
         stack().redo()
 
     def onUndo(self, button):
-        print stack().undotext()
+        print(stack().undotext())
         stack().undo()
 
     # Schedule signal handler methods
@@ -366,7 +365,7 @@ class MainWindow:
                     cell_formated = ""
                 else:
                     try:  # try evaluating unicode
-                        cell_formated = unicode(cell)
+                        cell_formated = str(cell)
                     except:
                         cell_formated = ""
                 # Try adding to item
@@ -424,7 +423,7 @@ class MainWindow:
 
     def OnMeasRenderClicked(self, button):
         filechooserbutton_meas = self.builder.get_object("filechooserbutton_meas")
-        if filechooserbutton_meas.get_file() <> None:
+        if filechooserbutton_meas.get_file() != None:
             folder = filechooserbutton_meas.get_file().get_path()
             code = self.measurements_view.render_selection(folder, self.project_settings_dict, self.bill_view.bills)
             self.display_status(code)
@@ -476,7 +475,7 @@ class MainWindow:
 
     def OnBillRenderClicked(self, button):
         filechooserbutton_bill = self.builder.get_object("filechooserbutton_bill")
-        if filechooserbutton_bill.get_file() <> None:
+        if filechooserbutton_bill.get_file() != None:
             folder = filechooserbutton_bill.get_file().get_path()
             code = self.bill_view.render_selected(folder, self.project_settings_dict)
             self.display_status(code)
@@ -543,24 +542,6 @@ class MainWindow:
         
         # Load global Variables
         globalvars.set_global_platform_vars()
-
-        # dirs = appdirs.AppDirs("cmb_automiser", "cpwd", version="1.0")
-        # settings_filename = os.path.join(dirs.user_data_dir,'settings.conf')
-        # try:
-            # settings_file = open(settings_filename,'r')
-            # globalvars.global_settings_dict = json.loads(settings_file.read())
-            # settings_file.close()
-        # except (ValueError,IOError):
-            # try:
-                # os.makedirs(dirs.user_data_dir)
-            # except OSError:
-                # pass
-            # try:
-                # settings_file = open(settings_filename,'w')
-                # settings_file.write(json.dumps(globalvars.global_settings_dict))
-                # settings_file.close()
-            # except (IOError,ValueError):
-                # pass
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")
@@ -613,8 +594,8 @@ class MainWindow:
         self.builder.get_object("tree_schedule_rate").connect("edited", self.schedule_view.onScheduleCellEditedRates, 3)
         self.builder.get_object("tree_schedule_qty").connect("edited", self.schedule_view.onScheduleCellEditedRates, 4)
         self.builder.get_object("tree_schedule_reference").connect("edited", self.schedule_view.onScheduleCellEdited, 5)
-        self.builder.get_object("tree_schedule_percent").connect("edited", self.schedule_view.onScheduleCellEditedRates,
-                                                                 6)
+        self.builder.get_object("tree_schedule_percent").connect("edited", self.schedule_view.onScheduleCellEditedRates,6)
+        
         # setup infobar
         self.builder.get_object("infobar_main").hide()
 

@@ -53,7 +53,7 @@ class ScheduleItemGeneric:
         return self.item[index]
 
     def print_item(self):
-        print self.item
+        print(self.item)
 
 
 class ScheduleGeneric:
@@ -88,10 +88,10 @@ class ScheduleGeneric:
         del self.items[:]
 
     def print_item(self):
-        print "schedule start"
+        print("schedule start")
         for item in self.items:
             item.print_item()
-        print "schedule end"
+        print("schedule end")
 
 
 class ScheduleDialog:
@@ -225,18 +225,18 @@ class ScheduleDialog:
         for row in range(1, rowcount):
             cells = []
             skip = 0  # no of columns to be skiped ex. breakup, total etc...
-            for column_type, i in zip(self.columntypes, range(len(self.columntypes))):
+            for column_type, i in zip(self.columntypes, list(range(len(self.columntypes)))):
                 cell = sheet.cell(row = row + 1, column = i - skip + 1).value
                 if cell is None:
                     cell_formated = ""
                 else:
                     try:  # try evaluating string
                         if column_type == MEAS_DESC:
-                            cell_formated = unicode(cell)
+                            cell_formated = str(cell)
                         elif column_type == MEAS_L:
-                            cell_formated = unicode(float(cell))
+                            cell_formated = str(float(cell))
                         elif column_type == MEAS_NO:
-                            cell_formated = unicode(int(cell))
+                            cell_formated = str(int(cell))
                         else:
                             cell_formated = ''
                     except:
@@ -272,7 +272,7 @@ class ScheduleDialog:
         state = event.get_state()
         shift_pressed = bool(state & Gdk.ModifierType.SHIFT_MASK)
         path, col = treeview.get_cursor()
-        if path <> None:
+        if path != None:
             ## only visible columns!!
             columns = [c for c in treeview.get_columns() if c.get_visible() and self.celldict[c].props.editable]
             rows = [r for r in treeview.get_model()]
@@ -470,12 +470,12 @@ class ScheduleDialog:
 
     def undo(self):
         setstack(self.stack)  # select schedule undo stack
-        print self.stack.undotext()
+        print(self.stack.undotext())
         self.stack.undo()
 
     def redo(self):
         setstack(self.stack)  # select schedule undo stack
-        print self.stack.redotext()
+        print(self.stack.redotext())
         self.stack.redo()
 
     def clear(self):
@@ -507,9 +507,9 @@ class ScheduleDialog:
                         if columntype == MEAS_DESC:
                             display_item.append(item_elem)
                         elif columntype == MEAS_NO:
-                            display_item.append(unicode(int(round(eval(item_elem)))))
+                            display_item.append(str(int(round(eval(item_elem)))))
                         elif columntype == MEAS_L:
-                            value = unicode(round(eval(item_elem), 2)) if item_elem != '0' else ''
+                            value = str(round(eval(item_elem), 2)) if item_elem != '0' else ''
                             display_item.append(value)
                     else:
                         display_item.append("")
@@ -572,7 +572,7 @@ class ScheduleDialog:
         self.item_combos = []
         self.item_remarks_cell = []
 
-        for itemno, index in zip(self.itemnos, range(len(self.itemnos))):
+        for itemno, index in zip(self.itemnos, list(range(len(self.itemnos)))):
             # get items in row
             row = Gtk.ListBoxRow()
             hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -606,7 +606,7 @@ class ScheduleDialog:
         self.celldict = {}
 
         for columntype, caption, render_func, i in zip(self.columntypes, self.captions, self.render_funcs,
-                                                       range(len(self.columntypes))):
+                                                       list(range(len(self.columntypes)))):
             cell = Gtk.CellRendererText()
 
             column = Gtk.TreeViewColumn(caption, cell, text=i)

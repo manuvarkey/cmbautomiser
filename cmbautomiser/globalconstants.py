@@ -60,7 +60,7 @@ INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos',
              'pair','pairs',
              'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
 # String used for checking file version
-PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_2'
+PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3'
 
 # Item codes for cmb
 global_vars = ['$cmbnameofwork$', '$cmbagency$', '$cmbagmntno$', '$cmbsituation$', '$cmbdateofstart$',

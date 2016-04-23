@@ -94,7 +94,7 @@ class ScheduleItem:
             return self.excess_rate_percent
 
     def print_item(self):
-        print [self.itemno, self.description, self.unit, self.rate, self.qty, self.reference, self.excess_rate_percent]
+        print([self.itemno, self.description, self.unit, self.rate, self.qty, self.reference, self.excess_rate_percent])
 
 
 # class storing schedule of rates for work
@@ -182,17 +182,17 @@ class Schedule:
             else:
                 item.extended_description = item.description
             if len(item.extended_description) > CMB_DESCRIPTION_MAX_LENGTH:
-                item.extended_description_limited = item.extended_description[0:CMB_DESCRIPTION_MAX_LENGTH/2] + \
-                    ' ... ' + item.extended_description[-CMB_DESCRIPTION_MAX_LENGTH/2:]
+                item.extended_description_limited = item.extended_description[0:int(CMB_DESCRIPTION_MAX_LENGTH/2)] + \
+                    ' ... ' + item.extended_description[-int(CMB_DESCRIPTION_MAX_LENGTH/2):]
             else:
                 item.extended_description_limited = item.extended_description
             iter += 1
 
     def print_item(self):
-        print "schedule start"
+        print("schedule start")
         for item in self.items:
             item.print_item()
-        print "schedule end"
+        print("schedule end")
 
 
 class ScheduleView:
@@ -216,7 +216,7 @@ class ScheduleView:
         state = event.get_state()
         shift_pressed = bool(state & Gdk.ModifierType.SHIFT_MASK)
         path, col = treeview.get_cursor()
-        if path <> None:
+        if path != None:
             ## only visible columns!!
             columns = [c for c in treeview.get_columns() if c.get_visible()]
             rows = [r for r in treeview.get_model()]
@@ -340,7 +340,7 @@ class ScheduleView:
     @undoable
     def cell_renderer_text(self, row, column, newvalue):
         oldvalue = self.schedule[row][column]
-        self.schedule[row][column] = unicode(newvalue,'utf-8','replace')
+        self.schedule[row][column] = str(newvalue)
         self.schedule.itemnos[row] = self.schedule[row][0]  # update agmntnos
         self.update_store()
         yield "Change data item at row:'{}' and column:'{}'".format(row, column)
@@ -386,12 +386,12 @@ class ScheduleView:
 
     def undo(self):
         setstack(self.stack)  # select schedule undo stack
-        print self.stack.undotext()
+        print(self.stack.undotext())
         self.stack.undo()
 
     def redo(self):
         setstack(self.stack)  # select schedule undo stack
-        print self.stack.redotext()
+        print(self.stack.redotext())
         self.stack.redo()
 
     def get_data_object(self):
@@ -424,10 +424,10 @@ class ScheduleView:
             self.store[row][0] = item.itemno
             self.store[row][1] = item.description
             self.store[row][2] = item.unit
-            self.store[row][3] = unicode(round(item.rate, 2)) if item.rate != 0 else ''
-            self.store[row][4] = unicode(round(item.qty, 2)) if item.qty != 0 else ''
-            self.store[row][5] = item.reference.decode(encoding='UTF-8',errors='replace')
-            self.store[row][6] = unicode(round(item.excess_rate_percent)) \
+            self.store[row][3] = str(round(item.rate, 2)) if item.rate != 0 else ''
+            self.store[row][4] = str(round(item.qty, 2)) if item.qty != 0 else ''
+            self.store[row][5] = item.reference
+            self.store[row][6] = str(round(item.excess_rate_percent)) \
                                     if item.excess_rate_percent != 0 else ''
         setstack(self.stack)  # select undo stack
 

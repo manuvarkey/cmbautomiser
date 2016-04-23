@@ -67,10 +67,10 @@ class ManageResourses:
     def update_bill_schedule_insert_item_at_row(self,itemlist,rows):
         if itemlist == None:
             itemlist = [[[100,100,0,[0],0,0]]*len(rows)]*len(self.bills_view.bills)
-        print itemlist,rows
+        print(itemlist,rows)
         for bill,item in zip(self.bills_view.bills,itemlist):
             for i in range(0, len(rows)):
-                print item[i], rows[i]
+                print(item[i], rows[i])
                 bill.data.item_part_percentage.insert(rows[i], item[i][0])
                 bill.data.item_excess_part_percentage.insert(rows[i], item[i][1])
                 bill.data.item_excess_rates.insert(rows[i], item[i][2])
@@ -79,7 +79,7 @@ class ManageResourses:
                 bill.data.item_excess_amount.insert(rows[i], item[i][5])
 
     def update_bill_schedule_delete_row(self,rows):
-        print rows
+        print(rows)
         items_top = []
         rows.sort()
         for bill in self.bills_view.bills:
@@ -127,7 +127,7 @@ class ManageResourses:
                                     try:
                                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                                     except:
-                                        print('Error found in meas-abstract: Item No.' + unicode(item) + '. Item Removed')
+                                        print(('Error found in meas-abstract: Item No.' + str(item) + '. Item Removed'))
                                         mitem.m_items.remove(item)
 
             # Set Billed flag for all items included in bill
@@ -136,7 +136,7 @@ class ManageResourses:
                     try:
                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                     except:
-                        print('Error found in ' + unicode(item) + ' in bill ' + bill.data.title + '. Item Removed')
+                        print(('Error found in ' + str(item) + ' in bill ' + bill.data.title + '. Item Removed'))
                         bill.data.mitems.remove(item)
 
 def abs_path(*args):
@@ -155,23 +155,20 @@ def run_latex(folder, filename):  # runs latex two passes
     return CMB_OK
 
 def replace_all(text, dic):
-    for i, j in dic.iteritems():
+    for i, j in dic.items():
         j = clean_latex(j)
         text = text.replace(i, j)
     return text
 
-
 def replace_all_vanilla(text, dic):
-    for i, j in dic.iteritems():
+    for i, j in dic.items():
         text = text.replace(i, j)
     return text
-
 
 def clean_markup(text):
     for splchar, replspelchar in zip(['&', '<', '>', ], ['&amp;', '&lt;', '&gt;']):
         text = text.replace(splchar, replspelchar)
     return text
-
 
 def clean_latex(text):
     for splchar, replspelchar in zip(['\\', '#', '$', '%', '^', '&', '_', '{', '}', '~', '\n'],
@@ -179,13 +176,6 @@ def clean_latex(text):
                                       '\{ ', '\} ', '\\textasciitilde ', '\\newline ']):
         text = text.replace(splchar, replspelchar)
     return text
-    
-def to_unicode(
-    obj, encoding='utf-8'):
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
-    return obj
 
 # For running command in seperate thread
 class Command(object):
@@ -202,7 +192,7 @@ class Command(object):
 
         thread.join(timeout)
         if thread.is_alive():
-            print 'Terminating process'
+            print('Terminating process')
             self.process.terminate()
             thread.join()
             return -1

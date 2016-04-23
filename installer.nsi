@@ -6,7 +6,7 @@
 !define COMPANYNAME "CPWD"
 !define DESCRIPTION "CPWD billing application using computerised measurement books."
 # These three must be integers
-!define VERSIONMAJOR 2.2
+!define VERSIONMAJOR 3.0
 !define VERSIONMINOR 0
 !define VERSIONBUILD 1
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"

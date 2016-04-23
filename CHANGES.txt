@@ -34,3 +34,6 @@ New features:
     Items in measurements view and bills can now be edited by double clicking.
     Measurements view now remembers cursor position during additions, edits and deletions.
     Regular bill can now be copied as custom bill.
+    
+Ver 3.0
+=======

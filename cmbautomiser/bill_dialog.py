@@ -39,7 +39,7 @@ class BillDialog:
     def OnNumberTextChanged(self, entry):
         try:
             val = int(entry.get_text())
-            entry.set_text(unicode(val))
+            entry.set_text(str(val))
         except ValueError:
             entry.set_text('')
 
@@ -77,12 +77,12 @@ class BillDialog:
 
         def callback_rate(value, row):
             if populated_items[row][4] != 0:
-                return unicode(populated_items[row][4])
+                return str(populated_items[row][4])
             else:
                 return ''
 
         def callback_flag(value, row):
-            return unicode(populated_items[row][5])
+            return str(populated_items[row][5])
 
         if self.data.bill_type == BILL_NORMAL:
             self.evaluate_qtys()
@@ -132,12 +132,12 @@ class BillDialog:
                 x = self.data.item_excess_rates[item[0]]
                 y = self.data.item_part_percentage[item[0]]
                 z = self.data.item_excess_part_percentage[item[0]]
-                records.append(['', '', '', '', unicode(x), unicode(y), unicode(z),''])
+                records.append(['', '', '', '', str(x), str(y), str(z),''])
             elif self.data.bill_type == BILL_CUSTOM:
                 x = self.data.item_qty[item[0]][0]
                 y = self.data.item_normal_amount[item[0]]
                 z = self.data.item_excess_amount[item[0]]
-                records.append(['', '', '', '', unicode(x), unicode(y), unicode(z)])
+                records.append(['', '', '', '', str(x), str(y), str(z)])
         old_val = [[], [], records, '', []]
 
         dialog.set_model(old_val)  # modify dialog with current values of data
@@ -256,7 +256,7 @@ class BillDialog:
                 if isinstance(meas, Measurement):
                     for count_meas_item, meas_item in enumerate(meas):
                         path = Gtk.TreePath.new_from_string(
-                            unicode(count_cmb) + ':' + unicode(count_meas) + ':' + unicode(count_meas_item))
+                            str(count_cmb) + ':' + str(count_meas) + ':' + str(count_meas_item))
                         path_iter = self.measurements_view.store.get_iter(path)
                         if [count_cmb, count_meas, count_meas_item] in self.locked:
                             self.measurements_view.store.set_value(path_iter, 3,
@@ -268,7 +268,7 @@ class BillDialog:
                         elif isinstance(meas_item, MeasurementItemHeading):
                             self.measurements_view.store.set_value(path_iter, 3, MEAS_COLOR_LOCKED)
                 else:
-                    path = Gtk.TreePath.new_from_string(unicode(count_cmb) + ':' + unicode(count_meas))
+                    path = Gtk.TreePath.new_from_string(str(count_cmb) + ':' + str(count_meas))
                     path_iter = self.measurements_view.store.get_iter(path)
                     self.measurements_view.store.set_value(path_iter, 3, MEAS_COLOR_LOCKED)  # apply color to locked
 
@@ -341,7 +341,7 @@ class BillDialog:
             try:
                 self.locked.remove([path[0], path[1], path[2]])
             except ValueError:
-                print('Unable to release lock on item :' + unicode(path))
+                print(('Unable to release lock on item :' + str(path)))
 
         if self.data.prev_bill is not None:
             self.combobox_bill_last_bill.set_active(self.data.prev_bill + 1)
@@ -350,7 +350,7 @@ class BillDialog:
         self.entry_bill_title.set_text(self.data.title)
         self.entry_bill_cmbname.set_text(self.data.cmb_name)
         self.entry_bill_bill_date.set_text(self.data.bill_date)
-        self.entry_bill_starting_page.set_text(unicode(self.data.starting_page))
+        self.entry_bill_starting_page.set_text(str(self.data.starting_page))
         # special conditions for custom bill
         if self.data.bill_type == BILL_CUSTOM:
             self.treeview_bill.set_sensitive(False)  # deactivate measurement item entry

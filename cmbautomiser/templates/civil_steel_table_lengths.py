@@ -25,14 +25,14 @@
 # Standard conviniance functions * DONT CHANGE *
 
 def replace_all(text, dic):
-    for i, j in dic.iteritems():
+    for i, j in dic.items():
         j = clean_latex(j)
         text = text.replace(i, j)
     return text
 
 
 def replace_all_vanilla(text, dic):
-    for i, j in dic.iteritems():
+    for i, j in dic.items():
         text = text.replace(i, j)
     return text
 
