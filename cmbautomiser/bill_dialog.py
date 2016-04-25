@@ -67,13 +67,13 @@ class BillDialog:
         cellrenderers = []
         # call backs
         def callback_agmntno(value, row):
-            return to_unicode(populated_items[row][1])  # hack for unicode support
+            return populated_items[row][1]  # hack for unicode support
 
         def callback_description(value, row):
-            return to_unicode(populated_items[row][2])  # hack for unicode support
+            return populated_items[row][2]  # hack for unicode support
 
         def callback_unit(value, row):
-            return to_unicode(populated_items[row][3])  # hack for unicode support
+            return populated_items[row][3]  # hack for unicode support
 
         def callback_rate(value, row):
             if populated_items[row][4] != 0:
