@@ -7,7 +7,7 @@
 !define DESCRIPTION "CPWD billing application using computerised measurement books."
 # These three must be integers
 !define VERSIONMAJOR 2.2
-!define VERSIONMINOR 0
+!define VERSIONMINOR 1
 !define VERSIONBUILD 1
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client

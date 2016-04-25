@@ -200,7 +200,11 @@ class ScheduleView:
 
     # Cell renderer treeview generic for editable text field
     def onScheduleCellEdited(self, widget, row, new_text, column):
-        self.cell_renderer_text(int(row), column, new_text)
+        try:
+            validated_text = unicode(new_text)
+        except:
+            return
+        self.cell_renderer_text(int(row), column, validated_text)
 
     # Cell renderer treeview generic for editable text field rates
     def onScheduleCellEditedRates(self, widget, row, new_text, column):
@@ -340,7 +344,7 @@ class ScheduleView:
     @undoable
     def cell_renderer_text(self, row, column, newvalue):
         oldvalue = self.schedule[row][column]
-        self.schedule[row][column] = unicode(newvalue,'utf-8','replace')
+        self.schedule[row][column] = newvalue
         self.schedule.itemnos[row] = self.schedule[row][0]  # update agmntnos
         self.update_store()
         yield "Change data item at row:'{}' and column:'{}'".format(row, column)
@@ -426,7 +430,7 @@ class ScheduleView:
             self.store[row][2] = item.unit
             self.store[row][3] = unicode(round(item.rate, 2)) if item.rate != 0 else ''
             self.store[row][4] = unicode(round(item.qty, 2)) if item.qty != 0 else ''
-            self.store[row][5] = item.reference.decode(encoding='UTF-8',errors='replace')
+            self.store[row][5] = item.reference
             self.store[row][6] = unicode(round(item.excess_rate_percent)) \
                                     if item.excess_rate_percent != 0 else ''
         setstack(self.stack)  # select undo stack
