@@ -32,50 +32,44 @@ from undo import *
 from openpyxl import Workbook, load_workbook
 
 # local files import
-from globalconstants import *
 from schedule import *
 from cmb import *
 from bill import *
 from misc import *
-import globalvars
+import misc
 
 # redirect stdout to tempfile for logging
 sys.stdout = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_o_',delete=False)
 sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
 
 class MainWindow:
+
     # General Methods
 
-    def display_error(self, error_text):
+    def display_status(self, status_code, message):
+        """Displays a formated message in Infobar
+            
+            Arguments:
+                status_code: Specifies the formatting of message.
+                             (Takes the values misc.CMB_ERROR,
+                              misc.CMB_WARNING, misc.CMB_INFO]
+                message: The message to be displayed
+        """
         infobar_main = self.builder.get_object("infobar_main")
         label_infobar_main = self.builder.get_object("label_infobar_main")
-        infobar_main.set_message_type(Gtk.MessageType.ERROR)
-        label_infobar_main.set_text(error_text)
-        infobar_main.show()
-
-    def display_info(self, error_text):
-        infobar_main = self.builder.get_object("infobar_main")
-        label_infobar_main = self.builder.get_object("label_infobar_main")
-        infobar_main.set_message_type(Gtk.MessageType.INFO)
-        label_infobar_main.set_text(error_text)
-        infobar_main.show()
-
-    def display_warning(self, error_text):
-        infobar_main = self.builder.get_object("infobar_main")
-        label_infobar_main = self.builder.get_object("label_infobar_main")
-        infobar_main.set_message_type(Gtk.MessageType.WARNING)
-        label_infobar_main.set_text(error_text)
-        infobar_main.show()
-
-    def display_status(self, status):
-        status_code = status[0]
-        message = status[1]
-        if status_code == CMB_ERROR:
-            self.display_error(message)
-        elif status_code == CMB_WARNING:
-            self.display_warning(message)
-        elif status_code == CMB_INFO:
-            self.display_info(message)
+        
+        if status_code == misc.CMB_ERROR:
+            infobar_main.set_message_type(Gtk.MessageType.ERROR)
+            label_infobar_main.set_text(message)
+            infobar_main.show()
+        elif status_code == misc.CMB_WARNING:
+            infobar_main.set_message_type(Gtk.MessageType.WARNING)
+            label_infobar_main.set_text(message)
+            infobar_main.show()
+        elif status_code == misc.CMB_INFO:
+            infobar_main.set_message_type(Gtk.MessageType.INFO)
+            label_infobar_main.set_text(message)
+            infobar_main.show()
 
 
     def get_user_input(self, parent, message, title=''):
@@ -171,7 +165,7 @@ class MainWindow:
         child_window = MainWindow(CHILD_WINDOW)
         child_windows = child_windows + 1
         child_window.run()
-        child_window.display_info("New project window created")
+        child_window.display_status(misc.CMB_INFO, "New project window created")
 
     def onOpenProjectClicked(self, button):
         # create a filechooserdialog to open:
@@ -200,7 +194,7 @@ class MainWindow:
             fileobj = open(self.filename, 'rb')
             if fileobj == None:
                 print(("Error opening file " + self.filename))
-                self.display_error("Project could not be opened: Error opening file")
+                self.display_status(misc.CMB_ERROR,"Project could not be opened: Error opening file")
             else:
                 data = pickle.load(fileobj)  # load data structure
                 fileobj.close()
@@ -220,7 +214,7 @@ class MainWindow:
                     # set project as active
                     self.PROJECT_ACTIVE = 1
 
-                    self.display_info("Project successfully opened")
+                    self.display_status(misc.CMB_INFO, "Project successfully opened")
                     # Setup paths for folder chooser objects
                     self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
                         os.path.split(self.filename)[0]))
@@ -230,7 +224,7 @@ class MainWindow:
                     self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
                 else:
-                    self.display_error("Project could not be opened: Wrong file type selected")
+                    self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
         # if response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
             print("cancelled: FileChooserAction.OPEN")
@@ -257,10 +251,10 @@ class MainWindow:
             fileobj = open(self.filename, 'wb')
             if fileobj == None:
                 print("Error opening file " + self.filename)
-                self.display_error("Project file could not be opened for saving")
+                self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
             pickle.dump(data, fileobj)
             fileobj.close()
-            self.display_info("Project successfully saved")
+            self.display_status(misc.CMB_INFO, "Project successfully saved")
             self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
@@ -327,7 +321,7 @@ class MainWindow:
         try:
             number_of_rows = int(userInput)
         except:
-            self.display_warning("Invalid number of rows specified")
+            self.display_status(misc.CMB_WARNING, "Invalid number of rows specified")
             return
         items = []
         for i in range(0, number_of_rows):
@@ -426,14 +420,14 @@ class MainWindow:
         if filechooserbutton_meas.get_file() != None:
             folder = filechooserbutton_meas.get_file().get_path()
             code = self.measurements_view.render_selection(folder, self.project_settings_dict, self.bill_view.bills)
-            self.display_status(code)
+            self.display_status(*code)
             # remove temporary files
             onlytempfiles = [f for f in os.listdir(posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
                 os.remove(posix_path(folder,f))
         else:
-            self.display_error('Please select an output directory for rendering')
+            self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
 
     def OnMeasUndoClicked(self, button):
         self.measurements_view.undo()
@@ -451,7 +445,7 @@ class MainWindow:
     def OnMeasPropertiesClicked(self, button):
         code = self.measurements_view.edit_selected_properties()
         if code is not None:
-            self.display_status(code)
+            self.display_status(*code)
 
     def OnMeasCopyClicked(self, button):
         self.measurements_view.copy_selection()
@@ -478,14 +472,14 @@ class MainWindow:
         if filechooserbutton_bill.get_file() != None:
             folder = filechooserbutton_bill.get_file().get_path()
             code = self.bill_view.render_selected(folder, self.project_settings_dict)
-            self.display_status(code)
+            self.display_status(*code)
             # remove temporary files
             onlytempfiles = [f for f in os.listdir(posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
                 os.remove(posix_path(folder,f))
         else:
-            self.display_error('Please select an output directory for rendering')
+            self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
 
     def OnBillUndoClicked(self, button):
         self.bill_view.undo()
@@ -541,7 +535,7 @@ class MainWindow:
         self.project_settings_dialog = self.builder.get_object("projectsettingsdialog")
         
         # Load global Variables
-        globalvars.set_global_platform_vars()
+        misc.set_global_platform_vars()
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")

@@ -22,16 +22,73 @@
 #  
 #  
 
-import subprocess
-import threading
-import os
-import posixpath
-import platform
+import subprocess, threading, os, posixpath, platform
 
-from globalconstants import *
-import globalvars
+## GLOBAL CONSTANTS
 
-# PLATFORM DEPENDAND
+# Program name
+PROGRAM_NAME = 'CMB Automiser'
+# Item codes for schedule dialog
+MEAS_NO = 1
+MEAS_L = 2
+MEAS_DESC = 3
+MEAS_CUST = 4
+# CMB error codes used for displaying info in main window
+CMB_ERROR = -1
+CMB_WARNING = -2
+CMB_OK = 0
+CMB_INFO = 0
+# For tracking window management
+CHILD_WINDOW = 1
+PARENT_WINDOW = 0
+main_hidden = 0
+child_windows = 0
+# Used in bill module for indicating type of bill
+BILL_CUSTOM = 1
+BILL_NORMAL = 2
+# background colors for treeview
+MEAS_COLOR_LOCKED = '#BABDB6'
+MEAS_COLOR_NORMAL = '#FFFFFF'
+MEAS_COLOR_SELECTED = '#729FCF'
+# Timeout for killing Latex subprocess
+LATEX_TIMEOUT = 300 # 5 minutes
+# Item description wrap-width for screen purpose
+CMB_DESCRIPTION_WIDTH = 60
+CMB_DESCRIPTION_MAX_LENGTH = 1000
+# Deviation statement
+DEV_LIMIT_STATEMENT = 10
+# List of units which will be considered as integer values
+INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',
+             'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each','job','jobs','set','sets',
+             'pair','pairs',
+             'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
+# String used for checking file version
+PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3'
+# Item codes for cmb
+global_vars = ['$cmbnameofwork$', '$cmbagency$', '$cmbagmntno$', '$cmbsituation$', '$cmbdateofstart$',
+               '$cmbdateofstartasperagmnt$',
+               '$cmbissuedto$', '$cmbvarifyingauthority$', '$cmbvarifyingauthorityoffice$', '$cmbissuingauthority$',
+               '$cmbissuingauthorityoffice$']
+# Widget names equivalent to item codes
+builder_vars = ["proj_nameofwork", "proj_agency", "proj_agmntno", "proj_situation", "proj_dateofstart",
+                "proj_dateofstartasperagmnt",
+                "proj_issuedto", "proj_varifyingauthority", "proj_varifyingauthorityoffice", "proj_issuingauthority",
+                "proj_issuingauthorityoffice"]
+
+## GLOBAL VARIABLES
+
+# Dict for storing saved settings
+global_settings_dict = dict()
+
+## GLOBAL METHODS
+
+# Setup Latex Variables
+def set_global_platform_vars():
+    if platform.system() == 'Linux':
+        global_settings_dict['latex_path'] = 'pdflatex'
+    elif platform.system() == 'Windows':
+        global_settings_dict['latex_path'] = misc.abs_path(
+                    'miketex\\miktex\\bin\\pdflatex.exe')
 
 def posix_path(*args):
     if platform.system() == 'Linux': 

@@ -26,7 +26,6 @@ import copy
 
 from gi.repository import Gtk, Gdk, GLib
 
-from globalconstants import *
 from schedule import *
 from bill import *
 from schedule_dialog import *

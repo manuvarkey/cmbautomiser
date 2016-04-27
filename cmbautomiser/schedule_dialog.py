@@ -29,7 +29,6 @@ from gi.repository import Gtk, Gdk, GLib
 from undo import *
 
 # local files import
-from globalconstants import *
 from schedule import *
 from misc import *
 from openpyxl import Workbook, load_workbook

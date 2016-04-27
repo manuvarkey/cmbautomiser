@@ -31,7 +31,6 @@ from gi.repository import Gtk, Gdk, GLib
 from undo import *
 
 # local files import
-from globalconstants import *
 from schedule import *
 from cmb import *
 from bill_dialog import *
@@ -784,7 +783,7 @@ class BillView:
             code = self.render(folder, replacement_dict, path)
             return code
         else:
-            return [CMB_WARNING, 'Please select a Bill for rendering']
+            return (CMB_WARNING, 'Please select a Bill for rendering')
 
     def render(self, folder, replacement_dict, path, recursive=True):
         if self.bills[path[0]].data.bill_type == BILL_NORMAL:  # render only if normal bill
@@ -840,10 +839,10 @@ class BillView:
             # Render this bill
             code = run_latex(posix_path(folder), filename)
             if code == CMB_ERROR:
-                return [CMB_ERROR, 'Rendering of Bill: ' + self.bill.data.title + ' failed']
+                return (CMB_ERROR, 'Rendering of Bill: ' + self.bill.data.title + ' failed')
             code_bill = run_latex(posix_path(folder), filename_bill)
             if code_bill == CMB_ERROR:
-                return [CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed']
+                return (CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed')
 
             # Render all cmbs again to rebuild indexes on recursive run
             if recursive:  # if recursive call
@@ -854,9 +853,9 @@ class BillView:
                             return code
                 bill.export_ods_bill(filename_bill_ods,replacement_dict)
 
-            return [CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully']
+            return (CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
         else:
-            return [CMB_WARNING, 'Rendering of custom bill not supported']
+            return (CMB_WARNING, 'Rendering of custom bill not supported')
 
     def __init__(self, schedule, measurement_view, list_store_object, tree_view_object):
         self.schedule = schedule

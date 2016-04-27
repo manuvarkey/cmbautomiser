@@ -29,7 +29,6 @@ from gi.repository import Gtk, Gdk, GLib
 from undo import *
 
 # local files import
-from globalconstants import *
 from misc import *
 
 # class storing individual items in schedule of work

@@ -31,7 +31,6 @@ import copy
 from undo import *
 
 # local files import
-from globalconstants import *
 from schedule import *
 from schedule_dialog import ScheduleDialog
 
@@ -1619,7 +1618,7 @@ class MeasurementsView:
             code = self.render(folder,replacement_dict,bills,path)
             return code
         else:
-            return [CMB_WARNING,'Please select a CMB for rendering']
+            return (CMB_WARNING,'Please select a CMB for rendering')
 
     def render(self,folder,replacement_dict,bills,path,recursive = True):
         # fill in latex buffer
@@ -1654,7 +1653,7 @@ class MeasurementsView:
         # run latex on file
         code = run_latex(posix_path(folder),filename)
         if code == CMB_ERROR:
-            return [CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed']
+            return (CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed')
 
         # run on all bills refering cmb again to rebuild indexes on recursive run
         if recursive: # if recursive call
@@ -1664,7 +1663,7 @@ class MeasurementsView:
                     if code[0] == CMB_ERROR:
                         return code
 
-        return [CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully']
+        return (CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
             
     def edit_selected_row(self):
         toplevel = self.tree.get_toplevel() # get current top level window
@@ -1809,7 +1808,7 @@ class MeasurementsView:
                         newval[1][5] = newdata
                         self.edit_item(path,item,newval,oldval)
                     return None
-        return [CMB_WARNING,'User data not supported']
+        return (CMB_WARNING,'User data not supported')
 
     @undoable
     def edit_item(self,path,item,newval,oldval):
