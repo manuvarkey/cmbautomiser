@@ -24,11 +24,13 @@
 
 import subprocess, threading, os, posixpath, platform
 
+from gi.repository import Gtk
+
 ## GLOBAL CONSTANTS
 
 # Program name
 PROGRAM_NAME = 'CMB Automiser'
-# Item codes for schedule dialog
+# Item codes for data types
 MEAS_NO = 1
 MEAS_L = 2
 MEAS_DESC = 3
@@ -64,17 +66,41 @@ INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos',
              'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
 # String used for checking file version
 PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3'
-# Item codes for cmb
-global_vars = ['$cmbnameofwork$', '$cmbagency$', '$cmbagmntno$', '$cmbsituation$', '$cmbdateofstart$',
+# Item codes for project global variables
+global_vars = ['$cmbnameofwork$',
+               '$cmbagency$',
+               '$cmbagmntno$', 
+               '$cmbsituation$',
+               '$cmbdateofstart$',
                '$cmbdateofstartasperagmnt$',
-               '$cmbissuedto$', '$cmbvarifyingauthority$', '$cmbvarifyingauthorityoffice$', '$cmbissuingauthority$',
+               '$cmbissuedto$',
+               '$cmbvarifyingauthority$',
+               '$cmbvarifyingauthorityoffice$',
+               '$cmbissuingauthority$',
                '$cmbissuingauthorityoffice$']
-# Widget names equivalent to item codes
-builder_vars = ["proj_nameofwork", "proj_agency", "proj_agmntno", "proj_situation", "proj_dateofstart",
-                "proj_dateofstartasperagmnt",
-                "proj_issuedto", "proj_varifyingauthority", "proj_varifyingauthorityoffice", "proj_issuingauthority",
-                "proj_issuingauthorityoffice"]
-
+global_vars_captions = ['Name of Work', 
+                        'Agency',
+                        'Agreement Number',
+                        'Situation',
+                        'Date of Start',
+                        'Date of start as per Agmnt.',
+                        'CMB Issued to',
+                        'Varifying Authority',
+                        'Varifying Authority Office',
+                        'Issuing Authority',
+                        'Issuing Authority Office']
+global_vars_types = [MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC,
+                     MEAS_DESC]
+               
 ## GLOBAL VARIABLES
 
 # Dict for storing saved settings
@@ -109,6 +135,73 @@ def posix_path(*args):
 
 # Common functions
 
+class UserEntryDialog:
+        
+    def __init__(self, parent, window_caption, item_dict, item_captions, item_columntypes):
+        self.toplevel = parent # get current top level window
+        self.entrys = []
+        self.item_dict = item_dict
+        self.item_captions = item_captions
+        self.item_columntypes = item_columntypes
+
+        self.dialogWindow = Gtk.MessageDialog(self.toplevel,
+                              Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                              Gtk.MessageType.QUESTION,
+                              Gtk.ButtonsType.OK_CANCEL, '')
+        self.dialogWindow.set_title(window_caption)
+        self.dialogWindow.set_resizable(True)
+        self.dialogWindow.set_default_response(Gtk.ResponseType.OK)
+
+        # Pack Dialog
+        dialogBox = self.dialogWindow.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(5)
+        grid.set_row_spacing(5)
+        grid.set_border_width(5)
+        dialogBox.add(grid)
+        for caption in self.item_captions:
+            userLabel = Gtk.Label(caption)
+            userLabel.set_halign(Gtk.Align.END)
+            
+            userEntry = Gtk.Entry()
+            userEntry.set_activates_default(True)
+            grid.attach_next_to(userLabel, None, Gtk.PositionType.BOTTOM, 1, 1)
+            grid.attach_next_to(userEntry, userLabel, Gtk.PositionType.RIGHT, 1, 1)
+            self.entrys.append(userEntry)
+
+        # Add data
+        for key, userEntry in zip(self.item_dict, self.entrys):
+            userEntry.set_text(item_dict[key])
+                
+    def run(self):
+        # Run dialog
+        self.dialogWindow.show_all()
+        response = self.dialogWindow.run()
+        
+        if response == Gtk.ResponseType.OK:
+            # Get formated text and update item_dict
+            for key, userEntry, column_type in zip(self.item_dict, self.entrys, self.item_columntypes):
+                cell = userEntry.get_text()
+                try:  # try evaluating string
+                    if column_type == MEAS_DESC:
+                        cell_formated = str(cell)
+                    elif column_type == MEAS_L:
+                        cell_formated = str(float(cell))
+                    elif column_type == MEAS_NO:
+                        cell_formated = str(int(cell))
+                    else:
+                        cell_formated = ''
+                except:
+                    cell_formated = ''
+                self.item_dict[key] = cell_formated
+                
+            self.dialogWindow.destroy()
+            return True
+        else:
+            self.dialogWindow.destroy()
+            return False
+
+
 class ManageResourses:
     # Static Variables
     schedule_view = None
@@ -124,10 +217,8 @@ class ManageResourses:
     def update_bill_schedule_insert_item_at_row(self,itemlist,rows):
         if itemlist == None:
             itemlist = [[[100,100,0,[0],0,0]]*len(rows)]*len(self.bills_view.bills)
-        print(itemlist,rows)
         for bill,item in zip(self.bills_view.bills,itemlist):
             for i in range(0, len(rows)):
-                print(item[i], rows[i])
                 bill.data.item_part_percentage.insert(rows[i], item[i][0])
                 bill.data.item_excess_part_percentage.insert(rows[i], item[i][1])
                 bill.data.item_excess_rates.insert(rows[i], item[i][2])
@@ -136,7 +227,6 @@ class ManageResourses:
                 bill.data.item_excess_amount.insert(rows[i], item[i][5])
 
     def update_bill_schedule_delete_row(self,rows):
-        print(rows)
         items_top = []
         rows.sort()
         for bill in self.bills_view.bills:

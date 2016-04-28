@@ -27,8 +27,7 @@ import copy
 import math
 
 from gi.repository import Gtk, Gdk, GLib
-
-from undo import *
+from undo import undoable
 
 # local files import
 from schedule import *
@@ -724,16 +723,6 @@ class BillView:
         else:
             print("No text on the clipboard.")
 
-    def undo(self):
-        setstack(self.stack)  # select bill undo stack
-        print(self.stack.undotext())
-        self.stack.undo()
-
-    def redo(self):
-        setstack(self.stack)  # select bill undo stack
-        print(self.stack.redotext())
-        self.stack.redo()
-
     def get_data_object(self):
         data = []
         for bill in self.bills:
@@ -752,7 +741,6 @@ class BillView:
         self.update_store()
 
     def clear(self):
-        self.stack.clear()
         self.bills = []
         self.update_store()
 
@@ -771,7 +759,6 @@ class BillView:
             self.store.append()
             self.store[count][0] = str(count + 1)
             self.store[count][1] = bill.get_text()
-        setstack(self.stack)  # select undo stack
 
     def render_selected(self, folder, replacement_dict):
         # get selection
@@ -865,8 +852,6 @@ class BillView:
         self.cmbs = measurement_view.cmbs
 
         self.bills = []
-        self.stack = Stack()  # initialise undo/redo stack
-        setstack(self.stack)  # select bill undo stack
 
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)  # initialise clipboard
 

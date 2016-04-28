@@ -26,7 +26,7 @@ import pickle
 
 from gi.repository import Gtk, Gdk, GLib
 
-from undo import *
+from undo import undoable
 
 # local files import
 from misc import *
@@ -383,16 +383,6 @@ class ScheduleView:
         else:
             print("No text on the clipboard.")
 
-    def undo(self):
-        setstack(self.stack)  # select schedule undo stack
-        print(self.stack.undotext())
-        self.stack.undo()
-
-    def redo(self):
-        setstack(self.stack)  # select schedule undo stack
-        print(self.stack.redotext())
-        self.stack.redo()
-
     def get_data_object(self):
         return self.schedule
 
@@ -401,7 +391,6 @@ class ScheduleView:
         self.update_store()
 
     def clear(self):
-        self.stack.clear()
         self.schedule.clear()
         self.update_store()
 
@@ -428,7 +417,6 @@ class ScheduleView:
             self.store[row][5] = item.reference
             self.store[row][6] = str(round(item.excess_rate_percent)) \
                                     if item.excess_rate_percent != 0 else ''
-        setstack(self.stack)  # select undo stack
 
         # populate ScheduleItem.extended_description (Used for final billing)
         self.schedule.update()
@@ -437,9 +425,6 @@ class ScheduleView:
         self.schedule = schedule
         self.store = ListStoreObject
         self.tree = TreeViewObject
-
-        self.stack = Stack()  # initialise undo/redo stack
-        setstack(self.stack)  # select schedule undo stack
 
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)  # initialise clipboard
 

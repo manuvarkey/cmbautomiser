@@ -28,7 +28,7 @@ import json
 
 from gi.repository import Gtk, Gdk, GLib
 
-from undo import *
+import undo
 from openpyxl import Workbook, load_workbook
 
 # local files import
@@ -39,8 +39,8 @@ from misc import *
 import misc
 
 # redirect stdout to tempfile for logging
-sys.stdout = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_o_',delete=False)
-sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
+# sys.stdout = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_o_',delete=False)
+# sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
 
 class MainWindow:
 
@@ -103,27 +103,14 @@ class MainWindow:
     # General signal handler Methods
 
     def onProjectSettingsClicked(self, button):
-        self.project_settings_dialog.show()
-
-        # write values to dialog
-        for item_code, builder_var in zip(global_vars, builder_vars):
-            self.builder.get_object(builder_var).set_text(self.project_settings_dict[item_code])
-
-        # run dialog
-        response = self.project_settings_dialog.run()
-
-        if response == Gtk.ResponseType.APPLY:
-            # read values to dictionary
-            for item_code, builder_var in zip(global_vars, builder_vars):
-                self.project_settings_dict[item_code] = self.builder.get_object(builder_var).get_text()
-            self.project_settings_dialog.hide()
-        elif response == Gtk.ResponseType.CANCEL:
-            self.project_settings_dialog.hide()
-
-
-    def onProjectSettingsClose(self, *args):
-        self.project_settings_dialog.hide()
-        return True
+        # Setup project settings dialog
+        project_settings_dialog = misc.UserEntryDialog(self.window, 
+                                      'Project Settings',
+                                      self.project_settings_dict,
+                                      misc.global_vars_captions,
+                                      global_vars_types)
+        # Show settings dialog
+        project_settings_dialog.run()
 
     # About Dialog
 
@@ -134,7 +121,7 @@ class MainWindow:
     def onAboutClick(self, button):
         self.about_dialog.show()
         response = self.about_dialog.run()
-        if response == Gtk.ResponseType.CANCEL :
+        if response == Gtk.ResponseType.CANCEL:
             self.about_dialog.hide()
 
     def onHelpClick(self, button):
@@ -222,6 +209,8 @@ class MainWindow:
                         os.path.split(self.filename)[0]))
                     # setup window name
                     self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
+                    # clear undo/redo stack
+                    self.stack.clear()
 
                 else:
                     self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
@@ -300,13 +289,13 @@ class MainWindow:
     def onInfobarClose(self, widget, response=0):
         widget.hide()
 
-    def onRedo(self, button):
-        print(stack().redotext())
-        stack().redo()
+    def onRedoClicked(self, button):
+        print('Redo:',self.stack.redotext())
+        self.stack.redo()
 
-    def onUndo(self, button):
-        print(stack().undotext())
-        stack().undo()
+    def onUndoClicked(self, button):
+        print('Undo:',self.stack.undotext())
+        self.stack.undo()
 
     # Schedule signal handler methods
 
@@ -330,12 +319,6 @@ class MainWindow:
 
     def onButtonScheduleDeletePressed(self, button):
         self.schedule_view.delete_selection()
-
-    def onUndoSchedule(self, button):
-        self.schedule_view.undo()
-
-    def onRedoSchedule(self, button):
-        self.schedule_view.redo()
 
     def onCopySchedule(self, button):
         self.schedule_view.copy_selection()
@@ -428,12 +411,6 @@ class MainWindow:
                 os.remove(posix_path(folder,f))
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
-
-    def OnMeasUndoClicked(self, button):
-        self.measurements_view.undo()
-
-    def OnMeasRedoClicked(self, button):
-        self.measurements_view.redo()
         
     def OnMeasClickEvent(self, button, event):
         if event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -480,12 +457,6 @@ class MainWindow:
                 os.remove(posix_path(folder,f))
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
-
-    def OnBillUndoClicked(self, button):
-        self.bill_view.undo()
-
-    def OnBillRedoClicked(self, button):
-        self.bill_view.redo()
         
     def OnBillClickEvent(self, button, event):
         if event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -528,11 +499,10 @@ class MainWindow:
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
 
-        # Setup project settings dialog
+        # Setup project settings dictionary
         self.project_settings_dict = {}
-        for item_code in global_vars:  # initialise settings dictionary
+        for item_code in misc.global_vars:
             self.project_settings_dict[item_code] = ''
-        self.project_settings_dialog = self.builder.get_object("projectsettingsdialog")
         
         # Load global Variables
         misc.set_global_platform_vars()
@@ -595,6 +565,10 @@ class MainWindow:
 
         # setup class for intra process communication
         self.manage_resources = ManageResourses(self.schedule_view,self.measurements_view,self.bill_view)
+        
+        # Initialise undo/redo stack
+        self.stack = undo.Stack()
+        undo.setstack(self.stack)
 
     def run(self, *args):
         self.window.show_all()

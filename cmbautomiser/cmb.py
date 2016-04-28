@@ -23,12 +23,11 @@
 #  
 
 from gi.repository import Gtk, Gdk, GLib
+from undo import undoable
 
 import pickle
 import os.path
 import copy
-
-from undo import *
 
 # local files import
 from schedule import *
@@ -1129,16 +1128,6 @@ class MeasurementsView:
         if event.keyval == Gdk.KEY_Escape:  # unselect all
             self.tree.get_selection().unselect_all()
 
-    def undo(self):
-        setstack(self.stack) # select schedule undo stack
-        print(self.stack.undotext())
-        self.stack.undo()
-
-    def redo(self):
-        setstack(self.stack) # select schedule undo stack
-        print(self.stack.redotext())
-        self.stack.redo()
-
     def get_data_object(self):
         return self.cmbs
 
@@ -1157,7 +1146,6 @@ class MeasurementsView:
         self.update_store()
 
     def clear(self):
-        self.stack.clear()
         self.cmbs = []
         self.update_store()
 
@@ -1582,7 +1570,6 @@ class MeasurementsView:
                 elif isinstance(meas,Completion):
                     pass
         self.tree.expand_all()
-        setstack(self.stack) # select schedule undo stack
 
         # Set selection
         if old_path != []:
@@ -1849,9 +1836,6 @@ class MeasurementsView:
         self.schedule = schedule
         self.store = TreeStoreObject
         self.tree = TreeViewObject
-        
-        self.stack = Stack() # initialise undo/redo stack
-        setstack(self.stack) # select schedule undo stack
             
         self.cmbs = [] # initialise item list
         
