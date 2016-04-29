@@ -89,116 +89,107 @@ global_vars_captions = ['Name of Work',
                         'Varifying Authority Office',
                         'Issuing Authority',
                         'Issuing Authority Office']
-global_vars_types = [MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC,
-                     MEAS_DESC]
                
 ## GLOBAL VARIABLES
 
 # Dict for storing saved settings
 global_settings_dict = dict()
 
-## GLOBAL METHODS
-
-# Setup Latex Variables
 def set_global_platform_vars():
+    """Setup global platform dependent variables"""
+    
     if platform.system() == 'Linux':
         global_settings_dict['latex_path'] = 'pdflatex'
     elif platform.system() == 'Windows':
         global_settings_dict['latex_path'] = misc.abs_path(
                     'miketex\\miktex\\bin\\pdflatex.exe')
 
-def posix_path(*args):
-    if platform.system() == 'Linux': 
-        if len(args) > 1:
-            return posixpath.join(*args)
-        else:
-            return args[0]
-    elif platform.system() == 'Windows':
-        if len(args) > 1:
-            path = os.path.normpath(posixpath.join(*args))
-        else:
-            path = os.path.normpath(args[0])
-        # remove any leading slash
-        if path[0] == '\\':
-            return path[1:]
-        else:
-            return path
+## GLOBAL CLASSES
 
-# Common functions
-
-class UserEntryDialog:
-        
-    def __init__(self, parent, window_caption, item_dict, item_captions, item_columntypes):
-        self.toplevel = parent # get current top level window
+class UserEntryDialog():
+    """Creates a dialog box for entry of custom data fields
+    
+        Arguments:
+            parent: Parent Window
+            window_caption: Window Caption to be displayed on Dialog
+            item_values: Item values to be requested from user
+            item_captions: Description of item values to be shown to user
+    """
+    
+    def __init__(self, parent, window_caption, item_values, item_captions):
+        self.toplevel = parent
         self.entrys = []
-        self.item_dict = item_dict
+        self.item_values = item_values
         self.item_captions = item_captions
-        self.item_columntypes = item_columntypes
 
-        self.dialogWindow = Gtk.MessageDialog(self.toplevel,
-                              Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                              Gtk.MessageType.QUESTION,
-                              Gtk.ButtonsType.OK_CANCEL, '')
-        self.dialogWindow.set_title(window_caption)
-        self.dialogWindow.set_resizable(True)
-        self.dialogWindow.set_default_response(Gtk.ResponseType.OK)
+        self.dialog_window = Gtk.Dialog(window_caption, parent, Gtk.DialogFlags.MODAL,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        self.dialog_window.set_title(window_caption)
+        self.dialog_window.set_resizable(True)
+        self.dialog_window.set_border_width(5)
+        self.dialog_window.set_size_request(int(self.toplevel.get_size_request()[0]*0.8),-1)
+        self.dialog_window.set_default_response(Gtk.ResponseType.OK)
 
         # Pack Dialog
-        dialogBox = self.dialogWindow.get_content_area()
+        dialog_box = self.dialog_window.get_content_area()
         grid = Gtk.Grid()
         grid.set_column_spacing(5)
         grid.set_row_spacing(5)
         grid.set_border_width(5)
-        dialogBox.add(grid)
+        grid.set_hexpand(True)
+        dialog_box.add(grid)
         for caption in self.item_captions:
-            userLabel = Gtk.Label(caption)
-            userLabel.set_halign(Gtk.Align.END)
-            
-            userEntry = Gtk.Entry()
-            userEntry.set_activates_default(True)
-            grid.attach_next_to(userLabel, None, Gtk.PositionType.BOTTOM, 1, 1)
-            grid.attach_next_to(userEntry, userLabel, Gtk.PositionType.RIGHT, 1, 1)
-            self.entrys.append(userEntry)
-
+            # Captions
+            user_label = Gtk.Label(caption)
+            user_label.set_halign(Gtk.Align.END)
+            # Text Entry
+            user_entry = Gtk.Entry()
+            user_entry.set_hexpand(True)
+            user_entry.set_activates_default(True)
+            # Pack Widgets
+            grid.attach_next_to(user_label, None, Gtk.PositionType.BOTTOM, 1, 1)
+            grid.attach_next_to(user_entry, user_label, Gtk.PositionType.RIGHT, 1, 1)
+            self.entrys.append(user_entry)
         # Add data
-        for key, userEntry in zip(self.item_dict, self.entrys):
-            userEntry.set_text(item_dict[key])
+        for value, user_entry in zip(self.item_values, self.entrys):
+            user_entry.set_text(value)
                 
     def run(self):
+        """Display dialog box and modify Item Values in place
+        
+            Save modified values to "item_values" (item passed by reference)
+            if responce is Ok. Discard modified values if response is Cancel.
+            
+            Returns:
+                True on Ok
+                False on Cancel
+        """
         # Run dialog
-        self.dialogWindow.show_all()
-        response = self.dialogWindow.run()
+        self.dialog_window.show_all()
+        response = self.dialog_window.run()
         
         if response == Gtk.ResponseType.OK:
-            # Get formated text and update item_dict
-            for key, userEntry, column_type in zip(self.item_dict, self.entrys, self.item_columntypes):
-                cell = userEntry.get_text()
+            # Get formated text and update item_values
+            for key, user_entry in zip(range(len(self.item_values)), self.entrys):
+                cell = user_entry.get_text()
                 try:  # try evaluating string
-                    if column_type == MEAS_DESC:
+                    if type(self.item_values[key]) is str:
                         cell_formated = str(cell)
-                    elif column_type == MEAS_L:
+                    elif type(self.item_values[key]) is int:
                         cell_formated = str(float(cell))
-                    elif column_type == MEAS_NO:
+                    elif type(self.item_values[key]) is float:
                         cell_formated = str(int(cell))
                     else:
                         cell_formated = ''
                 except:
                     cell_formated = ''
-                self.item_dict[key] = cell_formated
+                self.item_values[key] = cell_formated
                 
-            self.dialogWindow.destroy()
+            self.dialog_window.destroy()
             return True
         else:
-            self.dialogWindow.destroy()
+            self.dialog_window.destroy()
             return False
 
 
@@ -285,6 +276,25 @@ class ManageResourses:
                     except:
                         print(('Error found in ' + str(item) + ' in bill ' + bill.data.title + '. Item Removed'))
                         bill.data.mitems.remove(item)
+
+## GLOBAL METHODS
+
+def posix_path(*args):
+    if platform.system() == 'Linux': 
+        if len(args) > 1:
+            return posixpath.join(*args)
+        else:
+            return args[0]
+    elif platform.system() == 'Windows':
+        if len(args) > 1:
+            path = os.path.normpath(posixpath.join(*args))
+        else:
+            path = os.path.normpath(args[0])
+        # remove any leading slash
+        if path[0] == '\\':
+            return path[1:]
+        else:
+            return path
 
 def abs_path(*args):
     return os.path.join(os.path.split(__file__)[0],*args)

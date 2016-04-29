@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # main.py
@@ -99,19 +99,7 @@ class MainWindow:
             return text
         else:
             return None
-
-    # General signal handler Methods
-
-    def onProjectSettingsClicked(self, button):
-        # Setup project settings dialog
-        project_settings_dialog = misc.UserEntryDialog(self.window, 
-                                      'Project Settings',
-                                      self.project_settings_dict,
-                                      misc.global_vars_captions,
-                                      global_vars_types)
-        # Show settings dialog
-        project_settings_dialog.run()
-
+            
     # About Dialog
 
     def onAboutDialogClose(self, *args):
@@ -134,25 +122,27 @@ class MainWindow:
     # Main Window
 
     def onDeleteWindow(self, *args):
-        global CHILD_WINDOW, PARENT_WINDOW, main_hidden, child_windows
-        if self.windowtype == CHILD_WINDOW:
-            child_windows = child_windows - 1
-            if child_windows == 0 and main_hidden == 1:
-                Gtk.main_quit()
-            self.window.destroy()
+        """Callback called on pressing the close button of main window"""
+        
+        def wait_for_exit(child_windows):
+            """Wait for child windows to exit before calling Gtk.main_quit()"""
+            for window in child_windows:
+                window.wait()
+            Gtk.main_quit()
+                
+        if self.child_windows:
+            self.window.hide()
+            # Wait for all child windows to exist after returning from method
+            GLib.timeout_add(50, wait_for_exit, self.child_windows)
+            # Propogate delete event to destroy window
+            return False
         else:
-            if child_windows == 0:
-                Gtk.main_quit()
-            else:
-                self.window.hide()
-                main_hidden = 1
+            Gtk.main_quit()
 
     def onNewProjectClicked(self, button):
-        global CHILD_WINDOW, PARENT_WINDOW, main_hidden, child_windows
-        child_window = MainWindow(CHILD_WINDOW)
-        child_windows = child_windows + 1
-        child_window.run()
-        child_window.display_status(misc.CMB_INFO, "New project window created")
+        """Create a new window"""
+        proc = subprocess.Popen([__file__], stdin=None, stdout=None, stderr=None)
+        self.child_windows.append(proc)
 
     def onOpenProjectClicked(self, button):
         # create a filechooserdialog to open:
@@ -285,6 +275,18 @@ class MainWindow:
             print("cancelled: FileChooserAction.OPEN")
         # destroy dialog
         open_dialog.destroy()
+        
+    def onProjectSettingsClicked(self, button):
+        item_values = [self.project_settings_dict[key] for key in misc.global_vars]
+        # Setup project settings dialog
+        project_settings_dialog = misc.UserEntryDialog(self.window, 
+                                      'Project Settings',
+                                      item_values,
+                                      misc.global_vars_captions)
+        # Show settings dialog
+        project_settings_dialog.run()
+        for key,item in zip(misc.global_vars,item_values):
+            self.project_settings_dict[key] = item
 
     def onInfobarClose(self, widget, response=0):
         widget.hide()
@@ -480,6 +482,7 @@ class MainWindow:
 
     def __init__(self, _windowtype=PARENT_WINDOW):
         
+        self.child_windows = []
         # Variable to check multiple window instances
         if _windowtype == PARENT_WINDOW:
             self.windowtype = PARENT_WINDOW
@@ -500,7 +503,7 @@ class MainWindow:
         self.builder.connect_signals(self)
 
         # Setup project settings dictionary
-        self.project_settings_dict = {}
+        self.project_settings_dict = dict()
         for item_code in misc.global_vars:
             self.project_settings_dict[item_code] = ''
         
