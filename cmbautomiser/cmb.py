@@ -28,6 +28,7 @@ from undo import undoable
 import pickle, os.path, copy, logging
 
 # local files import
+import misc
 from schedule import *
 from schedule_dialog import ScheduleDialog
 
@@ -1091,37 +1092,6 @@ class Completion:
 
 # Measurements object
 class MeasurementsView:
-    # for CMB, measurement and Heading
-    def get_user_input_text(self, parent, message, title='',value=None):
-        # Returns user input as a string or None
-        # If user does not input text it returns None, NOT AN EMPTY STRING.
-        dialogWindow = Gtk.MessageDialog(parent,
-                              Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                              Gtk.MessageType.QUESTION,
-                              Gtk.ButtonsType.OK_CANCEL,
-                              message)
-        
-        dialogWindow.set_transient_for(parent)
-        dialogWindow.set_title(title)
-        dialogWindow.set_default_response(Gtk.ResponseType.OK)
-
-        dialogBox = dialogWindow.get_content_area()
-        userEntry = Gtk.Entry()
-        userEntry.set_activates_default(True)
-        userEntry.set_size_request(100,0)
-        dialogBox.pack_end(userEntry, False, False, 0)
-        
-        if value != None:
-            userEntry.set_text(value)
-
-        dialogWindow.show_all()
-        response = dialogWindow.run()
-        text = userEntry.get_text() 
-        dialogWindow.destroy()
-        if (response == Gtk.ResponseType.OK) and (text != ''):
-            return text
-        else:
-            return None
             
     # Callback functions
     
@@ -1152,7 +1122,7 @@ class MeasurementsView:
 
     def add_cmb(self):
         toplevel = self.tree.get_toplevel() # get current top level window
-        cmb_name = self.get_user_input_text(toplevel, "Please input CMB Name", "Add new CMB")
+        cmb_name = misc.get_user_input_text(toplevel, "Please input CMB Name", "Add new CMB")
         
         if cmb_name != None:
             cmb = Cmb(cmb_name)
@@ -1181,7 +1151,7 @@ class MeasurementsView:
         
     def add_measurement(self):
         toplevel = self.tree.get_toplevel() # get current top level window
-        meas_name = self.get_user_input_text(toplevel, "Please input Measurement Date", "Add new Measurement")
+        meas_name = misc.get_user_input_text(toplevel, "Please input Measurement Date", "Add new Measurement")
         
         if meas_name != None:
             meas = Measurement(meas_name)
@@ -1197,7 +1167,7 @@ class MeasurementsView:
 
     def add_completion(self):
         toplevel = self.tree.get_toplevel() # get current top level window
-        compl_name = self.get_user_input_text(toplevel, "Please input Completion Date", "Add Completion")
+        compl_name = misc.get_user_input_text(toplevel, "Please input Completion Date", "Add Completion")
 
         if compl_name != None:
             compl = Completion(compl_name)
@@ -1234,7 +1204,7 @@ class MeasurementsView:
         
     def add_heading(self):
         toplevel = self.tree.get_toplevel() # get current top level window
-        heading_name = self.get_user_input_text(toplevel, "Please input Heading", "Add new Item: Heading")
+        heading_name = misc.get_user_input_text(toplevel, "Please input Heading", "Add new Item: Heading")
         
         if heading_name != None:
             # get selection
@@ -1663,23 +1633,23 @@ class MeasurementsView:
             if len(path) == 1:
                 item = self.cmbs[path[0]]
                 oldval = item.get_name()
-                newval = self.get_user_input_text(toplevel, "Please input CMB Name", "Edit CMB",oldval)
+                newval = misc.get_user_input_text(toplevel, "Please input CMB Name", "Edit CMB",oldval)
                 self.edit_item(path,item,newval,oldval)
             elif len(path) == 2:
                 item = self.cmbs[path[0]][path[1]]
                 if isinstance(item,Measurement):
                     oldval = item.get_date()
-                    newval = self.get_user_input_text(toplevel, "Please input Measurement Date", "Edit Measurement",oldval)
+                    newval = misc.get_user_input_text(toplevel, "Please input Measurement Date", "Edit Measurement",oldval)
                     self.edit_item(path,item,newval,oldval)
                 elif isinstance(item,Completion):
                     oldval = item.get_date()
-                    newval = self.get_user_input_text(toplevel, "Please input Completion Date", "Edit Measurement",oldval)
+                    newval = misc.get_user_input_text(toplevel, "Please input Completion Date", "Edit Measurement",oldval)
                     self.edit_item(path,item,newval,oldval)
             elif len(path) == 3:
                 item = self.cmbs[path[0]][path[1]][path[2]]
                 if isinstance(item,MeasurementItemHeading):
                     oldval = item.get_remark()
-                    newval = self.get_user_input_text(toplevel, "Please input Heading", "Edit Heading",oldval)
+                    newval = misc.get_user_input_text(toplevel, "Please input Heading", "Edit Heading",oldval)
                     self.edit_item(path,item,newval,oldval)
                 elif isinstance(item,MeasurementItemNLBH):
                     oldval = item.get_model()

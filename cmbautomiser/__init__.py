@@ -68,35 +68,6 @@ class MainWindow:
             infobar_main.set_message_type(Gtk.MessageType.INFO)
             label_infobar_main.set_text(message)
             infobar_main.show()
-
-
-    def get_user_input(self, parent, message, title=''):
-        # Returns user input as a string or None
-        # If user does not input text it returns None, NOT AN EMPTY STRING.
-        dialogWindow = Gtk.MessageDialog(parent,
-                                         Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                                         Gtk.MessageType.QUESTION,
-                                         Gtk.ButtonsType.OK_CANCEL,
-                                         message)
-
-        dialogWindow.set_transient_for(parent)
-        dialogWindow.set_title(title)
-        dialogWindow.set_default_response(Gtk.ResponseType.OK)
-
-        dialogBox = dialogWindow.get_content_area()
-        userEntry = Gtk.Entry()
-        userEntry.set_activates_default(True)
-        userEntry.set_size_request(50, 0)
-        dialogBox.pack_end(userEntry, False, False, 0)
-
-        dialogWindow.show_all()
-        response = dialogWindow.run()
-        text = userEntry.get_text()
-        dialogWindow.destroy()
-        if (response == Gtk.ResponseType.OK) and (text != ''):
-            return text
-        else:
-            return None
             
     # About Dialog
 
@@ -309,10 +280,10 @@ class MainWindow:
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleAddMultPressed(self, button):
-        userInput = self.get_user_input(self.window, "Please enter the number \nof rows to be inserted",
+        user_input = misc.get_user_input_text(self.window, "Please enter the number \nof rows to be inserted",
                                         "Number of Rows")
         try:
-            number_of_rows = int(userInput)
+            number_of_rows = int(user_input)
         except:
             self.display_status(misc.CMB_WARNING, "Invalid number of rows specified")
             return

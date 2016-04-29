@@ -283,6 +283,41 @@ class ManageResourses:
 
 ## GLOBAL METHODS
 
+def get_user_input_text(parent, message, title=''):
+    '''Gets a single user input by diplaying a dialog box
+    
+    Arguments:
+        parent: Parent window
+        message: Message to be displayed to user
+        title: Dialog title text
+    Returns:
+        Returns user input as a string or 'None' if user does not input text.
+    '''
+    dialogWindow = Gtk.MessageDialog(parent,
+                                     Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                     Gtk.MessageType.QUESTION,
+                                     Gtk.ButtonsType.OK_CANCEL,
+                                     message)
+
+    dialogWindow.set_transient_for(parent)
+    dialogWindow.set_title(title)
+    dialogWindow.set_default_response(Gtk.ResponseType.OK)
+
+    dialogBox = dialogWindow.get_content_area()
+    userEntry = Gtk.Entry()
+    userEntry.set_activates_default(True)
+    userEntry.set_size_request(50, 0)
+    dialogBox.pack_end(userEntry, False, False, 0)
+
+    dialogWindow.show_all()
+    response = dialogWindow.run()
+    text = userEntry.get_text()
+    dialogWindow.destroy()
+    if (response == Gtk.ResponseType.OK) and (text != ''):
+        return text
+    else:
+        return None
+
 def posix_path(*args):
     if platform.system() == 'Linux': 
         if len(args) > 1:
