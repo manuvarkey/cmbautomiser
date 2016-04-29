@@ -25,15 +25,16 @@
 from gi.repository import Gtk, Gdk, GLib
 from undo import undoable
 
-import pickle
-import os.path
-import copy
+import pickle, os.path, copy, logging
 
 # local files import
 from schedule import *
 from schedule_dialog import ScheduleDialog
 
 from misc import *
+
+# Setup logger object
+log = logging.getLogger(__name__)
 
 # class storing Cmb
 class Cmb:
@@ -838,7 +839,7 @@ class MeasurementItemCustom(MeasurementItem):
                 self.user_data = self.custom_object.user_data_default
                 self.export_abstract = self.custom_object.export_abstract
             except ImportError:
-                print('Error Loading plugin')
+                log.error('Error Loading plugin - MeasurementItemCustom - ' + str(plugin))
 
             if data != None:
                 itemnos = data[0]
@@ -901,7 +902,7 @@ class MeasurementItemCustom(MeasurementItem):
                 self.latex_postproc_func = self.custom_object.latex_postproc_func
                 self.export_abstract = self.custom_object.export_abstract
             except ImportError:
-                print('Error Loading plugin')
+                log.error('Error Loading plugin - MeasurementItemCustom.set_model - ' + str(self.itemtype))
 
     def get_latex_buffer(self,path,isabstract=False):
         # read part latex code for records
@@ -1517,7 +1518,7 @@ class MeasurementsView:
             text = pickle.dumps(item) # dump item as text
             self.clipboard.set_text(text,-1) # push to clipboard
         else: # if no selection
-            print("No items selected to copy")
+            log.warning("No items selected to copy")
 
     def paste_at_selection(self):
         text = self.clipboard.wait_for_text() # get text from clipboard
@@ -1542,9 +1543,9 @@ class MeasurementsView:
                     elif isinstance(item,MeasurementItem):
                         self.add_measurement_item_at_node(item,None)
             except:
-                print('No valid data in clipboard')
+                log.warning('No valid data in clipboard')
         else:
-            print("No text on the clipboard.")
+            log.warning("No text on the clipboard.")
 
     def update_store(self):
 
@@ -1816,7 +1817,6 @@ class MeasurementsView:
         
         yield "Edit measurement items at '{}'".format(path)
         # Undo action
-        print(oldval,newval)
         if oldval != None and newval != None:
             if len(path) == 1:
                 item.set_name(oldval)

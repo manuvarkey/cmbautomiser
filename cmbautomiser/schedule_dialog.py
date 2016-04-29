@@ -22,7 +22,7 @@
 #  
 #  
 
-import copy
+import copy, logging
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -33,6 +33,8 @@ from schedule import *
 from misc import *
 from openpyxl import Workbook, load_workbook
 
+# Setup logger object
+log = logging.getLogger(__name__)
 
 # class storing individual items in schedule of work
 class ScheduleItemGeneric:
@@ -191,7 +193,7 @@ class ScheduleDialog:
         try:
             number_of_rows = int(userInput)
         except:
-            print("Invalid number of rows specified")
+            log.warning("Invalid number of rows specified")
             return
         items = []
         for i in range(0, number_of_rows):
@@ -418,7 +420,7 @@ class ScheduleDialog:
             text = pickle.dumps(items)  # dump item as text
             self.clipboard.set_text(text, -1)  # push to clipboard
         else:  # if no selection
-            print("No items selected to copy")
+            log.warning("No items selected to copy")
 
     def paste_at_selection(self):
         text = self.clipboard.wait_for_text()  # get text from clipboard
@@ -436,9 +438,9 @@ class ScheduleDialog:
                     else:  # if no selection
                         self.append_item(itemlist)
             except:
-                print('No valid data in clipboard')
+                log.warning('No valid data in clipboard')
         else:
-            print("No text on the clipboard.")
+            log.warning("No text on the clipboard.")
 
     def model_width(self):
         return len(self.columntypes)
@@ -469,12 +471,12 @@ class ScheduleDialog:
 
     def undo(self):
         setstack(self.stack)  # select schedule undo stack
-        print(self.stack.undotext())
+        log.info(self.stack.undotext())
         self.stack.undo()
 
     def redo(self):
         setstack(self.stack)  # select schedule undo stack
-        print(self.stack.redotext())
+        log.info(self.stack.redotext())
         self.stack.redo()
 
     def clear(self):
@@ -514,7 +516,7 @@ class ScheduleDialog:
                         display_item.append("")
                 except TypeError:
                     display_item.append("")
-                    print('Error: Wrong value loaded in store')
+                    log.warning('Error: Wrong value loaded in store')
             self.store[row] = display_item
         setstack(self.stack)  # select undo stack
 

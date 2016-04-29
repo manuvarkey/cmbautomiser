@@ -22,7 +22,7 @@
 #  
 #  
 
-import copy
+import copy, logging
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -31,6 +31,8 @@ from bill import *
 from schedule_dialog import *
 from misc import *
 
+# Setup logger object
+log = logging.getLogger(__name__)
 
 class BillDialog:
     # General signal handler Methods
@@ -340,7 +342,7 @@ class BillDialog:
             try:
                 self.locked.remove([path[0], path[1], path[2]])
             except ValueError:
-                print(('Unable to release lock on item :' + str(path)))
+                log.warning(('Unable to release lock on item :' + str(path)))
 
         if self.data.prev_bill is not None:
             self.combobox_bill_last_bill.set_active(self.data.prev_bill + 1)

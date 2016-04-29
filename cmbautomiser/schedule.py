@@ -22,7 +22,7 @@
 #  
 #  
 
-import pickle
+import pickle, logging
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -30,6 +30,9 @@ from undo import undoable
 
 # local files import
 from misc import *
+
+# Setup logger object
+log = logging.getLogger(__name__)
 
 # class storing individual items in schedule of work
 class ScheduleItem:
@@ -360,7 +363,7 @@ class ScheduleView:
             text = pickle.dumps(items)  # dump item as text
             self.clipboard.set_text(text, -1)  # push to clipboard
         else:  # if no selection
-            print("No items selected to copy")
+            log.warning("No items selected to copy")
 
     def paste_at_selection(self):
         text = self.clipboard.wait_for_text()  # get text from clipboard
@@ -379,9 +382,9 @@ class ScheduleView:
                     else:  # if no selection
                         self.append_item(itemlist)
             except:
-                print('No valid data in clipboard')
+                log.warning('No valid data in clipboard')
         else:
-            print("No text on the clipboard.")
+            log.warning("No text on the clipboard.")
 
     def get_data_object(self):
         return self.schedule

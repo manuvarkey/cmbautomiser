@@ -22,14 +22,15 @@
 #  
 #  
 
-import copy
+import copy, logging
 
 from gi.repository import Gtk, Gdk, GLib
 
 from cmb import *
 from misc import *
 
-
+# Setup logger object
+log = logging.getLogger(__name__)
 
 # Class storing Abstract dialog
 class AbstractDialog:

@@ -22,9 +22,7 @@
 #
 #
 
-import pickle
-import copy
-import math
+import pickle, copy, math, logging
 
 from gi.repository import Gtk, Gdk, GLib
 from undo import undoable
@@ -38,6 +36,9 @@ from misc import *
 from openpyxl import Workbook, load_workbook, worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
 from openpyxl.cell import get_column_letter
+
+# Setup logger object
+log = logging.getLogger(__name__)
 
 # Data structure for Bill Class
 class BillData:
@@ -669,7 +670,7 @@ class BillView:
             text = pickle.dumps(data)  # dump item as text
             self.clipboard.set_text(text, -1)  # push to clipboard
         else:  # if no selection
-            print("No items selected to copy")
+            log.warning("No items selected to copy")
 
     def paste_at_selection(self):
         text = self.clipboard.wait_for_text()  # get text from clipboard
@@ -719,9 +720,9 @@ class BillView:
                         bill.set_modal(data)
                         self.insert_item_at_row(bill, None)
             except:
-                print('No valid data in clipboard')
+                log.warning('No valid data in clipboard')
         else:
-            print("No text on the clipboard.")
+            log.warning("No text on the clipboard.")
 
     def get_data_object(self):
         data = []

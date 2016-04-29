@@ -575,14 +575,19 @@ class MainWindow:
 
 
 def main():
-    # redirect stderr to tempfile for logging
-    # sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
 
     # Setup Logging to temporary file
     log_file = tempfile.NamedTemporaryFile(mode='w', prefix='cmbautomiser_', 
                                                suffix='.log', delete=False)
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         stream=log_file,level=logging.INFO)
+    # Log all uncaught exceptions
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+        log.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+    sys.excepthook = handle_exception
 
     # Initialise main window
     log.info('Start Program Execution')
