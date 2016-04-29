@@ -22,9 +22,12 @@
 #  
 #  
 
-import subprocess, threading, os, posixpath, platform
+import subprocess, threading, os, posixpath, platform, logging
 
 from gi.repository import Gtk
+
+# Setup logger object
+log = logging.getLogger(__name__)
 
 ## GLOBAL CONSTANTS
 
@@ -265,7 +268,7 @@ class ManageResourses:
                                     try:
                                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                                     except:
-                                        print(('Error found in meas-abstract: Item No.' + str(item) + '. Item Removed'))
+                                        log.warning(('Error found in meas-abstract: Item No.' + str(item) + '. Item Removed'))
                                         mitem.m_items.remove(item)
 
             # Set Billed flag for all items included in bill
@@ -274,8 +277,9 @@ class ManageResourses:
                     try:
                         self.measurements_view.cmbs[item[0]][item[1]][item[2]].set_billed_flag(True)
                     except:
-                        print(('Error found in ' + str(item) + ' in bill ' + bill.data.title + '. Item Removed'))
+                        log.warning(('Error found in ' + str(item) + ' in bill ' + bill.data.title + '. Item Removed'))
                         bill.data.mitems.remove(item)
+            log.info('Billed flags updated')
 
 ## GLOBAL METHODS
 
@@ -301,14 +305,19 @@ def abs_path(*args):
 
 def run_latex(folder, filename):  # runs latex two passes
     if filename is not None:
-        latex_exec = Command([globalvars.global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
+        latex_exec = Command([global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
+        log.info('Latex first pass - ' + filename)
         code = latex_exec.run(timeout=LATEX_TIMEOUT)
         if code == 0:
+            log.info('Latex second pass')
             code = latex_exec.run(timeout=LATEX_TIMEOUT)
             if code != 0:
+                log.info('Latex error second pass')
                 return CMB_ERROR
         else:
+            log.error('Latex error first pass')
             return CMB_ERROR
+        log.info('Latex run compleated')
     return CMB_OK
 
 def replace_all(text, dic):
@@ -343,13 +352,14 @@ class Command(object):
     def run(self, timeout):
         def target():
             self.process = subprocess.Popen(self.cmd)
+            log.info('Sub-process spawned - ' + str(self.process.pid))
             self.process.communicate()
         thread = threading.Thread(target=target)
         thread.start()
 
         thread.join(timeout)
         if thread.is_alive():
-            print('Terminating process')
+            log.error('Terminating sub-process exceeding timeout - ' + str(self.process.pid))
             self.process.terminate()
             thread.join()
             return -1

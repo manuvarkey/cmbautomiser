@@ -22,9 +22,8 @@
 #  
 #  
 
-import subprocess,os,sys,tempfile
+import subprocess, os, sys, tempfile, logging, json
 import dill as pickle
-import json
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -38,9 +37,8 @@ from bill import *
 from misc import *
 import misc
 
-# redirect stdout to tempfile for logging
-# sys.stdout = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_o_',delete=False)
-# sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
+# Get logger object
+log = logging.getLogger()
 
 class MainWindow:
 
@@ -170,43 +168,47 @@ class MainWindow:
             self.filename = open_dialog.get_filename()
             fileobj = open(self.filename, 'rb')
             if fileobj == None:
-                print(("Error opening file " + self.filename))
+                log.error("Error opening file - " + self.filename)
                 self.display_status(misc.CMB_ERROR,"Project could not be opened: Error opening file")
             else:
-                data = pickle.load(fileobj)  # load data structure
-                fileobj.close()
-                if data[0] == PROJECT_FILE_VER:
-                    # clear application states
-                    self.schedule_view.clear()
-                    self.measurements_view.clear()
-                    self.bill_view.clear()
-                    # load application data
+                try:
+                    data = pickle.load(fileobj)  # load data structure
+                    fileobj.close()
+                    if data[0] == PROJECT_FILE_VER:
+                        # clear application states
+                        self.schedule_view.clear()
+                        self.measurements_view.clear()
+                        self.bill_view.clear()
+                        # load application data
 
-                    self.schedule = data[1]
-                    self.schedule_view.set_data_object(self.schedule)
-                    self.measurements_view.set_data_object(self.schedule, data[2])
-                    self.bill_view.set_data_object(self.schedule, self.measurements_view, data[3])
-                    self.project_settings_dict = data[4]
+                        self.schedule = data[1]
+                        self.schedule_view.set_data_object(self.schedule)
+                        self.measurements_view.set_data_object(self.schedule, data[2])
+                        self.bill_view.set_data_object(self.schedule, self.measurements_view, data[3])
+                        self.project_settings_dict = data[4]
 
-                    # set project as active
-                    self.PROJECT_ACTIVE = 1
+                        # set project as active
+                        self.PROJECT_ACTIVE = 1
 
-                    self.display_status(misc.CMB_INFO, "Project successfully opened")
-                    # Setup paths for folder chooser objects
-                    self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
-                        os.path.split(self.filename)[0]))
-                    self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
-                        os.path.split(self.filename)[0]))
-                    # setup window name
-                    self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
-                    # clear undo/redo stack
-                    self.stack.clear()
+                        self.display_status(misc.CMB_INFO, "Project successfully opened")
+                        # Setup paths for folder chooser objects
+                        self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
+                            os.path.split(self.filename)[0]))
+                        self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
+                            os.path.split(self.filename)[0]))
+                        # setup window name
+                        self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
+                        # clear undo/redo stack
+                        self.stack.clear()
 
-                else:
-                    self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
+                    else:
+                        self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
+                except:
+                    log.exception("Error parsing project file - " + self.filename)
+                    self.display_status(misc.CMB_ERROR,"Project could not be opened: Error opening file")
         # if response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("cancelled: FileChooserAction.OPEN")
+            log.info("cancelled: FileChooserAction.OPEN")
         # destroy dialog
         open_dialog.destroy()
 
@@ -229,7 +231,7 @@ class MainWindow:
             # try to open file
             fileobj = open(self.filename, 'wb')
             if fileobj == None:
-                print("Error opening file " + self.filename)
+                log.error("Error opening file " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
             pickle.dump(data, fileobj)
             fileobj.close()
@@ -272,7 +274,7 @@ class MainWindow:
                 os.path.split(self.filename)[0]))
         # if response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("cancelled: FileChooserAction.OPEN")
+            log.info("cancelled: FileChooserAction.OPEN")
         # destroy dialog
         open_dialog.destroy()
         
@@ -292,11 +294,11 @@ class MainWindow:
         widget.hide()
 
     def onRedoClicked(self, button):
-        print('Redo:',self.stack.redotext())
+        log.info('Redo:',self.stack.redotext())
         self.stack.redo()
 
     def onUndoClicked(self, button):
-        print('Undo:',self.stack.undotext())
+        log.info('Undo:',self.stack.undotext())
         self.stack.undo()
 
     # Schedule signal handler methods
@@ -480,14 +482,9 @@ class MainWindow:
         self.measurements_view.update_store()
         self.bill_view.update_store()
 
-    def __init__(self, _windowtype=PARENT_WINDOW):
-        
+    def __init__(self):
+        # Variable used to store handles for child window processes
         self.child_windows = []
-        # Variable to check multiple window instances
-        if _windowtype == PARENT_WINDOW:
-            self.windowtype = PARENT_WINDOW
-        else:
-            self.windowtype = CHILD_WINDOW
 
         # check for project active state
         self.PROJECT_ACTIVE = 0
@@ -542,7 +539,7 @@ class MainWindow:
                 menuitem.connect("activate",self.onMeasCustomMenuClicked,module_name)
                 self.custom_menus.append(menuitem)
             except ImportError:
-                print('Error Loading plugin')
+                log.error('Error Loading plugin - ' + module_name)
 
         # Setup bill View
         self.treeview_bill = self.builder.get_object("treeview_bill")
@@ -578,8 +575,20 @@ class MainWindow:
 
 
 def main():
-    MainWindow().run()  # initialise main window
-    Gtk.main()  # loop
+    # redirect stderr to tempfile for logging
+    # sys.stderr = tempfile.NamedTemporaryFile(mode='w',prefix='cmbautomiser_e_',delete=False)
+
+    # Setup Logging to temporary file
+    log_file = tempfile.NamedTemporaryFile(mode='w', prefix='cmbautomiser_', 
+                                               suffix='.log', delete=False)
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        stream=log_file,level=logging.INFO)
+
+    # Initialise main window
+    log.info('Start Program Execution')
+    MainWindow().run()
+    log.info('Main window initialised')
+    Gtk.main()
     return 0
 
 
