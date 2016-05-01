@@ -72,21 +72,23 @@ class MainWindow:
     # About Dialog
 
     def onAboutDialogClose(self, *args):
+        """Hide about dialog"""
         self.about_dialog.hide()
         return True
 
     def onAboutClick(self, button):
+        """Show about dialog"""
         self.about_dialog.show()
         response = self.about_dialog.run()
         if response == Gtk.ResponseType.CANCEL:
             self.about_dialog.hide()
 
     def onHelpClick(self, button):
+        """Launch help file"""
         if platform.system() == 'Linux':
             subprocess.call(('xdg-open', abs_path('documentation/cmbautomisermanual.pdf')))
         elif platform.system() == 'Windows':
             os.startfile(abs_path('documentation\\cmbautomisermanual.pdf'))
-
 
     # Main Window
 
@@ -114,6 +116,7 @@ class MainWindow:
         self.child_windows.append(proc)
 
     def onOpenProjectClicked(self, button):
+        """Open project selected by  the user"""
         # create a filechooserdialog to open:
         # the arguments are: title of the window, parent_window, action,
         # (buttons, response)
@@ -184,6 +187,7 @@ class MainWindow:
         open_dialog.destroy()
 
     def onSaveProjectClicked(self, button):
+        """Save project to file already opened"""
         if self.PROJECT_ACTIVE == 0:
             self.onSaveAsProjectClicked(button)
         else:
@@ -210,6 +214,7 @@ class MainWindow:
             self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
+        """Save project to file selected by the user"""
         # create a filechooserdialog to open:
         # the arguments are: title of the window, parent_window, action,
         # (buttons, response)
@@ -250,6 +255,7 @@ class MainWindow:
         open_dialog.destroy()
         
     def onProjectSettingsClicked(self, button):
+        """Display dialog to input project settings"""
         item_values = [self.project_settings_dict[key] for key in misc.global_vars]
         # Setup project settings dialog
         project_settings_dialog = misc.UserEntryDialog(self.window, 
@@ -262,24 +268,29 @@ class MainWindow:
             self.project_settings_dict[key] = item
 
     def onInfobarClose(self, widget, response=0):
+        """Hides the infobar"""
         widget.hide()
 
     def onRedoClicked(self, button):
+        """Redo action from stack"""
         log.info('Redo:' + str(self.stack.redotext()))
         self.stack.redo()
 
     def onUndoClicked(self, button):
+        """Undo action from stack"""
         log.info('Undo:' + str(self.stack.undotext()))
         self.stack.undo()
 
     # Schedule signal handler methods
 
     def onButtonScheduleAddPressed(self, button):
+        """Add empty row to schedule view"""
         items = []
         items.append(ScheduleItem("", "", "", 0, 0, "", 30))
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleAddMultPressed(self, button):
+        """Add multiple empty rows to schedule view"""
         user_input = misc.get_user_input_text(self.window, "Please enter the number \nof rows to be inserted",
                                         "Number of Rows")
         try:
@@ -293,15 +304,19 @@ class MainWindow:
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleDeletePressed(self, button):
+        """Delete selected rows from schedule view"""
         self.schedule_view.delete_selection()
 
     def onCopySchedule(self, button):
+        """Copy selected rows from schedule view to clipboard"""
         self.schedule_view.copy_selection()
 
     def onPasteSchedule(self, button):
+        """Paste rows from clipboard into schedule view"""
         self.schedule_view.paste_at_selection()
 
     def onImportScheduleClicked(self, button):
+        """Imports rows from spreadsheet selected by 'filechooserbutton_schedule' into schedule view"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
         spreadsheet = load_workbook(filename)
         sheet = spreadsheet.active
@@ -344,36 +359,47 @@ class MainWindow:
     # Measuremets signal handlers
 
     def onAddCmbClicked(self, button):
+        """Add a CMB object to measurement view"""
         self.measurements_view.add_cmb()
 
     def onAddMeasClicked(self, button):
+        """Add a Measurement object to measurement view"""
         self.measurements_view.add_measurement()
 
     def onAddComplClicked(self, button):
+        """Add a Completion object to measurement view"""
         self.measurements_view.add_completion()
 
     def onAddHeadingClicked(self, button):
+        """Add a Heading object to measurement view"""
         self.measurements_view.add_heading()
 
     def onAddNLBHClicked(self, button):
+        """Add a NLBH object to measurement view"""
         self.measurements_view.add_nlbh(None)
 
     def onAddLLLLLClicked(self, button):
+        """Add a LLLLL object to measurement view"""
         self.measurements_view.add_lllll(None)
 
     def onAddNNNNNNNNClicked(self, button):
+        """Add a NNNNNNNN object to measurement view"""
         self.measurements_view.add_nnnnnnnn(None)
 
     def onAddnnnnnTClicked(self, button):
+        """Add a nnnnnT object to measurement view"""
         self.measurements_view.add_nnnnnt(None)
 
     def onAddAbstractClicked(self, button):
+        """Add a measurement abstract object to measurement view"""
         self.measurements_view.add_abstract(None)
 
     def OnMeasDeleteClicked(self, button):
+        """Delete selected item from measurement view"""
         self.measurements_view.delete_selected_row()
 
     def OnMeasRenderClicked(self, button):
+        """Renders selected CMB to directory selected by 'filechooserbutton_meas'"""
         filechooserbutton_meas = self.builder.get_object("filechooserbutton_meas")
         if filechooserbutton_meas.get_file() != None:
             folder = filechooserbutton_meas.get_file().get_path()
@@ -388,38 +414,48 @@ class MainWindow:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
     def OnMeasClickEvent(self, button, event):
+        """Edit measurement view object on double click"""
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.measurements_view.edit_selected_row()
 
     def OnMeasEditClicked(self, button):
+        """Edit selected item in measurement view"""
         self.measurements_view.edit_selected_row()
 
     def OnMeasPropertiesClicked(self, button):
+        """Edit properties of supported items in measurement view"""
         code = self.measurements_view.edit_selected_properties()
         if code is not None:
             self.display_status(*code)
 
     def OnMeasCopyClicked(self, button):
+        """Copy selected item in measurement view to clipboard"""
         self.measurements_view.copy_selection()
 
     def OnMeasPasteClicked(self, button):
+        """Paste item from clipboard to measurement view"""
         self.measurements_view.paste_at_selection()
         
     def onMeasCustomMenuClicked(self,button,module):
+        """Callback function for click event of custom measurement item"""
         self.measurements_view.add_custom(None,module)
 
     # Bills signal handlers
 
     def onAddBillClicked(self, button):
+        """Add a bill to bill view"""
         self.bill_view.add_bill()
 
     def onAddBillCustomClicked(self, button):
+        """Add a custom bill to bill view"""
         self.bill_view.add_bill_custom()
 
     def OnBillDeleteClicked(self, button):
+        """Delete a bill from bill view"""
         self.bill_view.delete_selected_row()
 
     def OnBillRenderClicked(self, button):
+        """Renders selected Bill to directory selected by 'filechooserbutton_bill'"""
         filechooserbutton_bill = self.builder.get_object("filechooserbutton_bill")
         if filechooserbutton_bill.get_file() != None:
             folder = filechooserbutton_bill.get_file().get_path()
@@ -434,21 +470,26 @@ class MainWindow:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
     def OnBillClickEvent(self, button, event):
+        """Edit bill object on double click"""
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.bill_view.edit_selected_row()
 
     def OnBillEditClicked(self, button):
+        """Edit selected bill"""
         self.bill_view.edit_selected_row()
 
     def OnBillCopyClicked(self, button):
+        """Copy bill to clipboard"""
         self.bill_view.copy_selection()
 
     def OnBillPasteClicked(self, button):
+        """Paste bill in clipboard to bill view"""
         self.bill_view.paste_at_selection()
 
     # Tab methods
 
     def onSwitchTab(self, widget, page, pagenum):
+        """Refreashes displays on switching between views"""
         self.schedule_view.update_store()
         self.measurements_view.update_store()
         self.bill_view.update_store()
