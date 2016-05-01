@@ -265,11 +265,11 @@ class MainWindow:
         widget.hide()
 
     def onRedoClicked(self, button):
-        log.info('Redo:',self.stack.redotext())
+        log.info('Redo:' + str(self.stack.redotext()))
         self.stack.redo()
 
     def onUndoClicked(self, button):
-        log.info('Undo:',self.stack.undotext())
+        log.info('Undo:' + str(self.stack.undotext()))
         self.stack.undo()
 
     # Schedule signal handler methods
