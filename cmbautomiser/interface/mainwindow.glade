@@ -32,24 +32,6 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="liststore_schedule">
-    <columns>
-      <!-- column-name agmnt_no -->
-      <column type="gchararray"/>
-      <!-- column-name item_desc -->
-      <column type="gchararray"/>
-      <!-- column-name unit -->
-      <column type="gchararray"/>
-      <!-- column-name rate -->
-      <column type="gchararray"/>
-      <!-- column-name qty -->
-      <column type="gchararray"/>
-      <!-- column-name ref -->
-      <column type="gchararray"/>
-      <!-- column-name excess_rate_percent -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkMenu" id="popupmenu_meas">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -610,8 +592,6 @@
                       <object class="GtkTreeView" id="treeview_schedule">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="model">liststore_schedule</property>
-                        <property name="expander_column">treeviewcolumn_schedule_unit</property>
                         <property name="search_column">0</property>
                         <property name="show_expanders">False</property>
                         <property name="rubber_banding">True</property>
@@ -619,131 +599,6 @@
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="treeview-selection_schedule">
                             <property name="mode">multiple</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_agmntno">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Agmt.No.</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_agmntno">
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">0</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_description">
-                            <property name="resizable">True</property>
-                            <property name="fixed_width">450</property>
-                            <property name="min_width">300</property>
-                            <property name="max_width">700</property>
-                            <property name="title" translatable="yes">Item Description</property>
-                            <property name="expand">True</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_description">
-                                <property name="editable">True</property>
-                                <property name="wrap_mode">word-char</property>
-                                <property name="wrap_width">650</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">1</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_unit">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Unit</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_unit">
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">2</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_rate">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Rate</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_rate">
-                                <property name="alignment">right</property>
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">3</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_qt">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Qty</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_qty">
-                                <property name="alignment">right</property>
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">4</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_reference">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Reference</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_reference">
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">5</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="treeviewcolumn_schedule_percent">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">100</property>
-                            <property name="min_width">100</property>
-                            <property name="title" translatable="yes">Excess %</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_schedule_percent">
-                                <property name="alignment">right</property>
-                                <property name="editable">True</property>
-                              </object>
-                              <attributes>
-                                <attribute name="text">6</attribute>
-                              </attributes>
-                            </child>
                           </object>
                         </child>
                       </object>

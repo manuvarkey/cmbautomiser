@@ -31,11 +31,11 @@ import undo
 from openpyxl import Workbook, load_workbook
 
 # local files import
-from schedule import *
+import misc, data, view
+# from schedule import *
 from cmb import *
 from bill import *
 from misc import *
-import misc
 
 # Get logger object
 log = logging.getLogger()
@@ -286,7 +286,7 @@ class MainWindow:
     def onButtonScheduleAddPressed(self, button):
         """Add empty row to schedule view"""
         items = []
-        items.append(ScheduleItem("", "", "", 0, 0, "", 30))
+        items.append(ScheduleItem())
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleAddMultPressed(self, button):
@@ -300,12 +300,12 @@ class MainWindow:
             return
         items = []
         for i in range(0, number_of_rows):
-            items.append(ScheduleItem("", "", "", 0, 0, "", 30))
+            items.append(ScheduleItem())
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleDeletePressed(self, button):
         """Delete selected rows from schedule view"""
-        self.schedule_view.delete_selection()
+        self.schedule_view.delete_selected_rows()
 
     def onCopySchedule(self, button):
         """Copy selected rows from schedule view to clipboard"""
@@ -318,43 +318,12 @@ class MainWindow:
     def onImportScheduleClicked(self, button):
         """Imports rows from spreadsheet selected by 'filechooserbutton_schedule' into schedule view"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = load_workbook(filename)
-        sheet = spreadsheet.active
-        # get count of rows
-        rowcount = len(sheet.rows)
-        items = []
-        for row in range(0, rowcount):
-            item = ScheduleItem()
-            for col in range(0, 7):
-                cell = sheet.cell(row = row+1, column = col+1).value
-                # Get formatted string input
-                if cell is None:
-                    cell_formated = ""
-                else:
-                    try:  # try evaluating unicode
-                        cell_formated = str(cell)
-                    except:
-                        cell_formated = ""
-                # Try adding to item
-                if col in [0,1,2,5]:
-                    item[col] = cell_formated
-                elif col in [3,4,6]:
-                    try:
-                        item[col] = float(cell_formated)
-                    except:
-                        item[col] = ScheduleItem()[col]
-            # Hack for proper formating of AgmntNos
-            try:
-                agmntno_float = float(item[0])
-                agmntno_int = int(agmntno_float)
-                if float(agmntno_int) == agmntno_float:
-                    item[0] = str(agmntno_int)
-            except ValueError:
-                pass
-            items.append(item)
+        spreadsheet = misc.Spreadsheet(filename, 'r')
+        columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
+                       misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
+        items = spreadsheet.read_rows(columntypes = columntypes)
         self.schedule_view.insert_item_at_selection(items)
-
-
+        
 
     # Measuremets signal handlers
 
@@ -489,7 +458,7 @@ class MainWindow:
     # Tab methods
 
     def onSwitchTab(self, widget, page, pagenum):
-        """Refreashes displays on switching between views"""
+        """Refreshe display on switching between views"""
         self.schedule_view.update_store()
         self.measurements_view.update_store()
         self.bill_view.update_store()
@@ -523,7 +492,7 @@ class MainWindow:
         self.about_dialog = self.builder.get_object("aboutdialog")
 
         # Setup a schedule of items
-        self.schedule = Schedule()  # initialise a schedule
+        self.schedule = data.schedule.Schedule()  # initialise a schedule
 
         # Setup measurement View
         self.treeview_meas = self.builder.get_object("treeview_meas")
@@ -557,30 +526,20 @@ class MainWindow:
         self.treeview_bill = self.builder.get_object("treeview_bill")
         self.liststore_bill = self.builder.get_object("liststore_bill")
         self.bill_view = BillView(self.schedule, self.measurements_view, self.liststore_bill, self.treeview_bill)
+        
+        # Initialise undo/redo stack
+        self.stack = undo.Stack()
+        undo.setstack(self.stack)
 
         # Setup schedule View
         self.treeview_schedule = self.builder.get_object("treeview_schedule")
-        self.liststore_schedule = self.builder.get_object("liststore_schedule")
-        self.schedule_view = ScheduleView(self.schedule, self.liststore_schedule, self.treeview_schedule)
-        # Connect signals with custom userdata
-        self.builder.get_object("tree_schedule_agmntno").connect("edited", self.schedule_view.onScheduleCellEdited, 0)
-        self.builder.get_object("tree_schedule_description").connect("edited", self.schedule_view.onScheduleCellEdited,
-                                                                     1)
-        self.builder.get_object("tree_schedule_unit").connect("edited", self.schedule_view.onScheduleCellEdited, 2)
-        self.builder.get_object("tree_schedule_rate").connect("edited", self.schedule_view.onScheduleCellEditedRates, 3)
-        self.builder.get_object("tree_schedule_qty").connect("edited", self.schedule_view.onScheduleCellEditedRates, 4)
-        self.builder.get_object("tree_schedule_reference").connect("edited", self.schedule_view.onScheduleCellEdited, 5)
-        self.builder.get_object("tree_schedule_percent").connect("edited", self.schedule_view.onScheduleCellEditedRates,6)
+        self.schedule_view = view.schedule.ScheduleView(self.window, self.treeview_schedule, self.schedule, self.stack)
         
         # setup infobar
         self.builder.get_object("infobar_main").hide()
 
         # setup class for intra process communication
         self.manage_resources = ManageResourses(self.schedule_view,self.measurements_view,self.bill_view)
-        
-        # Initialise undo/redo stack
-        self.stack = undo.Stack()
-        undo.setstack(self.stack)
 
     def run(self, *args):
         self.window.show_all()
@@ -591,8 +550,10 @@ def main():
     # Setup Logging to temporary file
     log_file = tempfile.NamedTemporaryFile(mode='w', prefix='cmbautomiser_', 
                                                suffix='.log', delete=False)
+    #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    #                    stream=log_file,level=logging.INFO)
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        stream=log_file,level=logging.INFO)
+                        stream=sys.stdout,level=logging.INFO)
     # Log all uncaught exceptions
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):

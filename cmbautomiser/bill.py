@@ -28,7 +28,7 @@ from gi.repository import Gtk, Gdk, GLib
 from undo import undoable
 
 # local files import
-from schedule import *
+from data.schedule import *
 from cmb import *
 from bill_dialog import *
 from misc import *

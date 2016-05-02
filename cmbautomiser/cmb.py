@@ -29,8 +29,8 @@ import pickle, os.path, copy, logging
 
 # local files import
 import misc
-from schedule import *
-from schedule_dialog import ScheduleDialog
+from data.schedule import *
+from view.scheduledialog import ScheduleDialog
 
 from misc import *
 

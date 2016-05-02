@@ -26,9 +26,9 @@ import copy, logging
 
 from gi.repository import Gtk, Gdk, GLib
 
-from schedule import *
+from data.schedule import *
 from bill import *
-from schedule_dialog import *
+from view.scheduledialog import *
 from misc import *
 
 # Setup logger object

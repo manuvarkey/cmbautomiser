@@ -25,6 +25,9 @@
 import subprocess, threading, os, posixpath, platform, logging
 
 from gi.repository import Gtk
+import openpyxl
+
+import data
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -194,6 +197,61 @@ class UserEntryDialog():
         else:
             self.dialog_window.destroy()
             return False
+            
+class Spreadsheet:
+    """Manage input and output of spreadsheets"""
+    
+    def __init__(self, filename, mode='r'):
+        self.filename = filename
+        self.mode = mode
+        self.spreadsheet = None
+        self.file = None
+        
+        if self.mode == 'r':
+            self.spreadsheet = openpyxl.load_workbook(filename)
+        elif self.mode == 'w':
+            self.file = open(filename,'w')
+        elif self.mode == 'a':
+            self.file = open(filename,'a')
+        else:
+            self.file = None
+            
+    def read_rows(self,columntypes = [], start=0, end=-1, sheet_no = 0):  
+        sheet = self.spreadsheet.active
+        # Get count of rows
+        rowcount = len(sheet.rows)
+        if end < 0 or end >= rowcount:
+            count_actual = rowcount
+        else:
+            count_actual = end
+        
+        items = []
+        for row in range(1, count_actual):
+            cells = []
+            skip = 0  # No of columns to be skiped ex. breakup, total etc...
+            for columntype, i in zip(columntypes, list(range(len(columntypes)))):
+                cell = sheet.cell(row = row + 1, column = i - skip + 1).value
+                if cell is None:
+                    cell_formated = ""
+                else:
+                    try:  # try evaluating string
+                        if columntype == MEAS_DESC:
+                            cell_formated = str(cell)
+                        elif columntype == MEAS_L:
+                            cell_formated = str(float(cell))
+                        elif columntype == MEAS_NO:
+                            cell_formated = str(int(cell))
+                        else:
+                            cell_formated = ''
+                    except:
+                        cell_formated = ''
+                        log.warning("Spreadsheet - Value skiped on import - " + str((row, i)))
+                if columntype == MEAS_CUST:
+                    skip = skip + 1
+                cells.append(cell_formated)
+            item = data.schedule.ScheduleItemGeneric(cells)
+            items.append(item)
+        return items
 
 
 class ManageResourses:
