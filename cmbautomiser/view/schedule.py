@@ -421,7 +421,7 @@ class ScheduleView(ScheduleViewGeneric):
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
         render_funcs = [None,None,None,None,None,None,None]
-        widths = [100,500,100,100,100,100,100]
+        widths = [80,500,100,100,100,100,100]
         expandables = [False,True,False,False,False,False,False,]
         
         # Initialise base class
