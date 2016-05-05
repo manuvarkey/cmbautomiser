@@ -198,6 +198,7 @@ class UserEntryDialog():
             self.dialog_window.destroy()
             return False
             
+            
 class Spreadsheet:
     """Manage input and output of spreadsheets"""
     
@@ -245,7 +246,7 @@ class Spreadsheet:
                             cell_formated = ''
                     except:
                         cell_formated = ''
-                        log.warning("Spreadsheet - Value skiped on import - " + str((row, i)))
+                        log.warning("Spreadsheet - Value skipped on import - " + str((row, i)))
                 if columntype == MEAS_CUST:
                     skip = skip + 1
                 cells.append(cell_formated)
@@ -254,6 +255,51 @@ class Spreadsheet:
         return items
 
 
+class LatexFile:
+    """Class for forating and rendering latex code"""
+    def __init__(self, latex_buffer = ""):
+        self.latex_buffer = latex_buffer
+    
+    # Inbuilt methods
+
+    def clean_latex(text):
+        """Replace special charchters with latex commands"""
+        for splchar, replspelchar in zip(['\\', '#', '$', '%', '^', '&', '_', '{', '}', '~', '\n'],
+                                         ['\\textbackslash ', '\# ', '\$ ', '\% ', '\\textasciicircum ', '\& ', '\_ ',
+                                          '\{ ', '\} ', '\\textasciitilde ', '\\newline ']):
+            text = text.replace(splchar, replspelchar)
+        return text
+        
+    # Operator overloading
+    
+    def __add__(self,other):
+        return LatexFile(self.latex_buffer + '\n' + other.latex_buffer)
+        
+    # Public members
+            
+    def add_preffix_from_file(self,filename):
+        """Add a latex file as preffix"""
+        latex_file = open(filename,'r')
+        self.latex_buffer = latex_file.read + self.latex_buffer + '\n'
+        latex_file.close()
+        
+    def add_suffix_from_file(self,filename):
+        """Add a latex file as suffix"""
+        latex_file = open(filename,'r')
+        self.latex_buffer = self.latex_buffer + '\n' + latex_file.read
+        latex_file.close()
+        
+    def replace_and_clean(dic):
+        """Replace items as per dictionary after cleaning special charachters"""
+        for i, j in dic.items():
+            j = clean_latex(j)
+            self.latex_buffer = self.latex_buffer.replace(i, j)
+
+    def replace(dic):
+        """Replace items as per dictionary"""
+        for i, j in dic.items():
+            self.latex_buffer = self.latex_buffer.replace(i, j)        
+        
 class ManageResourses:
     # Static Variables
     schedule_view = None
@@ -339,6 +385,29 @@ class ManageResourses:
                         bill.data.mitems.remove(item)
             log.info('Billed flags updated')
 
+
+class Command(object):
+    """Runs a command in a seperate thread"""
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.process = None
+
+    def run(self, timeout):
+        def target():
+            self.process = subprocess.Popen(self.cmd)
+            log.info('Sub-process spawned - ' + str(self.process.pid))
+            self.process.communicate()
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(timeout)
+        if thread.is_alive():
+            log.error('Terminating sub-process exceeding timeout - ' + str(self.process.pid))
+            self.process.terminate()
+            thread.join()
+            return -1
+        return 0
+
 ## GLOBAL METHODS
 
 def get_user_input_text(parent, message, title=''):
@@ -396,64 +465,7 @@ def posix_path(*args):
 def abs_path(*args):
     return os.path.join(os.path.split(__file__)[0],*args)
 
-def run_latex(folder, filename):  # runs latex two passes
-    if filename is not None:
-        latex_exec = Command([global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
-        log.info('Latex first pass - ' + filename)
-        code = latex_exec.run(timeout=LATEX_TIMEOUT)
-        if code == 0:
-            log.info('Latex second pass')
-            code = latex_exec.run(timeout=LATEX_TIMEOUT)
-            if code != 0:
-                log.info('Latex error second pass')
-                return CMB_ERROR
-        else:
-            log.error('Latex error first pass')
-            return CMB_ERROR
-        log.info('Latex run compleated')
-    return CMB_OK
-
-def replace_all(text, dic):
-    for i, j in dic.items():
-        j = clean_latex(j)
-        text = text.replace(i, j)
-    return text
-
-def replace_all_vanilla(text, dic):
-    for i, j in dic.items():
-        text = text.replace(i, j)
-    return text
-
 def clean_markup(text):
     for splchar, replspelchar in zip(['&', '<', '>', ], ['&amp;', '&lt;', '&gt;']):
         text = text.replace(splchar, replspelchar)
     return text
-
-def clean_latex(text):
-    for splchar, replspelchar in zip(['\\', '#', '$', '%', '^', '&', '_', '{', '}', '~', '\n'],
-                                     ['\\textbackslash ', '\# ', '\$ ', '\% ', '\\textasciicircum ', '\& ', '\_ ',
-                                      '\{ ', '\} ', '\\textasciitilde ', '\\newline ']):
-        text = text.replace(splchar, replspelchar)
-    return text
-
-# For running command in seperate thread
-class Command(object):
-    def __init__(self, cmd):
-        self.cmd = cmd
-        self.process = None
-
-    def run(self, timeout):
-        def target():
-            self.process = subprocess.Popen(self.cmd)
-            log.info('Sub-process spawned - ' + str(self.process.pid))
-            self.process.communicate()
-        thread = threading.Thread(target=target)
-        thread.start()
-
-        thread.join(timeout)
-        if thread.is_alive():
-            log.error('Terminating sub-process exceeding timeout - ' + str(self.process.pid))
-            self.process.terminate()
-            thread.join()
-            return -1
-        return 0
