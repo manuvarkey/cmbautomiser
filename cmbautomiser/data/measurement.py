@@ -402,8 +402,8 @@ class MeasurementItemCustom(MeasurementItem):
 			self.__init__(data[1], data[5])
 
     def get_latex_buffer(self,path,isabstract=False):
-        # read part latex code for records
-        latex_records = ''
+        latex_records = misc.LatexFile()
+        
         data_string = [None]*self.model_width()
         for slno,record in enumerate(self.records):
             meascustom_rec_vars = {}
@@ -434,9 +434,10 @@ class MeasurementItemCustom(MeasurementItem):
                 else:
                     meascustom_rec_vars['$data' + str(i+1) + '$'] = data_string[i]
             meascustom_rec_vars['$slno$'] = str(slno+1)
-            latex_record = self.latex_record[:]
-            latex_record = replace_all_vanilla(latex_record,meascustom_rec_vars_van)
-            latex_record = replace_all(latex_record,meascustom_rec_vars)
+            
+            latex_record = misc.LatexFile(self.latex_record)
+            latex_record.replace(meascustom_rec_vars_van)
+            latex_record.replace_and_clean(meascustom_rec_vars)
             latex_records += latex_record
             
         # replace local variables
@@ -462,13 +463,15 @@ class MeasurementItemCustom(MeasurementItem):
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iftrue'
         else:
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iffalse'
-        latex_buffer = self.latex_item[:]
-        latex_buffer = replace_all(latex_buffer,meascustom_local_vars)
-
-        # fill in records - vanilla function used since latex_records contains latex code
+	    # fill in records - vanilla used since latex_records contains latex code
         meascustom_local_vars_vannilla['$cmbrecords$'] = latex_records
-        latex_buffer = replace_all_vanilla(latex_buffer,meascustom_local_vars_vannilla)
-        return self.latex_postproc_func(self.records,self.user_data,latex_buffer,isabstract)
+            
+        latex_buffer = misc.LatexFile(self.latex_item)
+        latex_buffer.replace_and_clean(meascustom_local_vars)
+        latex_buffer.replace(meascustom_local_vars_vannilla)
+        
+        latex_post = self.latex_postproc_func(self.records,self.user_data,latex_buffer,isabstract)
+        return latex_post
 
     def print_item(self):
         print("    Item No." + str(self.itemnos))
