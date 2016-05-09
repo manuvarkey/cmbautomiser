@@ -23,21 +23,29 @@
 #  
 
 from gi.repository import Gtk, Gdk, GLib
-from undo import undoable
-
 import os.path, copy, logging
 
 # local files import
-import misc
+from __main__ import misc
 
 # Setup logger object
 log = logging.getLogger(__name__)
 
 class Cmb:
 	"""Stores a CMB data instance"""
-    def __init__(self,name = ""):
-        self.name = name
-        self.items = []
+    def __init__(self, model=None):
+        if model is not None:
+            self.name = model[0]
+			self.items = []
+			for item_model in model[1]:
+				if item_model[0] in ['Measurement','Completion']:
+					item_type = globals()[item_model[0]]
+					item = item_type()
+					item.set_model(item_model)
+					self.items.append(item)
+        else:
+            self.name = ''
+            self.items = []
 
     def append_item(self,item):
         item.set_cmb(self)
@@ -66,23 +74,14 @@ class Cmb:
         return len(self.items)
         
 	def get_model(self):
-		model = ['CMB',[self.name]]
 		items_model = []
 		for item in self.items:
 			items_model.append(item.get_model())
-		model.append(items_model)
-		return model
+		return ['CMB', [self.name, items_model]]
 	
 	def set_model(self, model):
 		if model[0] == 'CMB':
-			self.name = model[1][0]
-			self.items = []
-			for item_model in model[2]:
-				if item_model[0] in ['Measurement','Completion']:
-					item_type = globals()[item_model[0]]
-					item = item_type()
-					item.set_model(item_model)
-					self.items.append(item)
+			self.__init__(model[1])
 
     def clear(self):
         self.items = []
@@ -116,9 +115,22 @@ class Cmb:
         
 class Measurement:
 	"""Stores a Measurement groups"""
-    def __init__(self,date = ""):
-        self.date = date
-        self.items = []
+    def __init__(self, model = None):
+        if model is not None:
+            self.date = model[0]
+            self.items = []
+            class_list = ['MeasurementItemHeading',
+                          'MeasurementItemCustom',
+                          'MeasurementItemAbstract']
+            for item_model in model[1]:
+                if item_model[0] in class_list:
+                    item_type = globals()[item_model[0]]
+                    item = item_type()
+                    item.set_model(item_model)
+                    self.items.append(item)
+        else:
+            self.date = ''
+            self.items = []
 
     def append_item(self,item):
         item.set_measurement(self)
@@ -147,26 +159,14 @@ class Measurement:
         return len(self.items)
 	
 	def get_model(self):
-		model = ['Measurement',[self.date]]
 		items_model = []
 		for item in self.items:
 			items_model.append(item.get_model())
-		model.append(items_model)
-		return model
+		return ['Measurement', [self.date, items_model]]
 	
 	def set_model(self, model):
 		if model[0] == 'Measurement':
-			self.date = model[1][0]
-			self.items = []
-			class_list = ['MeasurementItemHeading',
-						  'MeasurementItemCustom',
-						  'MeasurementItemAbstract']
-			for item_model in model[2]:
-				if item_model[0] in class_list:
-					item_type = globals()[item_model[0]]
-					item = item_type()
-					item.set_model(item_model)
-					self.items.append(item)
+			self.__init__(model[1])
         
 	def get_latex_buffer(self,path):
         latex_buffer = misc.LatexFile()
@@ -241,16 +241,19 @@ class MeasurementItem:
                 
 class MeasurementItemHeading(MeasurementItem):
 	"""Stores an item heading"""
-    def __init__(self,remark):
-        MeasurementItem.__init__(self,itemnos=[],records=[],remark=remark,item_remarks = None)
+    def __init__(self, model=None):
+        if model is not None:
+            MeasurementItem.__init__(self,remark=model[0])
+        else:
+            MeasurementItem.__init__(self)
 	
 	def get_model(self):
-		model = ['MeasurementItemHeading',[self.remark]]
+		model = ['MeasurementItemHeading', [self.remark]]
 		return model
 	
 	def set_model(self, model):
 		if model[0] == 'MeasurementItemHeading':
-			self.remark = model[1][0]
+			self.__init__(model[1])
         
     def get_latex_buffer(self,path):
         latex_buffer = misc.LatexFile()
@@ -370,8 +373,9 @@ class MeasurementItemCustom(MeasurementItem):
                 
                 records = []
                 for item_model in data[1]:
-					item = RecordCustom(item_model, cust_funcs, total_func, 
-                
+					item = RecordCustom(item_model, self.cust_funcs,
+                                        self.total_func, self.columntypes)
+                    record.append(item)
                 remark = data[2]
                 item_remarks = data[3]
                 self.user_data = data[4]
@@ -396,10 +400,10 @@ class MeasurementItemCustom(MeasurementItem):
                  self.user_data, self.itemtype]
         return ['MeasurementItemCustom', data]
 
-    def set_model(self, data):
-		if data[1] == 'MeasurementItemCustom':
+    def set_model(self, model):
+		if model[0] == 'MeasurementItemCustom':
 			self.clear()
-			self.__init__(data[1], data[5])
+			self.__init__(model[1], model[1][5])
 
     def get_latex_buffer(self,path,isabstract=False):
         latex_records = misc.LatexFile()
@@ -496,36 +500,29 @@ class MeasurementItemCustom(MeasurementItem):
         else:
             return None
 
-# Abstract of measurement
+
 class MeasurementItemAbstract(MeasurementItem):
-    def __init__(self,data = None):
-        self.int_m_item = None # used to store all records and stuff
-        self.m_items = None
+    """Stores an abstract of measurements"""
+    def __init__(self, data = None):
+        self.int_m_item = None  # MeasurementItemCustom for storing abstract
+        self.m_items = []  # Paths to items to be abstracted
 
         if data is not None:
-            self.set_model(data)
+            self.m_items = data[0]
+            self.int_m_item = MeasurementItemCustom(data[1],data[1][5])
         MeasurementItem.__init__(self,itemnos=[],items=[],records=[],remark='',item_remarks = [])
 
     def get_model(self):
         model = None
-        itemtype = None
         if self.int_m_item is not None:
             model = self.int_m_item.get_model()
-            itemtype = self.int_m_item.itemtype
-        data = [self.m_items,model,itemtype]
-        return data
+        data = [self.m_items, model]
+        return ['MeasurementItemAbstract', data]
 
-    def set_model(self,data):
-        self.int_m_item = None # used to store all records and stuff
-        self.m_items = None
-
-        if data is not None:
-            self.m_items = data[0]
-            if self.m_items is not None:
-                self.int_m_item = MeasurementItemCustom(None,data[2])
-                self.int_m_item.set_model(data[1])
-                MeasurementItem.__init__(self,self.int_m_item.itemnos,self.int_m_item.items,self.int_m_item.records,
-                              self.int_m_item.remark,self.int_m_item.item_remarks)
+    def set_model(self, model):
+        if model[0] == 'MeasurementItemAbstract':
+			self.clear()
+            self.__init__(model[1])
 
     def get_latex_buffer(self,path):
         if self.m_items is not None:
@@ -554,8 +551,12 @@ class MeasurementItemAbstract(MeasurementItem):
 
 class Completion:
 	"""Class storing Completion date"""
-    def __init__(self,date = "",remark = ""):
-        self.date = date
+    def __init__(self, model=None):
+        if model is not None:
+            self.date = model[0]
+        else:
+            self.date = ''
+        MeasurementItem.__init__(self)
 
     def set_date(self,date):
         self.date = date
@@ -564,12 +565,11 @@ class Completion:
         return self.date
         
 	def get_model(self):
-		model = ['Completion',[self.date]]
-		return model
+		return ['Completion',[self.date]]
 	
 	def set_model(self, model):
 		if model[0] == 'Completion':
-			self.date = model[1][0]
+			self.__init__(model[1])
 	
 	def get_latex_buffer(self,path):
 		latex_buffer = misc.LatexFile()

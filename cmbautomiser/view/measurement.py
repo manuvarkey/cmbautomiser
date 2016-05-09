@@ -28,11 +28,8 @@ from undo import undoable
 import pickle, os.path, copy, logging
 
 # local files import
-import misc
-from data.schedule import *
-from view.scheduledialog import ScheduleDialog
-
-from misc import *
+from __main__ import misc
+from .scheduledialog import ScheduleDialog
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -45,257 +42,67 @@ class MeasurementsView:
     def onKeyPressTreeview(self, treeview, event):
         if event.keyval == Gdk.KEY_Escape:  # unselect all
             self.tree.get_selection().unselect_all()
-
-    def get_data_object(self):
-        return self.cmbs
-
-    def set_data_object(self,schedule,data):
-        del self.cmbs
-        self.cmbs = data
-        for cmb in self.cmbs: # required since cutom object can be dynamic
-            for meas in cmb:
-                if not isinstance(meas,Completion):
-                    for mitem in meas:
-                        if isinstance(mitem,MeasurementItemCustom) or isinstance(mitem,MeasurementItemAbstract):
-                            billedflag = mitem.get_billed_flag() # keep billed flag info. Not copied with set_modal
-                            mitem.set_model(mitem.get_model()) # refresh changes on disk
-                            mitem.set_billed_flag(billedflag)
-        self.schedule = schedule
-        self.update_store()
-
-    def clear(self):
-        self.cmbs = []
-        self.update_store()
+            
+    # Public Methods
 
     def add_cmb(self):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        cmb_name = misc.get_user_input_text(toplevel, "Please input CMB Name", "Add new CMB")
-        
+        cmb_name = misc.get_user_input_text(self.parent, "Please input CMB Name", "Add new CMB")
         if cmb_name != None:
-            cmb = Cmb(cmb_name)
-            
-            # get selection
+            cmb = ['CMB', [cmb_name, []]]
+            # Get selection
             selection = self.tree.get_selection()
-            if selection.count_selected_rows() != 0: # if selection exists
+            if selection.count_selected_rows() != 0:  # If selection exists
                 [model, paths] = selection.get_selected_rows()
-                self.add_cmb_at_node(cmb,paths[0].get_indices()[0])
-            else: # if no selection append at end
-                self.add_cmb_at_node(cmb,None)
-        
-    @undoable
-    def add_cmb_at_node(self,cmb,row):
-        if row != None:
-            self.cmbs.insert(row,cmb)
-            row_delete = row
-        else:
-            self.cmbs.append(cmb)
-            row_delete = len(self.cmbs) - 1
-        self.update_store()
-
-        yield "Add CMB at '{}'".format([row])
-        # Undo action
-        self.delete_row([row_delete])
+                self.add_cmb_at_node(cmb, paths[0].get_indices()[0])
+            else:  # If no selection append at end
+                self.add_cmb_at_node(cmb, None)
+            self.update_store()
         
     def add_measurement(self):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        meas_name = misc.get_user_input_text(toplevel, "Please input Measurement Date", "Add new Measurement")
-        
+        meas_name = misc.get_user_input_text(self.parent, "Please input Measurement Date", "Add new Measurement")
         if meas_name != None:
-            meas = Measurement(meas_name)
-            # get selection
+            meas = ['Measurement', [meas_name, []]]
+            # Get selection
             selection = self.tree.get_selection()
-            if selection.count_selected_rows() != 0: # if selection exists
+            if selection.count_selected_rows() != 0:  # If selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
                 self.add_measurement_at_node(meas,path)
-            else: # if no selection append at end
+            else: # If no selection append at end
                 self.add_measurement_at_node(meas,None)
-        self.update_store()
+            self.update_store()
 
     def add_completion(self):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        compl_name = misc.get_user_input_text(toplevel, "Please input Completion Date", "Add Completion")
-
+        compl_name = misc.get_user_input_text(self.parent, "Please input Completion Date", "Add Completion")
         if compl_name != None:
-            compl = Completion(compl_name)
-            # get selection
+            compl = ['Completion', [compl_name]]
+            # Get selection
             selection = self.tree.get_selection()
-            if selection.count_selected_rows() != 0: # if selection exists
+            if selection.count_selected_rows() != 0: # If selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
                 self.add_measurement_at_node(compl,path)
-            else: # if no selection append at end
+            else: # If no selection append at end
                 self.add_measurement_at_node(compl,None)
-        self.update_store()
-
-    @undoable
-    def add_measurement_at_node(self,meas,path):
-        selection = self.tree.get_selection()
-        delete_path = None
-        if path != None:
-            if len(path) > 1: # if a measurement selected
-                self.cmbs[path[0]].insert_item(path[1],meas)
-                delete_path = [path[0],path[1]]
-            else: # append to selected cmb
-                self.cmbs[path[0]].append_item(meas)
-                delete_path = [path[0],self.cmbs[path[0]].length()-1]
-        else: # if no selection append at end
-            if len(self.cmbs) != 0:
-                self.cmbs[-1].append_item(meas)
-                delete_path = [len(self.cmbs)-1,self.cmbs[-1].length()-1]
-        self.update_store()
-
-        yield "Add Measurement at '{}'".format(path)
-        # Undo action
-        self.delete_row(delete_path)
+            self.update_store()
         
     def add_heading(self):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        heading_name = misc.get_user_input_text(toplevel, "Please input Heading", "Add new Item: Heading")
+        heading_name = misc.get_user_input_text(self.parent, "Please input Heading", "Add new Item: Heading")
         
         if heading_name != None:
             # get selection
             selection = self.tree.get_selection()
-            heading = MeasurementItemHeading(heading_name)
+            heading = ['MeasurementItemHeading', [heading_name]]
             if selection.count_selected_rows() != 0: # if selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
                 self.add_measurement_item_at_node(heading,path)
             else: # if no selection append at end
                 self.add_measurement_item_at_node(heading,None)
-
-    def add_nlbh(self,oldval=None):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        itemnos = [None]
-        captions = ['Description','Breakup','Nos','L','B','H','Total']
-        columntypes = [MEAS_DESC,MEAS_CUST,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_CUST]
-        callback_total = lambda values,row:str(RecordNLBH(*values[1:6]).find_total())
-        callback_breakup = lambda values,row:str(RecordNLBH(*values[1:6]).find_breakup())
-        cellrenderers = [None] + [callback_breakup] + [None]*4 + [callback_total]
-        item_schedule = self.schedule
-        
-        dialog = ScheduleDialog(toplevel,itemnos,captions,columntypes,cellrenderers,item_schedule)
-
-        if oldval != None: # if edit mode add data
-            dialog.set_model(oldval)
-            data = dialog.run()
-            if data != None: # if edited
-                return data
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            data = dialog.run()
-            if data != None:
-                item = MeasurementItemNLBH()
-                item.set_model(data)
-                # get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
-                else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
-                    
-    def add_lllll(self,oldval=None):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        itemnos = [None]*5
-        captions = ['Description','Breakup','L1','L2','L3','L4','L5']
-        columntypes = [MEAS_DESC,MEAS_CUST,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_L]
-        callback_breakup = lambda values,row:str(RecordLLLLL(*values[1:7]).find_breakup()) # check later
-        cellrenderers = [None] + [callback_breakup] + [None]*5
-        item_schedule = self.schedule
-        
-        dialog = ScheduleDialog(toplevel,itemnos,captions,columntypes,cellrenderers,item_schedule)
-
-        if oldval != None: # if edit mode add data
-            dialog.set_model(oldval)
-            data = dialog.run()
-            if data != None: # if edited
-                return data
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            data = dialog.run()
-            if data != None:
-                item = MeasurementItemLLLLL()
-                item.set_model(data)
-                # get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
-                else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
-                    
-    def add_nnnnnnnn(self,oldval=None):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        itemnos = [None]*8
-        captions = ['Description','N1','N2','N3','N4','N5','N6','N7','N8']
-        columntypes = [MEAS_DESC,MEAS_NO,MEAS_NO,MEAS_NO,MEAS_NO,MEAS_NO,MEAS_NO,MEAS_NO,MEAS_NO]
-        cellrenderers = [None] + [None]*8
-        item_schedule = self.schedule
-        
-        dialog = ScheduleDialog(toplevel,itemnos,captions,columntypes,cellrenderers,item_schedule)
-
-        if oldval != None: # if edit mode add data
-            dialog.set_model(oldval)
-            data = dialog.run()
-            if data != None: # if edited
-                return data
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            data = dialog.run()
-            if data != None:
-                item = MeasurementItemNNNNNNNN()
-                item.set_model(data)
-                # get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
-                else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
-                    
-    def add_nnnnnt(self,oldval=None):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        itemnos = [None]
-        captions = ['Description','N1','N2','N3','N4','N5','Total']
-        columntypes = [MEAS_DESC,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_L,MEAS_CUST]
-        callback_total = lambda values,row:str(RecordnnnnnT(*values[0:6]).find_total())
-        cellrenderers = [None] + [None]*5 + [callback_total]
-        item_schedule = self.schedule
-        
-        dialog = ScheduleDialog(toplevel,itemnos,captions,columntypes,cellrenderers,item_schedule)
-
-        if oldval != None: # if edit mode add data
-            dialog.set_model(oldval)
-            data = dialog.run()
-            if data != None: # if edited
-                return data
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            data = dialog.run()
-            if data != None:
-                item = MeasurementItemnnnnnT()
-                item.set_model(data)
-                # get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
-                else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
+            self.update_store()
                     
     def add_custom(self,oldval=None,itemtype=None):
         item = MeasurementItemCustom(None,itemtype)
-
-        toplevel = self.tree.get_toplevel() # get current top level window
         itemnos_mask = item.itemnos_mask
         captions = item.captions
         columntypes = item.columntypes
@@ -309,7 +116,7 @@ class MeasurementsView:
                 cellrenderers.append(None)
         item_schedule = self.schedule
         
-        dialog = ScheduleDialog(toplevel, itemnos_mask, captions, columntypes, cellrenderers, item_schedule)
+        dialog = ScheduleDialog(self.parent, itemnos_mask, captions, columntypes, cellrenderers, item_schedule)
 
         if oldval is not None: # if edit mode add data
             dialog.set_model(oldval[:-2])
@@ -359,67 +166,12 @@ class MeasurementsView:
                 else: # if no selection append at end
                     self.add_measurement_item_at_node(item,None)
         
-    @undoable
-    def add_measurement_item_at_node(self,item,path):
-        delete_path = None
-        if path != None:
-            if len(path) > 2: # if a measurement item selected
-                self.cmbs[path[0]][path[1]].insert_item(path[2],item)
-                delete_path = [path[0],path[1],path[2]]
-            elif len(path) > 1: # if measurement group selected
-                if isinstance(self.cmbs[path[0]][path[1]],Measurement): # check if meas item
-                    self.cmbs[path[0]][path[1]].append_item(item)
-                    delete_path = [path[0],path[1],self.cmbs[path[0]][path[1]].length()-1]
-            elif len(path) == 1: # if cmb selected
-                index_meas = self.cmbs[path[0]].length()-1
-                if isinstance(self.cmbs[path[0]][index_meas],Measurement): # check if meas item
-                    self.cmbs[path[0]][index_meas].append_item(item)
-                    index_item = self.cmbs[path[0]][index_meas].length()-1
-                    delete_path = [path[0],index_meas,index_item]
-        else: # if path is None append at end
-            if len(self.cmbs) != 0:
-                if self.cmbs[-1].length() > 0:
-                    if isinstance(self.cmbs[-1][-1],Measurement):
-                        self.cmbs[-1][-1].append_item(item)
-                        delete_path = [len(self.cmbs)-1,self.cmbs[-1].length()-1,self.cmbs[-1][-1].length()-1]
-        self.update_store()
-        
-        yield "Add Measurement item at '{}'".format(path)
-        # Undo action
-        if delete_path != None:
-            self.delete_row(delete_path)
-        
     def delete_selected_row(self):
         # get selection
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
             self.delete_row(paths[0].get_indices())
-    
-    @undoable
-    def delete_row(self,path):
-        item = None
-        # get selection
-        if len(path) == 1:
-            item = self.cmbs[path[0]]
-            del self.cmbs[path[0]]
-        elif len(path) == 2:
-            item = self.cmbs[path[0]][path[1]]
-            self.cmbs[path[0]].remove_item(path[1])
-        elif len(path) == 3:
-            item = self.cmbs[path[0]][path[1]][path[2]]
-            self.cmbs[path[0]][path[1]].remove_item(path[2])
-        self.update_store()
-        
-        yield "Delete measurement items at '{}'".format(path)
-        # Undo action
-        if len(path) == 1:
-            self.add_cmb_at_node(item,path[0])
-        elif len(path) == 2:
-            self.add_measurement_at_node(item,path)
-        elif len(path) == 3:
-            self.add_measurement_item_at_node(item,path)
-        self.update_store()
 
     def copy_selection(self):
         selection = self.tree.get_selection()
@@ -749,16 +501,47 @@ class MeasurementsView:
                     item.set_model(oldval)
             self.update_store()
                     
-    def __init__(self,schedule,TreeStoreObject,TreeViewObject):
-        self.schedule = schedule
-        self.store = TreeStoreObject
-        self.tree = TreeViewObject
-            
-        self.cmbs = [] # initialise item list
+    def __init__(self, parent, data, store, tree):
+        """Initialise MeasurementsView class
         
+            Arguments:
+                parent: Parent widget (Main window)
+                data: Main data model
+                tree: Treeview for implementing MeasurementsView
+        """
+        self.parent = parent        
+        self.tree = tree
+        self.data = data
+        self.schedule = data_model.schedule
+        self.cmbs = data_model.cmbs
+        self.bills = data_model.cmbs
+        
+        ## Setup treeview store
+        # Item Description, Billed Flag, Tooltip, Colour
+        self.store = Gtk.ListStore([str,bool,str,str])
+        # Treeview columns
+        column_desc = Gtk.TreeViewColumn('Item Description')
+        column_desc.props.expand = True
+        column_toggle = Gtk.TreeViewColumn('Billed ?')
+        column_toggle.props.fixed_width = 150
+        column_toggle.props.min_width = 150
+        # Treeview renderers
+        renderer_desc = Gtk.CellRendererText()
+        renderer_toggle = Gtk.CellRendererToggle()
+        # Pack renderers
+        column_desc.pack_start(renderer_desc, True)
+        column_toggle.pack_start(renderer_toggle, True)
+        # Add attributes
+        column_desc.add_attribute(renderer_desc, "text", 0)
+        renderer_toggle.add_attribute(renderer_toggle, "active", 1)
+        # Set model for store
+        self.tree.set_model(self.store)
+
+        # Intialise clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD) # initialise clipboard
-        
-        # connect callbacks
+
+        # Connect Callbacks
         self.tree.connect("key-press-event", self.onKeyPressTreeview)
         
+        # Update GUI elements according to data
         self.update_store()
