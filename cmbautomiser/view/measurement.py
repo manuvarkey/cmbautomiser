@@ -22,10 +22,10 @@
 #  
 #  
 
+import pickle, os.path, copy, logging
+
 from gi.repository import Gtk, Gdk, GLib
 from undo import undoable
-
-import pickle, os.path, copy, logging
 
 # local files import
 from __main__ import misc
@@ -150,30 +150,26 @@ class MeasurementsView:
                     self.add_measurement_item_at_node(custmod, None)
 
     def add_abstract(self,oldval=None):
-        
-
-        item = MeasurementItemAbstract(None)
-        
+        """Add an Abstract item to measurement view"""
         if oldval is not None: # if edit mode add data
-            dialog = AbstractDialog(self.parent,oldval, self, self.schedule)
-            data = dialog.run()
-            if data is not None: # if edited
-                return data
+            dialog = AbstractDialog(self.parent, self.data, oldval)
+            model = dialog.run()
+            if model is not None: # if edited
+                return model
             else: # if cancel pressed
                 return None
         else: # if normal mode
-            dialog = AbstractDialog(toplevel,[[],None,None], self, self.schedule)
-            data = dialog.run()
-            if data is not None:
-                item.set_model(data)
-                # get selection
+            dialog = AbstractDialog(self.parent, self.data, None)
+            model = dialog.run()
+            if model is not None:
+                # Get selection
                 selection = self.tree.get_selection()
                 if selection.count_selected_rows() != 0: # if selection exists
                     [model, paths] = selection.get_selected_rows()
                     path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
+                    self.add_measurement_item_at_node(model, path)
                 else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
+                    self.add_measurement_item_at_node(model, None)
         
     def delete_selected_row(self):
         """Delete selected rows"""
@@ -547,7 +543,7 @@ class MeasurementsView:
         self.tree.set_model(self.store)
 
         # Intialise clipboard
-        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD) # initialise clipboard
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         # Connect Callbacks
         self.tree.connect("key-press-event", self.onKeyPressTreeview)

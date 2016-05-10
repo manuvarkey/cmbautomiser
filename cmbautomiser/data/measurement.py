@@ -373,7 +373,7 @@ class MeasurementItemCustom(MeasurementItem):
                 
                 records = []
                 for item_model in data[1]:
-					item = RecordCustom(item_model, self.cust_funcs,
+                    item = RecordCustom(item_model, self.cust_funcs,
                                         self.total_func, self.columntypes)
                     record.append(item)
                 remark = data[2]
@@ -382,7 +382,7 @@ class MeasurementItemCustom(MeasurementItem):
                 MeasurementItem.__init__(self, itemnos, records, remark, item_remarks)
             else:
                 MeasurementItem.__init__(self, [None]*self.item_width(), [],
-										 '', ['']*self.item_width())
+                                         '', ['']*self.item_width())
         else:
             MeasurementItem.__init__(self)
 
@@ -401,9 +401,9 @@ class MeasurementItemCustom(MeasurementItem):
         return ['MeasurementItemCustom', data]
 
     def set_model(self, model):
-		if model[0] == 'MeasurementItemCustom':
-			self.clear()
-			self.__init__(model[1], model[1][5])
+        if model[0] == 'MeasurementItemCustom':
+            self.clear()
+            self.__init__(model[1], model[1][5])
 
     def get_latex_buffer(self,path,isabstract=False):
         latex_records = misc.LatexFile()

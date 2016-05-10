@@ -22,7 +22,7 @@
 #  
 #  
 
-import copy, logging
+import logging
 
 from gi.repository import Gtk, Gdk, GLib
 
@@ -59,7 +59,7 @@ class AbstractDialog:
 
     def get_model(self):
         self.update_store()
-        return [self.mitems,self.int_m_item.get_model(),self.int_m_item.itemtype]
+        return [self.mitems, self.int_m_item.get_model(), self.int_m_item.itemtype]
 
     def clear(self):
         self.data = None
@@ -133,13 +133,13 @@ class AbstractDialog:
         # Update measurements view
         self.measurements_view.update_store()
 
-    def __init__(self, parent, data):
+    def __init__(self, parent, data, model):
         # Setup variables
         self.parent = parent
         self.data = data
         self.schedule = data.schedule
-        self.locked = None
-        self.selected = None
+        self.selected = data.datamodel.LockState()
+        self.locked = data.get_lock_states()
         
         self.mitems = []
         self.int_m_item = None
@@ -157,15 +157,16 @@ class AbstractDialog:
         # Setup measurements view
         self.measurements_view = MeasurementsView(self.window, self.data, self.treeview_abstract)
         # Connect toggled signal of measurement view to callback
-        self.measurements_view.renderer_toggle.connect("toggled", self.onToggleCellRendererToggle) #TODO
+        self.measurements_view.renderer_toggle.connect("toggled", self.onToggleCellRendererToggle)
 
         # Load data
-        if self.data is not None:
-            self.mitems = data[0]
-            self.int_m_item = MeasurementItemCustom(data[1],data[5])
-            self.entry_abstract_remark.set_text(self.int_m_item.get_remark())
-            self.selected = data.datamodel.LockState(self.mitems)
-            self.locked = data.get_lock_states() - self.selected
+        if self.model is not None:
+            if model[0] == 'MeasurementItemAbstract':
+                self.mitems = model[1][0]
+                self.int_m_item = MeasurementItemCustom(model[1][1],model[1][5])
+                self.entry_abstract_remark.set_text(self.int_m_item.get_remark())
+                self.selected = data.datamodel.LockState(self.mitems)
+                self.locked = data.get_lock_states() - self.selected
         
         # Update GUI
         self.update_store()
