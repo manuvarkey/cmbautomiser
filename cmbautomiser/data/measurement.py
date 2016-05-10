@@ -523,6 +523,9 @@ class MeasurementItemAbstract(MeasurementItem):
         if model[0] == 'MeasurementItemAbstract':
 			self.clear()
             self.__init__(model[1])
+            
+    def get_abstracted_items(self):
+        return self.m_items
 
     def get_latex_buffer(self,path):
         if self.m_items is not None:

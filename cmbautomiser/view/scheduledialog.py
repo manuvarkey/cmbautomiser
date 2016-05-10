@@ -34,6 +34,7 @@ from __main__ import misc, data
 log = logging.getLogger(__name__)
 
 class ScheduleDialog:
+    """Class implements a dialog box for entry of measurement records"""
 
     # General Methods
 
@@ -93,7 +94,7 @@ class ScheduleDialog:
             combo.set_active_id(itemno)
         # Set schedule
         self.schedule_view.clear()
-        self.schdeule_view.set_model(data[1])
+        self.schedule_view.set_model(data[1])
         self.schedule_view.update_store()
         # Set remark cells
         self.remark_cell.set_text(data[2])
@@ -165,7 +166,21 @@ class ScheduleDialog:
         self.onComboChanged(combo, -1)
 
     def __init__(self, parent, itemnos, captions, columntypes, render_funcs, item_schedule):
-
+        """Initialise ScheduleDialog class
+        
+            Arguments:
+                parent: Parent widget (Main window)
+                item_schedule: Agreement schedule
+                itemnos: Itemsnos of items being meaured
+                captions: Captions of columns
+                columntypes: Data types of columns. 
+                             Takes following values:
+                                misc.MEAS_NO: Integer
+                                misc.MEAS_L: Float
+                                misc.MEAS_DESC: String
+                                misc.MEAS_CUSTOM: Value from render funstion provided
+                render_funcs: Generates values of CUSTOM columns
+        """
         # Setup variables
         self.parent = parent
         self.itemnos = itemnos
@@ -243,6 +258,12 @@ class ScheduleDialog:
             self.item_remarks_cell.append(entry)
 
     def run(self):
+        """Display dialog box and return data model
+        
+            Returns:
+                Data Model on Ok
+                None on Cancel
+        """
         self.window.show_all()
         response = self.window.run()
 

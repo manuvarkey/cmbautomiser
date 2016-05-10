@@ -30,6 +30,7 @@ import pickle, os.path, copy, logging
 # local files import
 from __main__ import misc
 from .scheduledialog import ScheduleDialog
+from .abstractdialog import AbstractDialog
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -40,12 +41,27 @@ class MeasurementsView:
     # Callback functions
     
     def onKeyPressTreeview(self, treeview, event):
+        """Handle keypress event"""
         if event.keyval == Gdk.KEY_Escape:  # unselect all
             self.tree.get_selection().unselect_all()
             
     # Public Methods
+    
+    def set_colour(self, path, color):
+        """Sets the colour of item selected by path"""
+        if len(path == 1):
+            path_formated = Gtk.TreePath.new_from_string(str(path[0]))
+        elif len(path == 2):
+            path_formated = Gtk.TreePath.new_from_string(str(path[0]) + ':' + str(path[1]))
+        elif len(path == 3):
+            path_formated = Gtk.TreePath.new_from_string(str(path[0]) + ':' + str(path[1]) + ':' + str(path[2]))
+        else
+            return
+        path_iter = self.store.get_iter(path_formated)
+        self.measurements_view.store.set_value(path_iter, 3, color)
 
     def add_cmb(self):
+        """Add a CMB to measurement view"""
         cmb_name = misc.get_user_input_text(self.parent, "Please input CMB Name", "Add new CMB")
         if cmb_name != None:
             cmb = ['CMB', [cmb_name, []]]
@@ -59,6 +75,7 @@ class MeasurementsView:
             self.update_store()
         
     def add_measurement(self):
+        """Add a Measurement to measurement view"""
         meas_name = misc.get_user_input_text(self.parent, "Please input Measurement Date", "Add new Measurement")
         if meas_name != None:
             meas = ['Measurement', [meas_name, []]]
@@ -73,6 +90,7 @@ class MeasurementsView:
             self.update_store()
 
     def add_completion(self):
+        """Add a Completion to measurement view"""
         compl_name = misc.get_user_input_text(self.parent, "Please input Completion Date", "Add Completion")
         if compl_name != None:
             compl = ['Completion', [compl_name]]
@@ -87,6 +105,7 @@ class MeasurementsView:
             self.update_store()
         
     def add_heading(self):
+        """Add a Heading to measurement view"""
         heading_name = misc.get_user_input_text(self.parent, "Please input Heading", "Add new Item: Heading")
         
         if heading_name != None:
@@ -101,52 +120,42 @@ class MeasurementsView:
                 self.add_measurement_item_at_node(heading,None)
             self.update_store()
                     
-    def add_custom(self,oldval=None,itemtype=None):
-        item = MeasurementItemCustom(None,itemtype)
-        itemnos_mask = item.itemnos_mask
-        captions = item.captions
-        columntypes = item.columntypes
-        cellrenderers = []
-        cust_iter = 0
-        for columntype in columntypes:
-            if columntype == MEAS_CUST:
-                cellrenderers.append(item.cust_funcs[cust_iter])
-                cust_iter += 1
-            else:
-                cellrenderers.append(None)
-        item_schedule = self.schedule
-        
-        dialog = ScheduleDialog(self.parent, itemnos_mask, captions, columntypes, cellrenderers, item_schedule)
+    def add_custom(self, oldval=None, itemtype=None):
+        """Add a Custom item to measurement view"""
+        template = self.data.get_custom_item_template(itemtype)
+        dialog = ScheduleDialog(self.parent, self.schedule, *template)
 
         if oldval is not None: # if edit mode add data
-            dialog.set_model(oldval[:-2])
+            # Obtain ScheduleDialog model from MeasurementItemCustom model
+            schmod = data.get_schmod_from_custmod(oldval)
+            dialog.set_model(schmod)
             data = dialog.run()
             if data is not None: # if edited
-                return data + [oldval[5]] + [itemtype]
+                # Obtain MeasurementItemCustom model from ScheduleDialog model
+                custmod = data.get_custmod_from_schmod(data, oldval, itemtype)
+                return custmod
             else: # if cancel pressed
                 return None
         else: # if normal mode
             data = dialog.run()
             if data is not None:
-                item.set_model(data + [item.user_data] + [itemtype])
+                custmod = data.get_custmod_from_schmod(data, None, itemtype)
                 # get selection
                 selection = self.tree.get_selection()
                 if selection.count_selected_rows() != 0: # if selection exists
                     [model, paths] = selection.get_selected_rows()
                     path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(item,path)
+                    self.add_measurement_item_at_node(custmod, path)
                 else: # if no selection append at end
-                    self.add_measurement_item_at_node(item,None)
+                    self.add_measurement_item_at_node(custmod, None)
 
     def add_abstract(self,oldval=None):
-        from abstract_dialog import AbstractDialog
+        
 
         item = MeasurementItemAbstract(None)
-
-        toplevel = self.tree.get_toplevel() # get current top level window
-
+        
         if oldval is not None: # if edit mode add data
-            dialog = AbstractDialog(toplevel,oldval, self, self.schedule)
+            dialog = AbstractDialog(self.parent,oldval, self, self.schedule)
             data = dialog.run()
             if data is not None: # if edited
                 return data
@@ -167,7 +176,7 @@ class MeasurementsView:
                     self.add_measurement_item_at_node(item,None)
         
     def delete_selected_row(self):
-        # get selection
+        """Delete selected rows"""
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
@@ -501,7 +510,7 @@ class MeasurementsView:
                     item.set_model(oldval)
             self.update_store()
                     
-    def __init__(self, parent, data, store, tree):
+    def __init__(self, parent, data, tree):
         """Initialise MeasurementsView class
         
             Arguments:
@@ -520,20 +529,20 @@ class MeasurementsView:
         # Item Description, Billed Flag, Tooltip, Colour
         self.store = Gtk.ListStore([str,bool,str,str])
         # Treeview columns
-        column_desc = Gtk.TreeViewColumn('Item Description')
-        column_desc.props.expand = True
-        column_toggle = Gtk.TreeViewColumn('Billed ?')
-        column_toggle.props.fixed_width = 150
-        column_toggle.props.min_width = 150
+        self.column_desc = Gtk.TreeViewColumn('Item Description')
+        self.column_desc.props.expand = True
+        self.column_toggle = Gtk.TreeViewColumn('Billed ?')
+        self.column_toggle.props.fixed_width = 150
+        self.column_toggle.props.min_width = 150
         # Treeview renderers
-        renderer_desc = Gtk.CellRendererText()
-        renderer_toggle = Gtk.CellRendererToggle()
+        self.renderer_desc = Gtk.CellRendererText()
+        self.renderer_toggle = Gtk.CellRendererToggle()
         # Pack renderers
-        column_desc.pack_start(renderer_desc, True)
-        column_toggle.pack_start(renderer_toggle, True)
+        self.column_desc.pack_start(self.renderer_desc, True)
+        self.column_toggle.pack_start(self.renderer_toggle, True)
         # Add attributes
-        column_desc.add_attribute(renderer_desc, "text", 0)
-        renderer_toggle.add_attribute(renderer_toggle, "active", 1)
+        self.column_desc.add_attribute(self.renderer_desc, "text", 0)
+        self.column_toggle.add_attribute(self.renderer_toggle, "active", 1)
         # Set model for store
         self.tree.set_model(self.store)
 
