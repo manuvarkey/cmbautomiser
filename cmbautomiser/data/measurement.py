@@ -23,7 +23,7 @@
 #  
 
 from gi.repository import Gtk, Gdk, GLib
-import os.path, copy, logging
+import copy, logging
 
 # local files import
 from __main__ import misc
@@ -32,17 +32,17 @@ from __main__ import misc
 log = logging.getLogger(__name__)
 
 class Cmb:
-	"""Stores a CMB data instance"""
+    """Stores a CMB data instance"""
     def __init__(self, model=None):
         if model is not None:
             self.name = model[0]
-			self.items = []
-			for item_model in model[1]:
-				if item_model[0] in ['Measurement','Completion']:
-					item_type = globals()[item_model[0]]
-					item = item_type()
-					item.set_model(item_model)
-					self.items.append(item)
+            self.items = []
+            for item_model in model[1]:
+                if item_model[0] in ['Measurement','Completion']:
+                    item_type = globals()[item_model[0]]
+                    item = item_type()
+                    item.set_model(item_model)
+                    self.items.append(item)
         else:
             self.name = ''
             self.items = []
@@ -73,21 +73,21 @@ class Cmb:
     def length(self):
         return len(self.items)
         
-	def get_model(self):
-		items_model = []
-		for item in self.items:
-			items_model.append(item.get_model())
-		return ['CMB', [self.name, items_model]]
-	
-	def set_model(self, model):
-		if model[0] == 'CMB':
-			self.__init__(model[1])
+    def get_model(self):
+        items_model = []
+        for item in self.items:
+            items_model.append(item.get_model())
+        return ['CMB', [self.name, items_model]]
+    
+    def set_model(self, model):
+        if model[0] == 'CMB':
+            self.__init__(model[1])
 
     def clear(self):
         self.items = []
         
     def get_latex_buffer(self,path):
-		latex_buffer = misc.LatexFile()
+        latex_buffer = misc.LatexFile()
         cmb_local_vars = {}
         cmb_local_vars['$cmbbookno$'] = self.name
         cmb_local_vars['$cmbheading$'] = ' '
@@ -114,14 +114,14 @@ class Cmb:
             item.print_item()
         
 class Measurement:
-	"""Stores a Measurement groups"""
+    """Stores a Measurement groups"""
     def __init__(self, model = None):
         if model is not None:
             self.date = model[0]
             self.items = []
             class_list = ['MeasurementItemHeading',
-                          'MeasurementItemCustom',
-                          'MeasurementItemAbstract']
+                        'MeasurementItemCustom',
+                        'MeasurementItemAbstract']
             for item_model in model[1]:
                 if item_model[0] in class_list:
                     item_type = globals()[item_model[0]]
@@ -157,18 +157,18 @@ class Measurement:
 
     def length(self):
         return len(self.items)
-	
-	def get_model(self):
-		items_model = []
-		for item in self.items:
-			items_model.append(item.get_model())
-		return ['Measurement', [self.date, items_model]]
-	
-	def set_model(self, model):
-		if model[0] == 'Measurement':
-			self.__init__(model[1])
+    
+    def get_model(self):
+        items_model = []
+        for item in self.items:
+            items_model.append(item.get_model())
+        return ['Measurement', [self.date, items_model]]
+    
+    def set_model(self, model):
+        if model[0] == 'Measurement':
+            self.__init__(model[1])
         
-	def get_latex_buffer(self,path):
+    def get_latex_buffer(self,path):
         latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file('../latex/measgroup.tex')
         # replace local variables
@@ -196,7 +196,7 @@ class Measurement:
             item.print_item()
         
 class MeasurementItem:
-	"""Base class for storing Measurement items"""
+    """Base class for storing Measurement items"""
     def __init__(self, itemnos=[], records=[], remark="", item_remarks=[]):
         self.itemnos = itemnos
         self.records = records
@@ -240,20 +240,20 @@ class MeasurementItem:
         self.item_remarks = []
                 
 class MeasurementItemHeading(MeasurementItem):
-	"""Stores an item heading"""
+    """Stores an item heading"""
     def __init__(self, model=None):
         if model is not None:
             MeasurementItem.__init__(self,remark=model[0])
         else:
             MeasurementItem.__init__(self)
-	
-	def get_model(self):
-		model = ['MeasurementItemHeading', [self.remark]]
-		return model
-	
-	def set_model(self, model):
-		if model[0] == 'MeasurementItemHeading':
-			self.__init__(model[1])
+    
+    def get_model(self):
+        model = ['MeasurementItemHeading', [self.remark]]
+        return model
+    
+    def set_model(self, model):
+        if model[0] == 'MeasurementItemHeading':
+            self.__init__(model[1])
         
     def get_latex_buffer(self,path):
         latex_buffer = misc.LatexFile()
@@ -270,11 +270,11 @@ class MeasurementItemHeading(MeasurementItem):
     def get_tooltip(self):
         return None
         
-	def print_item(self):
+    def print_item(self):
         print("    " + self.remark)
 
 class RecordCustom:
-	"""An individual record of a MeasurementItemCustom"""
+    """An individual record of a MeasurementItemCustom"""
     def __init__(self, items, cust_funcs, total_func, columntypes):
         self.data_string = items
         self.data = []
@@ -294,7 +294,7 @@ class RecordCustom:
         self.total = self.find_total()
 
     def get(self):
-		#TODO
+        #TODO
         iter_d = 0
         skip = 0
         data = []
@@ -310,7 +310,7 @@ class RecordCustom:
     def get_model(self):
         return self.data_string
         
-	def set_model(self, items, cust_funcs, total_func, columntypes):
+    def set_model(self, items, cust_funcs, total_func, columntypes):
         self.__init__(items, cust_funcs, total_func, columntypes)
 
     def find_total(self):
@@ -324,7 +324,7 @@ class RecordCustom:
 
 
 class MeasurementItemCustom(MeasurementItem):
-	"""Stores a custom record set [As per plugin loaded]"""
+    """Stores a custom record set [As per plugin loaded]"""
     def __init__(self, data = None, plugin=None):
         self.name = ''
         self.itemtype = None
@@ -382,7 +382,7 @@ class MeasurementItemCustom(MeasurementItem):
                 MeasurementItem.__init__(self, itemnos, records, remark, item_remarks)
             else:
                 MeasurementItem.__init__(self, [None]*self.item_width(), [],
-                                         '', ['']*self.item_width())
+                                        '', ['']*self.item_width())
         else:
             MeasurementItem.__init__(self)
 
@@ -397,7 +397,7 @@ class MeasurementItemCustom(MeasurementItem):
         for item in self.records:
             item_schedule.append(item.get_model())
         data = [self.itemnos, item_schedule, self.remark, self.item_remarks,
-                 self.user_data, self.itemtype]
+                self.user_data, self.itemtype]
         return ['MeasurementItemCustom', data]
 
     def set_model(self, model):
@@ -449,7 +449,7 @@ class MeasurementItemCustom(MeasurementItem):
         meascustom_local_vars_vannilla = {}
         for i in range(0,self.item_width()):
             try:
-                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description)
+                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description) #TODO
                 meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
                 meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
                 meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
@@ -467,7 +467,7 @@ class MeasurementItemCustom(MeasurementItem):
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iftrue'
         else:
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iffalse'
-	    # fill in records - vanilla used since latex_records contains latex code
+        # fill in records - vanilla used since latex_records contains latex code
         meascustom_local_vars_vannilla['$cmbrecords$'] = latex_records
             
         latex_buffer = misc.LatexFile(self.latex_item)
@@ -492,7 +492,7 @@ class MeasurementItemCustom(MeasurementItem):
     def get_text(self):
         total = ['{:.1f}'.format(x) for x in self.get_total()]
         return "Item No.<b>" + str(self.itemnos) + "    |Custom: " + self.name + "|</b>    # of records: <b>" + \
-               str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
+            str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
 
     def get_tooltip(self):
         if self.remark != "":
@@ -521,7 +521,7 @@ class MeasurementItemAbstract(MeasurementItem):
 
     def set_model(self, model):
         if model[0] == 'MeasurementItemAbstract':
-			self.clear()
+            self.clear()
             self.__init__(model[1])
             
     def get_abstracted_items(self):
@@ -553,7 +553,7 @@ class MeasurementItemAbstract(MeasurementItem):
                 return 'Abs: ' + self.int_m_item.get_tooltip()
 
 class Completion:
-	"""Class storing Completion date"""
+    """Class storing Completion date"""
     def __init__(self, model=None):
         if model is not None:
             self.date = model[0]
@@ -567,15 +567,15 @@ class Completion:
     def get_date(self):
         return self.date
         
-	def get_model(self):
-		return ['Completion',[self.date]]
-	
-	def set_model(self, model):
-		if model[0] == 'Completion':
-			self.__init__(model[1])
-	
-	def get_latex_buffer(self,path):
-		latex_buffer = misc.LatexFile()
+    def get_model(self):
+        return ['Completion',[self.date]]
+    
+    def set_model(self, model):
+        if model[0] == 'Completion':
+            self.__init__(model[1])
+    
+    def get_latex_buffer(self,path):
+        latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file('../latex/meascompletion.tex')
         # replace local variables
         measgroup_local_vars = {}

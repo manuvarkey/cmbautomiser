@@ -218,7 +218,7 @@ class Spreadsheet:
             self.file = None
             
     def read_rows(self,columntypes = [], start=0, end=-1, sheet_no = 0):  
-        sheet = self.spreadsheet.active
+        sheet = self.spreadsheet.active #TODO
         # Get count of rows
         rowcount = len(sheet.rows)
         if end < 0 or end >= rowcount:
