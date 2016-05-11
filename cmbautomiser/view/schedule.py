@@ -120,6 +120,7 @@ class ScheduleViewGeneric:
     # Class methods
     
     def setup_column_props(self, widths, expandables):
+        """Set column properties"""
         for column, width, expandable in zip(self.columns, widths, expandables):
             if width != None:
                 column.set_min_width(width)
@@ -218,8 +219,8 @@ class ScheduleViewGeneric:
     def copy_selection(self):
         """Copy selected rows to clipboard"""
         selection = self.tree.get_selection()
-        test_string = "Schedule:" + str(self.columntypes)
         if selection.count_selected_rows() != 0:  # if selection exists
+            test_string = "Schedule:" + str(self.columntypes)
             [model, paths] = selection.get_selected_rows()
             items = []
             for path in paths:
@@ -232,9 +233,10 @@ class ScheduleViewGeneric:
             log.warning("ScheduleViewGeneric - copy_selection - No items selected to copy")
 
     def paste_at_selection(self):
+        """Paste copied item at selected row"""
         text = self.clipboard.wait_for_text()  # get text from clipboard
-        test_string = "Schedule:" + str(self.columntypes)
         if text is not None:
+            test_string = "Schedule:" + str(self.columntypes)
             try:
                 itemlist = pickle.loads(codecs.decode(text.encode(), "base64"))  # recover item from string
                 if itemlist[0] == test_string:
@@ -253,6 +255,7 @@ class ScheduleViewGeneric:
             log.warning("ScheduleViewGeneric - paste_at_selection - No text in clipboard.")
 
     def model_width(self):
+        """Returns the width of model"""
         return len(self.columntypes)
 
     def get_model(self):

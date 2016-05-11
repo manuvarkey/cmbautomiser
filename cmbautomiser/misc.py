@@ -298,7 +298,13 @@ class LatexFile:
     def replace(dic):
         """Replace items as per dictionary"""
         for i, j in dic.items():
-            self.latex_buffer = self.latex_buffer.replace(i, j)        
+            self.latex_buffer = self.latex_buffer.replace(i, j)
+            
+    def write(self, filename):
+        """Write latex file to disk"""
+        file_latex = open(filename,'w')
+        file_latex.write(self.latex_buffer)
+        file_latex.close()
         
 class ManageResourses:
     # Static Variables
@@ -461,6 +467,20 @@ def posix_path(*args):
             return path[1:]
         else:
             return path
+            
+def run_latex(folder, filename): # runs latex two passes
+    if filename is not None:
+        latex_exec = Command([global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
+        # First Pass
+        code = latex_exec.run(timeout=LATEX_TIMEOUT)
+        if code == 0:
+            # Second Pass
+            code = latex_exec.run(timeout=LATEX_TIMEOUT)
+            if code != 0:
+                return CMB_ERROR
+        else:
+            return CMB_ERROR
+    return CMB_OK
 
 def abs_path(*args):
     return os.path.join(os.path.split(__file__)[0],*args)

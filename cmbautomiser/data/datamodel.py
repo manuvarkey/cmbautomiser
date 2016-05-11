@@ -42,7 +42,8 @@ class DataModel:
         self.cmbs = []
         self.bills = []
         # Derived data
-        self.lock_state = LockState()
+        self.lock_state = LockState()  # Billed/Abstracted states of measurement items
+        self.cmb_ref = []  # Array of sets corresponding to cmbs refered to by particular cmb
         
         if data is not None:
             self.schedule.set_model(data[0])
@@ -56,19 +57,6 @@ class DataModel:
                 self.bills.append(bill)
         # Update values
         self.update()
-    
-    def update(self):
-        """Update derived data values"""
-        # Update locks
-        self.lock_state = LockState()
-        for bill in self.bills:
-            self.lock_state += LockState(bill.get_billed_items())
-        for cmb in self.cmbs:
-            for meas in cmb:
-                if isinstance(meas, measurement.Measurement):
-                    for measitem in meas:
-                        if isinstance(meas, measurement.MeasurementItemAbstract):
-                            self.lock_state += LockState(measitem.get_abstracted_items())
     
     def get_model(self):
         schedule_model = self.schedule.get_model()
@@ -158,19 +146,19 @@ class DataModel:
                 self.cmbs[path[0]][path[1]].insert_item(path[2],item)
                 delete_path = [path[0],path[1],path[2]]
             elif len(path) > 1: # if measurement group selected
-                if isinstance(self.cmbs[path[0]][path[1]],Measurement): # check if meas item
+                if isinstance(self.cmbs[path[0]][path[1]], measurement.Measurement): # check if meas item
                     self.cmbs[path[0]][path[1]].append_item(item)
                     delete_path = [path[0],path[1],self.cmbs[path[0]][path[1]].length()-1]
             elif len(path) == 1: # if cmb selected
                 index_meas = self.cmbs[path[0]].length()-1
-                if isinstance(self.cmbs[path[0]][index_meas],Measurement): # check if meas item
+                if isinstance(self.cmbs[path[0]][index_meas], measurement.Measurement): # check if meas item
                     self.cmbs[path[0]][index_meas].append_item(item)
                     index_item = self.cmbs[path[0]][index_meas].length()-1
                     delete_path = [path[0],index_meas,index_item]
         else: # if path is None append at end
             if len(self.cmbs) != 0:
                 if self.cmbs[-1].length() > 0:
-                    if isinstance(self.cmbs[-1][-1],Measurement):
+                    if isinstance(self.cmbs[-1][-1], measurement.Measurement):
                         self.cmbs[-1][-1].append_item(item)
                         delete_path = [len(self.cmbs)-1,self.cmbs[-1].length()-1,self.cmbs[-1][-1].length()-1]
         self.update()
@@ -179,6 +167,41 @@ class DataModel:
         # Undo action
         if delete_path != None:
             self.delete_row_meas(delete_path)
+            
+    @undoable
+    def edit_measurement_item(self, path, item, newval, oldval):
+        """Edit an item in measurements view"""
+        if newval != None:
+            if len(path) == 1:
+                item.set_name(newval)
+            elif len(path) == 2:
+                if isinstance(item, measurement.Measurement):
+                    item.set_date(newval)
+                elif isinstance(item, measurement.Completion):
+                    item.set_date(newval)
+            elif len(path) == 3:
+                if isinstance(item, measurement.MeasurementItemHeading):
+                    item.set_remark(newval)
+                else:
+                    item.set_model(newval)
+            self.update()
+        
+        yield "Edit measurement items at '{}'".format(path)
+        # Undo action
+        if oldval != None and newval != None:
+            if len(path) == 1:
+                item.set_name(oldval)
+            elif len(path) == 2:
+                if isinstance(item, measurement.Measurement):
+                    item.set_date(oldval)
+                elif isinstance(item, measurement.Completion):
+                    item.set_date(oldval)
+            elif len(path) == 3:
+                if isinstance(item, measurement.MeasurementItemHeading):
+                    item.set_remark(oldval)
+                else:
+                    item.set_model(oldval)
+            self.update()
         
     @undoable
     def delete_row_meas(self,path):
@@ -204,6 +227,94 @@ class DataModel:
         elif len(path) == 3:
             self.add_measurement_item_at_node(item,path)
         self.update()
+        
+    def render_cmb(self, folder, replacement_dict, path, recursive = True):
+        """Render CMB"""
+        # Fill in latex buffer
+        latex_buffer = self.cmbs[path[0]].get_latex_buffer([path[0]])
+
+        # Make global variables replacements
+        latex_buffer.replace_and_clean(replacement_dict)
+
+        # Include linked bills
+        replacement_dict_bills = {}
+        external_docs = ''
+        for count,bill in enumerate(bills):
+            external_docs += '\externaldocument{abs_' + str(count+1) + '}\n'
+        replacement_dict_bills['$cmbexternaldocs$'] = external_docs
+        latex_buffer.replace(replacement_dict_bills)
+
+        # Write output
+        filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.tex')
+        file_latex.write(filename)
+
+        # Run latex on file and dependencies
+        
+        # Run on all cmbs refered by cmb
+        if recursive: # if recursive call
+            for cmb_count, cmb in enumerate(self.cmbs):
+                if path[0] in self.cmb_ref[cmb_count]:
+                    code = self.render_cmb(folder, replacement_dict, [cmb_count],False)
+                    if code[0] == misc.CMB_ERROR:
+                        return code
+        # Run on all bills refering cmb
+        if recursive: # if recursive call
+            for bill_count,bill in enumerate(self.bills):
+                if path[0] in bill.cmb_ref:
+                    code = self.render_bill(folder, replacement_dict, [bill_count], False)
+                    if code[0] == misc.CMB_ERROR:
+                        return code
+                        
+        # Run latex on file
+        code = misc.run_latex(posix_path(folder), filename)
+        if code == misc.CMB_ERROR:
+            return (misc.CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed')
+
+        # Run on all cmbs and bills refering cmb again to rebuild indexes on recursive run
+        # Run on all cmbs refered by cmb
+        if recursive: # if recursive call
+            for cmb_count, cmb in enumerate(bills):
+                if path[0] in self.cmb_ref[cmb_count]:
+                    code = self.render_cmb(folder, replacement_dict, [cmb_count],False)
+                    if code[0] == misc.CMB_ERROR:
+                        return code
+        # Run on all bills refering cmb
+        if recursive: # if recursive call
+            for bill_count,bill in enumerate(bills):
+                if path[0] in bill.cmb_ref:
+                    code = self.render_bill(folder, replacement_dict, [bill_count], False)
+                    if code[0] == misc.CMB_ERROR:
+                        return code
+        
+        # Return status code for main application interface
+        return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
+    
+    def update(self):
+        """Update derived data values"""
+        # Update locks
+        self.lock_state = LockState()
+        for bill in self.bills:
+            self.lock_state += LockState(bill.get_billed_items())
+        for cmb in self.cmbs:
+            for meas in cmb:
+                if isinstance(meas, measurement.Measurement):
+                    for measitem in meas:
+                        if isinstance(meas, measurement.MeasurementItemAbstract):
+                            self.lock_state += LockState(measitem.get_abstracted_items())
+        
+        # Update dependency tree of cmbs
+        self.cmb_ref = []
+        for cmb_no, cmb in enumerate(self.cmbs):
+            ref = set()
+            for meas in cmb.items:
+                if isinstance(meas, measurement.Measurement):
+                    for meas_item in meas.items:
+                        if isinstance(meas_item, measurement.MeasurementItemAbstract):
+                            for m_item in meas_item.m_items:
+                                if m_item[0] != cmb_no:
+                                    ref |= set(m_item[0])
+            self.cmb_ref.append(ref)
+
         
 class LockState:
     """Implements variable for storing N-D array of bools for tracking variable lock states"""

@@ -372,7 +372,7 @@ class MainWindow:
         filechooserbutton_meas = self.builder.get_object("filechooserbutton_meas")
         if filechooserbutton_meas.get_file() != None:
             folder = filechooserbutton_meas.get_file().get_path()
-            code = self.measurements_view.render_selection(folder, self.project_settings_dict, self.bill_view.bills)
+            code = self.measurements_view.render_selection(folder, self.project_settings_dict)
             self.display_status(*code)
             # remove temporary files
             onlytempfiles = [f for f in os.listdir(posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1

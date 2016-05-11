@@ -22,13 +22,13 @@
 #  
 #  
 
-import pickle, os.path, copy, logging
+import pickle, codecs, os.path, copy, logging
 
 from gi.repository import Gtk, Gdk, GLib
 from undo import undoable
 
 # local files import
-from __main__ import misc
+from __main__ import misc, data
 from .scheduledialog import ScheduleDialog
 from .abstractdialog import AbstractDialog
 
@@ -179,8 +179,10 @@ class MeasurementsView:
             self.delete_row(paths[0].get_indices())
 
     def copy_selection(self):
+        """Copy selected row to clipboard"""
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
+            test_string = "MeasurementsView"
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
             if len(path) == 1:
@@ -189,43 +191,44 @@ class MeasurementsView:
                 item = self.cmbs[path[0]][path[1]]
             elif len(path) == 3:
                 item = self.cmbs[path[0]][path[1]][path[2]]
-            text = pickle.dumps(item) # dump item as text
+            text = codecs.encode(pickle.dumps([test_string, item]), "base64").decode() # dump item as text
             self.clipboard.set_text(text,-1) # push to clipboard
         else: # if no selection
-            log.warning("No items selected to copy")
+            log.warning("MeasurementsView - copy_selection - No items selected to copy")
 
     def paste_at_selection(self):
+        """Paste copied item at selected row"""
         text = self.clipboard.wait_for_text() # get text from clipboard
         if text != None:
+            test_string = "MeasurementsView"
             try:
-                item = pickle.loads(text) # recover item from string
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    if isinstance(item,Cmb):
-                        self.add_cmb_at_node(item,path[0])
-                    elif isinstance(item,Measurement) or isinstance(item,Completion):
-                        self.add_measurement_at_node(item,path)
-                    elif isinstance(item,MeasurementItem):
-                        self.add_measurement_item_at_node(item,path)
-                else:
-                    if isinstance(item,Cmb):
-                        self.add_cmb_at_node(item,None)
-                    elif isinstance(item,Measurement) or isinstance(item,Completion):
-                        self.add_measurement_at_node(item,None)
-                    elif isinstance(item,MeasurementItem):
-                        self.add_measurement_item_at_node(item,None)
+                itemlist = pickle.loads(codecs.decode(text.encode(), "base64"))  # recover item from string
+                if itemlist[0] == test_string:
+                    item = itemlist[1]
+                    selection = self.tree.get_selection()
+                    if selection.count_selected_rows() != 0: # if selection exists
+                        [model, paths] = selection.get_selected_rows()
+                        path = paths[0].get_indices()
+                        if isinstance(item, data.measurement.Cmb):
+                            self.add_cmb_at_node(item,path[0])
+                        elif isinstance(item, data.measurement.Measurement) or isinstance(item, data.measurement.Completion):
+                            self.add_measurement_at_node(item,path)
+                        elif isinstance(item, data.measurement.MeasurementItem):
+                            self.add_measurement_item_at_node(item,path)
+                    else:
+                        if isinstance(item, data.measurement.Cmb):
+                            self.add_cmb_at_node(item,None)
+                        elif isinstance(item, data.measurement.Measurement) or isinstance(item, data.measurement.Completion):
+                            self.add_measurement_at_node(item,None)
+                        elif isinstance(item, data.measurement.MeasurementItem):
+                            self.add_measurement_item_at_node(item,None)
             except:
-                log.warning('No valid data in clipboard')
+                log.warning('MeasurementsView - paste_at_selection - No valid data in clipboard')
         else:
-            log.warning("No text on the clipboard.")
+            log.warning("MeasurementsView - paste_at_selection - No text on the clipboard.")
 
     def update_store(self):
-
-        # Update all measurement flags
-        ManageResourses().update_billed_flags()
-
+        """Update GUI of MeasurementsView from data model while trying to preserve selection"""
         # Get selection
         selection = self.tree.get_selection()
         old_path = []
@@ -236,17 +239,17 @@ class MeasurementsView:
         # Update StoreView
         self.store.clear()
         for cmb in self.cmbs:
-            iter_cmb = self.store.append(None,[cmb.get_text(),False,cmb.get_tooltip(),MEAS_COLOR_NORMAL])
+            iter_cmb = self.store.append(None,[cmb.get_text(),False,cmb.get_tooltip(),misc.MEAS_COLOR_NORMAL])
             for meas in cmb.items:
-                iter_meas = self.store.append(iter_cmb,[meas.get_text(),False,meas.get_tooltip(),MEAS_COLOR_NORMAL])
-                if isinstance(meas,Measurement):
+                iter_meas = self.store.append(iter_cmb,[meas.get_text(),False,meas.get_tooltip(),misc.MEAS_COLOR_NORMAL])
+                if isinstance(meas, data.measurement.Measurement):
                     for mitem in meas.items:
-                        self.store.append(iter_meas,[mitem.get_text(),mitem.get_billed_flag(),mitem.get_tooltip(),MEAS_COLOR_NORMAL])
-                elif isinstance(meas,Completion):
+                        self.store.append(iter_meas,[mitem.get_text(),mitem.get_billed_flag(),mitem.get_tooltip(),misc.MEAS_COLOR_NORMAL])
+                elif isinstance(meas, data.measurement.Completion):
                     pass
         self.tree.expand_all()
 
-        # Set selection
+        # Set selection to the nearest item that was selected
         if old_path != []:
             if len(old_path) > 0 and len(self.cmbs) > 0:
                 if len(self.cmbs) <= old_path[0]:
@@ -256,7 +259,7 @@ class MeasurementsView:
                     if len(cmb.items) <= old_path[1]:
                         old_path[1] = len(cmb.items)-1
                     item = cmb.items[old_path[1]]
-                    if isinstance(item,Measurement) and len(old_path) == 3 and len(item.items) > 0:
+                    if isinstance(item, data.measurement.Measurement) and len(old_path) == 3 and len(item.items) > 0:
                         if len(item.items) <= old_path[2]:
                             old_path[2] = len(item.items)-1
                     else:
@@ -270,66 +273,24 @@ class MeasurementsView:
                 path = Gtk.TreePath.new_from_indices(old_path)
                 self.tree.set_cursor(path)
 
-    def render_selection(self,folder,replacement_dict,bills):
+    def render_selection(self, folder, replacement_dict, bills):
+        """Render selected CMB"""
         # get selection
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0 and folder != None: # if selection exists
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            code = self.render(folder,replacement_dict,bills,path)
+            code = data.render_cmb(folder, replacement_dict, path)
+            # Return status code for main application interface
             return code
         else:
-            return (CMB_WARNING,'Please select a CMB for rendering')
-
-    def render(self,folder,replacement_dict,bills,path,recursive = True):
-        # fill in latex buffer
-        latex_buffer = self.cmbs[path[0]].get_latex_buffer([path[0]])
-
-        # make global variables replacements
-        latex_buffer = replace_all(latex_buffer,replacement_dict)
-
-        # include linked bills
-        replacement_dict_bills = {}
-        external_docs = ''
-        for count,bill in enumerate(bills):
-            external_docs += '\externaldocument{abs_' + str(count+1) + '}\n'
-        replacement_dict_bills['$cmbexternaldocs$'] = external_docs
-        latex_buffer = replace_all_vanilla(latex_buffer,replacement_dict_bills)
-
-        # write output
-        filename = posix_path(folder,'cmb_' + str(path[0]+1) + '.tex')
-        file_latex = open(filename,'w')
-        file_latex.write(latex_buffer)
-        file_latex.close()
-
-        # run latex on file and dependencies
-
-        # run on all bills refering cmb
-        if recursive: # if recursive call
-            for bill_count,bill in enumerate(bills):
-                if path[0] in bill.cmb_ref:
-                    code = bill.bill_view.render(folder,replacement_dict,[bill_count],False)
-                    if code[0] == CMB_ERROR:
-                        return code
-        # run latex on file
-        code = run_latex(posix_path(folder),filename)
-        if code == CMB_ERROR:
-            return (CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed')
-
-        # run on all bills refering cmb again to rebuild indexes on recursive run
-        if recursive: # if recursive call
-            for bill_count,bill in enumerate(bills):
-                if path[0] in bill.cmb_ref:
-                    code = bill.bill_view.render(folder,replacement_dict,[bill_count],False)
-                    if code[0] == CMB_ERROR:
-                        return code
-
-        return (CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,'Please select a CMB for rendering')
             
     def edit_selected_row(self):
-        toplevel = self.tree.get_toplevel() # get current top level window
-        # get selection
+        """Edit selected Row"""
+        # Get selection
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
@@ -337,174 +298,71 @@ class MeasurementsView:
             if len(path) == 1:
                 item = self.cmbs[path[0]]
                 oldval = item.get_name()
-                newval = misc.get_user_input_text(toplevel, "Please input CMB Name", "Edit CMB",oldval)
-                self.edit_item(path,item,newval,oldval)
+                newval = misc.get_user_input_text(self.parent, "Please input CMB Name", "Edit CMB",oldval)
+                data.edit_measurement_item(path,item,newval,oldval)
             elif len(path) == 2:
                 item = self.cmbs[path[0]][path[1]]
-                if isinstance(item,Measurement):
+                if isinstance(item, data.measurement.Measurement):
                     oldval = item.get_date()
-                    newval = misc.get_user_input_text(toplevel, "Please input Measurement Date", "Edit Measurement",oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,Completion):
+                    newval = misc.get_user_input_text(self.parent, "Please input Measurement Date", "Edit Measurement",oldval)
+                    self.edit_measurement_item(path,item,newval,oldval)
+                elif isinstance(item, data.measurement.Completion):
                     oldval = item.get_date()
-                    newval = misc.get_user_input_text(toplevel, "Please input Completion Date", "Edit Measurement",oldval)
-                    self.edit_item(path,item,newval,oldval)
+                    newval = misc.get_user_input_text(self.parent, "Please input Completion Date", "Edit Measurement",oldval)
+                    self.edit_measurement_item(path,item,newval,oldval)
             elif len(path) == 3:
                 item = self.cmbs[path[0]][path[1]][path[2]]
-                if isinstance(item,MeasurementItemHeading):
+                if isinstance(item, data.measurement.MeasurementItemHeading):
                     oldval = item.get_remark()
-                    newval = misc.get_user_input_text(toplevel, "Please input Heading", "Edit Heading",oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemNLBH):
-                    oldval = item.get_model()
-                    newval = self.add_nlbh(oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemLLLLL):
-                    oldval = item.get_model()
-                    newval = self.add_lllll(oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemNNNNNNNN):
-                    oldval = item.get_model()
-                    newval = self.add_nnnnnnnn(oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemnnnnnT):
-                    oldval = item.get_model()
-                    newval = self.add_nnnnnt(oldval)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemCustom):
+                    newval = misc.get_user_input_text(self.parent, "Please input Heading", "Edit Heading",oldval)
+                    self.edit_measurement_item(path,item,newval,oldval)
+                elif isinstance(item, data.measurement.MeasurementItemCustom):
                     oldval = item.get_model()
                     newval = self.add_custom(oldval,item.itemtype)
-                    self.edit_item(path,item,newval,oldval)
-                elif isinstance(item,MeasurementItemAbstract):
+                    self.edit_measurement_item(path,item,newval,oldval)
+                elif isinstance(item, data.measurement.MeasurementItemAbstract):
                     oldval = item.get_model()
                     newval = self.add_abstract(oldval)
-                    self.edit_item(path,item,newval,oldval)
-
-    def edit_user_data(self,oldval,itemtype):
-
-        item = MeasurementItemCustom(None,itemtype)
-        captions_udata = item.captions_udata
-        columntypes_udata = item.columntypes_udata
-        toplevel = self.tree.get_toplevel() # get current top level window
-        newdata = []
-        entrys = []
-
-        dialogWindow = Gtk.MessageDialog(toplevel,
-                              Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                              Gtk.MessageType.QUESTION,
-                              Gtk.ButtonsType.OK_CANCEL,
-                              'Edit User Data')
-
-        dialogWindow.set_transient_for(toplevel)
-        dialogWindow.set_title('Edit User Data')
-        dialogWindow.set_default_response(Gtk.ResponseType.OK)
-
-        # Pack Dialog
-        dialogBox = dialogWindow.get_content_area()
-        grid = Gtk.Grid()
-        grid.set_column_spacing(5)
-        grid.set_row_spacing(5)
-        grid.set_border_width(5)
-        dialogBox.add(grid)
-        for caption, columntype in zip(captions_udata, columntypes_udata):
-            userLabel = Gtk.Label(caption)
-            userEntry = Gtk.Entry()
-            userEntry.set_activates_default(True)
-            grid.attach_next_to(userLabel, None, Gtk.PositionType.BOTTOM, 1, 1)
-            grid.attach_next_to(userEntry, userLabel, Gtk.PositionType.RIGHT, 1, 1)
-            entrys.append(userEntry)
-
-        # Add data
-        if oldval is not None:
-            for data_str,userEntry in zip(oldval,entrys):
-                userEntry.set_text(data_str)
-
-        # Run dialog
-        dialogWindow.show_all()
-        response = dialogWindow.run()
-
-        # Get formated text
-        for userEntry,column_type in zip(entrys,columntypes_udata):
-            cell = userEntry.get_text()
-            try:  # try evaluating string
-                if column_type == MEAS_DESC:
-                    cell_formated = str(cell)
-                elif column_type == MEAS_L:
-                    cell_formated = str(float(cell))
-                elif column_type == MEAS_NO:
-                    cell_formated = str(int(cell))
-                else:
-                    cell_formated = ''
-            except:
-                cell_formated = ''
-            newdata.append(cell_formated)
-        dialogWindow.destroy()
-        if response == Gtk.ResponseType.OK:
-            return newdata
-        else:
-            return None
+                    self.edit_measurement_item(path,item,newval,oldval)
+            # Update GUI
+            self.update_store()
 
     def edit_selected_properties(self):
-        # get selection
+        """Edit user data of selected item"""
+        # Get Selection
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
             if len(path) == 3:
                 item = self.cmbs[path[0]][path[1]][path[2]]
-                if isinstance(item,MeasurementItemCustom):
+                if isinstance(item, MeasurementItemCustom):
                     oldval = item.get_model()
-                    olddata = oldval[5]
-                    newdata = self.edit_user_data(olddata,item.itemtype)
-                    if newdata is not None:
+                    olddata = oldval[1][4]
+                    # Setup user data dialog
+                    newdata = olddata[:]
+                    project_settings_dialog = misc.UserEntryDialog(self.parent, 
+                                                  'Edit User Data',
+                                                  newval,
+                                                  item.captions_udata)
+                    # Show user data dialog
+                    code = project_settings_dialog.run()
+                    # Edit data on success
+                    if code:
                         newval = copy.deepcopy(oldval)
-                        newval[5] = newdata
-                        self.edit_item(path,item,newval,oldval)
+                        newval[1][4] = newdata
+                        self.edit_item(path, item, newval, oldval)
                     return None
-                if isinstance(item,MeasurementItemAbstract):
+                if isinstance(item, MeasurementItemAbstract):
                     oldval = item.get_model()
-                    olddata = oldval[1][5]
+                    olddata = oldval[1][1][4]
                     newdata = self.edit_user_data(olddata,oldval[2])
                     if newdata is not None:
                         newval = copy.deepcopy(oldval)
-                        newval[1][5] = newdata
-                        self.edit_item(path,item,newval,oldval)
+                        newval[1][1][4] = newdata
+                        self.edit_item(path, item, newval, oldval)
                     return None
         return (CMB_WARNING,'User data not supported')
-
-    @undoable
-    def edit_item(self,path,item,newval,oldval):
-        if newval != None:
-            if len(path) == 1:
-                item.set_name(newval)
-            elif len(path) == 2:
-                if isinstance(item,Measurement):
-                    item.set_date(newval)
-                elif isinstance(item,Completion):
-                    item.set_date(newval)
-            elif len(path) == 3:
-                if isinstance(item,MeasurementItemHeading):
-                    item.set_remark(newval)
-                else:
-                    item.set_model(newval)
-            self.update_store()
-        
-        yield "Edit measurement items at '{}'".format(path)
-        # Undo action
-        if oldval != None and newval != None:
-            if len(path) == 1:
-                item.set_name(oldval)
-            elif len(path) == 2:
-                if isinstance(item,Measurement):
-                    item.set_date(oldval)
-                elif isinstance(item,Completion):
-                    item.set_date(oldval)
-            elif len(path) == 3:
-                if isinstance(item,MeasurementItemHeading):
-                    item.set_remark(oldval)
-                else:
-                    item.set_model(oldval)
-            self.update_store()
                     
     def __init__(self, parent, data, tree):
         """Initialise MeasurementsView class
@@ -519,7 +377,6 @@ class MeasurementsView:
         self.data = data
         self.schedule = data_model.schedule
         self.cmbs = data_model.cmbs
-        self.bills = data_model.cmbs
         
         ## Setup treeview store
         # Item Description, Billed Flag, Tooltip, Colour
