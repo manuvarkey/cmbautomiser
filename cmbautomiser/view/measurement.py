@@ -35,8 +35,9 @@ from .abstractdialog import AbstractDialog
 # Setup logger object
 log = logging.getLogger(__name__)
 
-# Measurements object
+
 class MeasurementsView:
+    """Implements a view for display and manipulation of measurement items over a treeview"""
             
     # Callback functions
     

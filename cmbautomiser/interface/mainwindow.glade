@@ -12,14 +12,6 @@
       <pattern>*.proj</pattern>
     </patterns>
   </object>
-  <object class="GtkListStore" id="liststore_bill">
-    <columns>
-      <!-- column-name slno -->
-      <column type="gchararray"/>
-      <!-- column-name desc -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkMenu" id="popupmenu_meas">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1132,7 +1124,6 @@
                       <object class="GtkTreeView" id="treeview_bill">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="model">liststore_bill</property>
                         <property name="headers_clickable">False</property>
                         <property name="search_column">0</property>
                         <property name="rubber_banding">True</property>
@@ -1141,32 +1132,6 @@
                         <signal name="button-press-event" handler="OnBillClickEvent" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="treeview-selection5"/>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="tree_meas_slno">
-                            <property name="resizable">True</property>
-                            <property name="sizing">fixed</property>
-                            <property name="fixed_width">70</property>
-                            <property name="title" translatable="yes">Sl.No.</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_bill_text_slno"/>
-                              <attributes>
-                                <attribute name="markup">0</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="tree_meas_description">
-                            <property name="title" translatable="yes">Description</property>
-                            <property name="expand">True</property>
-                            <child>
-                              <object class="GtkCellRendererText" id="tree_bill_text_description"/>
-                              <attributes>
-                                <attribute name="markup">1</attribute>
-                              </attributes>
-                            </child>
-                          </object>
                         </child>
                       </object>
                     </child>

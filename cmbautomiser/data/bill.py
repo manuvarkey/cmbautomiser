@@ -26,7 +26,7 @@ from gi.repository import Gtk, Gdk, GLib
 import copy, math, logging
 
 from openpyxl import Workbook, load_workbook, worksheet
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.styles import Alignment, Font
 from openpyxl.cell import get_column_letter
 
 # local files import
@@ -180,7 +180,7 @@ class Bill:
             for itemno in itemnos:
                 # If item measured, calculate values
                 if itemno in self.item_qty:
-                    item = self.schedule[itemno]
+                    item = schedule[itemno]
                     # Determine total qty
                     total_qty = sum(self.item_qty[itemno])
                     # Determine items above and at normal rates
@@ -196,7 +196,7 @@ class Bill:
                     # Determine amounts
                     self.item_normal_amount[itemno] = round(
                         self.item_normal_qty[itemno] * self.data.item_part_percentage[itemno] * 0.01 *
-                        self.schedule[itemno].rate, 2)
+                        schedule[itemno].rate, 2)
                     self.item_excess_amount[itemno] = round(
                         self.item_excess_qty[itemno] * self.data.item_excess_part_percentage[itemno] * 0.01 *
                         self.data.item_excess_rates[itemno], 2)
@@ -302,7 +302,7 @@ class Bill:
                 item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[itemno] * 0.01 * self.schedule[itemno].rate, 2))
+                    round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
                 item_local_vars['$cmbexcesspr$'] = str(
                     round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
                 item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
@@ -383,7 +383,7 @@ class Bill:
                 item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[itemno] * 0.01 * self.schedule[itemno].rate, 2))
+                    round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
                 item_local_vars['$cmbexcesspr$'] = str(
                     round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
                 item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
@@ -406,7 +406,7 @@ class Bill:
         
         return latex_buffer
 
-    def export_ods_bill(self, filename, project_settings_dict):
+    def export_ods_bill(self, filename, project_settings_dict, schedule):
         """Export bill to spreadsheetc file"""
         spreadsheet = Workbook()
 
@@ -421,8 +421,8 @@ class Bill:
             sheet.cell(row=1,column=c+1).value = head
             sheet.cell(row=1,column=c+1).font = Font(bold=True)
             sheet.cell(row=1,column=c+1).alignment = Alignment(wrap_text=True, vertical='center')
-        for count in range(self.schedule.length()):
-            item = self.schedule.get_item_by_index(count)
+        for count in range(schedule.length()):
+            item = schedule.get_item_by_index(count)
             
             sheet.cell(row=count+2, column=1).value = item.itemno
             sheet.cell(row=count+2, column=2).value = item.description
@@ -438,7 +438,7 @@ class Bill:
                 sheet.cell(row=count+2, column=5).value = self.item_normal_qty[itemno]
                 sheet.cell(row=count+2, column=6).value = self.item_excess_qty[itemno]
                 sheet.cell(row=count+2, column=8).value = round(self.data.item_part_percentage[itemno] *
-                                                 0.01 * self.schedule[itemno].rate, 2)
+                                                 0.01 * schedule[itemno].rate, 2)
                 sheet.cell(row=count+2, column=9).value = self.data.item_excess_rates[itemno]
                 sheet.cell(row=count+2, column=10).value = round(self.data.item_excess_part_percentage[itemno] *
                                                  0.01 * self.data.item_excess_rates[itemno], 2)
@@ -478,8 +478,8 @@ class Bill:
                 sheet2.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
         
         # Copy all values
-        for count in range(self.schedule.length()):
-            item = self.schedule.get_item_by_index(count)
+        for count in range(schedule.length()):
+            item = schedule.get_item_by_index(count)
             sheet2.cell(row=count+rowend+1, column=1).value = '=IF(INDIRECT(ADDRESS(ROW(),5))<>0,MAX(INDIRECT("A$12:" & ADDRESS(ROW()-1,1)))+1,"")'
             sheet2.cell(row=count+rowend+1, column=2).value = item.itemno
             sheet2.cell(row=count+rowend+1, column=3).value = item.description
@@ -529,13 +529,13 @@ class Bill:
             
         # Copy all from dev end
         template_end_sheet = template.get_sheet_by_name('end')
-        for row,row_ in zip(list(range(rowend+self.schedule.length()+1,rowend+self.schedule.length()+rowend_end+1)),list(range(1,rowend_end+1))):
+        for row,row_ in zip(list(range(rowend+schedule.length()+1,rowend+schedule.length()+rowend_end+1)),list(range(1,rowend_end+1))):
             for column,column_ in zip(list(range(1,colend+1)),list(range(1,colend+1))):
                 sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
                 sheet2.cell(row=row, column=column).style = template_end_sheet.cell(row=row_, column=column_).style
-        sheet2.cell(row=rowend+self.schedule.length()+1, column=colend-1).value = \
+        sheet2.cell(row=rowend+schedule.length()+1, column=colend-1).value = \
             '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
-            str(rowend+self.schedule.length())+')'
+            str(rowend+schedule.length())+')'
             
         # sheet2 formatings
         for column in range(1,colend+1):
@@ -568,16 +568,16 @@ class Bill:
                 total) + '</b></span>'
 
     def print_item(self):
-        print(("bill " + self.data.title + " start"))
-        for count in range(self.schedule.length()):
-            itemno = self.schedule[count].itemno
-            desc = self.schedule[count].description
-            unit = self.schedule[count].unit
+        print("bill " + self.data.title + " start")
+        for itemno in self.item_normal_amount:
             if self.data.bill_type == BILL_NORMAL:
-                rate = [self.schedule[count].rate, self.data.item_excess_rates[count]]
+                rate = [self.data.item_excess_rates[count]]
+                percentages = [self.data.item_part_percentage[itemno], self.data.item_excess_part_percentage[itemno]]
             elif self.data.bill_type == BILL_CUSTOM:
-                rate = [self.schedule[count].rate]
-            amount = [self.item_normal_amount[count], self.item_excess_amount[count]]
-            print([itemno, desc, unit, rate, amount])
+                rate = []
+                percentages = []
+            qty = self.data.item_qty[itemno]
+            amount = [self.item_normal_amount[itemno], self.item_excess_amount[itemno]]
+            print([itemno, qty, rate, percentages, amount])
         print(['\nTotal Amount | Since Prev ', [self.bill_total_amount, self.bill_since_prev_amount]])
         print("bill end")
