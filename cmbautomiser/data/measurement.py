@@ -86,7 +86,7 @@ class Cmb:
     def clear(self):
         self.items = []
         
-    def get_latex_buffer(self,path):
+    def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         cmb_local_vars = {}
         cmb_local_vars['$cmbbookno$'] = self.name
@@ -98,7 +98,7 @@ class Cmb:
         latex_buffer.replace_and_clean(cmb_local_vars)
         for count,item in enumerate(self.items):
             newpath = list(path) + [count]
-            latex_buffer += item.get_latex_buffer(newpath)
+            latex_buffer += item.get_latex_buffer(newpath, schedule)
         latex_buffer.add_suffix_from_file('../latex/end.tex')
         return latex_buffer
         
@@ -168,7 +168,7 @@ class Measurement:
         if model[0] == 'Measurement':
             self.__init__(model[1])
         
-    def get_latex_buffer(self,path):
+    def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file('../latex/measgroup.tex')
         # replace local variables
@@ -178,7 +178,7 @@ class Measurement:
         
         for count,item in enumerate(self.items):
             newpath = list(path) + [count]
-            latex_buffer += item.get_latex_buffer(newpath)
+            latex_buffer += item.get_latex_buffer(newpath, schedule)
         return latex_buffer
         
     def clear(self):
@@ -255,7 +255,7 @@ class MeasurementItemHeading(MeasurementItem):
         if model[0] == 'MeasurementItemHeading':
             self.__init__(model[1])
         
-    def get_latex_buffer(self,path):
+    def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file('..latex/measheading.tex')        
         # replace local variables
@@ -405,7 +405,7 @@ class MeasurementItemCustom(MeasurementItem):
             self.clear()
             self.__init__(model[1], model[1][5])
 
-    def get_latex_buffer(self,path,isabstract=False):
+    def get_latex_buffer(self, path, schedule, isabstract=False):
         latex_records = misc.LatexFile()
         
         data_string = [None]*self.model_width()
@@ -449,7 +449,7 @@ class MeasurementItemCustom(MeasurementItem):
         meascustom_local_vars_vannilla = {}
         for i in range(0,self.item_width()):
             try:
-                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(self.items[i].extended_description) #TODO
+                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(schedule[itemnos[i]].extended_description)
                 meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
                 meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
                 meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
@@ -527,9 +527,9 @@ class MeasurementItemAbstract(MeasurementItem):
     def get_abstracted_items(self):
         return self.m_items
 
-    def get_latex_buffer(self,path):
+    def get_latex_buffer(self, path, schedule):
         if self.m_items is not None:
-            return self.int_m_item.get_latex_buffer(path,True)
+            return self.int_m_item.get_latex_buffer(path, schedule, True)
 
     def print_item(self):
         print('    Abstract Item')
@@ -574,7 +574,7 @@ class Completion:
         if model[0] == 'Completion':
             self.__init__(model[1])
     
-    def get_latex_buffer(self,path):
+    def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file('../latex/meascompletion.tex')
         # replace local variables

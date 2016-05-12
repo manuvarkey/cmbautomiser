@@ -231,24 +231,30 @@ class DataModel:
     def render_cmb(self, folder, replacement_dict, path, recursive = True):
         """Render CMB"""
         # Fill in latex buffer
-        latex_buffer = self.cmbs[path[0]].get_latex_buffer([path[0]])
+        latex_buffer = self.cmbs[path[0]].get_latex_buffer([path[0]], self.schedule)
 
         # Make global variables replacements
         latex_buffer.replace_and_clean(replacement_dict)
-
-        # Include linked bills
-        replacement_dict_bills = {}
+        
+        # Include linked cmbs and bills
+        replacement_dict_external_docs = {}
         external_docs = ''
-        for count,bill in enumerate(bills):
-            external_docs += '\externaldocument{abs_' + str(count+1) + '}\n'
-        replacement_dict_bills['$cmbexternaldocs$'] = external_docs
-        latex_buffer.replace(replacement_dict_bills)
+        # Include cmbs
+        for count,cmb in enumerate(self.cmbs):
+            if path[0] in self.cmb_ref[count]:
+                external_docs += '\externaldocument{cmb_' + str(count+1) + '}\n'
+        # Include bills
+        for count,bill in enumerate(self.bills):
+            if path[0] in bill.cmb_ref:
+                external_docs += '\externaldocument{abs_' + str(count+1) + '}\n'
+        replacement_dict_external_docs['$cmbexternaldocs$'] = external_docs
+        latex_buffer.replace(replacement_dict_external_docs)
 
         # Write output
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.tex')
         file_latex.write(filename)
 
-        # Run latex on file and dependencies
+        # Run latex on files and dependencies
         
         # Run on all cmbs refered by cmb
         if recursive: # if recursive call

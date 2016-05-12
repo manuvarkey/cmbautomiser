@@ -153,4 +153,32 @@ class Schedule(ScheduleGeneric):
             else:
                 item.extended_description_limited = item.extended_description
             iter += 1
+            
+    def __setitem__(self, index, value):
+        if isinstance(index, int):
+            self.items[index] = value
+        elif isinstance(index, str):
+            for item in self.items:
+                if item.itemno == index:
+                    self.items[index] = value
+                    break
+            else:
+                log.warning("Schedule - Itemno not found while assigning value")
+
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            return self.items[index]
+        elif isinstance(index, str):
+            for item in self.items:
+                if item.itemno == index:
+                    return item
+            return None
+            
+    def get_itemnos(self):
+        """Returns a list of itemnos with order as in schedule"""
+        itemnos = []
+        for item in self.items:
+            if item.itemno != '' and item.unit != '' and item.qty != 0:
+                itemnos.append(item.itemno)
+        return itemnos
 

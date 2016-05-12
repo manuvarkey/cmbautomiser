@@ -69,9 +69,9 @@ class BillData:
             self.mitems = model[1][5]
             self.item_part_percentage = model[1][6]
             self.item_excess_part_percentage = model[1][7]
-            self.item_excess_rates = dict()  model[1][8]
+            self.item_excess_rates = model[1][8]
             # Additional elements for custom bill
-            self.item_qty = dict()  model[1][9]
+            self.item_qty = model[1][9]
             self.item_normal_amount = model[1][10]
             self.item_excess_amount = model[1][11]
             # Type Flag
@@ -98,8 +98,9 @@ class Bill:
         self.bill_total_amount = 0  # total amount of work done uptodate
         self.bill_since_prev_amount = 0  # since previous amount of work done
 
-    def clear(self):
-        self.data = BillData(self.data.bill_type)
+    def clear(self, clear_all = False):
+        if clear_all:
+            self.data = BillData(self.data.bill_type)
         # Derived data
         self.item_cmb_ref = dict()  # cmb references of items b/f
         self.item_paths = dict()
@@ -121,113 +122,96 @@ class Bill:
         self.data.set_model(model)
         self.update()
 
-    def update(self):
-        sch_len = self.schedule.length()
+    def update(self, schedule, cmbs, bills):
+        """Update bill data structures from other objects"""
+        
+        # Get required datas
+        itemnos = schedule.itemnos
+        
+        # Clear all derived structures
+        self.clear()
+        
+        # If bill is a normal bill
         if self.data.bill_type == BILL_NORMAL:
-            # Update schedule item vars
+            
+            # Set previous bill object
             if self.data.prev_bill is not None:
-                self.prev_bill = self.bill_view.bills[self.data.prev_bill]  # get prev_bill object
+                self.prev_bill = bills[self.data.prev_bill]  # Get prev_bill object
             else:
                 self.prev_bill = None
-            # initialise variables to schedule length
-            self.item_cmb_ref = []
-            self.item_paths = []
-            self.item_qty = []
-            for i in range(sch_len):  # make a list of empty lists
-                self.item_cmb_ref.append([])
-                self.item_paths.append([])
-                self.item_qty.append([])
-            self.item_normal_qty = [0] * sch_len
-            self.item_normal_amount = [0] * sch_len
-            self.item_excess_qty = [0] * sch_len
-            self.item_excess_amount = [0] * sch_len
 
-            # expand variables to schedule length
-            existing_length = len(self.data.item_excess_rates)
-            if sch_len > existing_length:
-                self.data.item_part_percentage += [100] * (sch_len - existing_length)
-                self.data.item_excess_part_percentage += [100] * (sch_len - existing_length)
-                self.data.item_excess_rates += [0] * (sch_len - existing_length)
-                for i in range(sch_len - existing_length):
-                    self.data.item_qty.append([0])
-                self.data.item_normal_amount += [0] * (sch_len - existing_length)
-                self.data.item_excess_amount += [0] * (sch_len - existing_length)
-
-            # fill in from Prev Bill
+            # Fill in values from Prev Bill
             if self.prev_bill is not None:
-                for item_index, item_qty in enumerate(self.prev_bill.item_qty):
-                    if sum(item_qty) > 0:
-                        self.item_cmb_ref[item_index].append(-1)  # use -1 as marker for prev abstract
-                        self.item_paths[item_index].append([self.data.prev_bill, item_index])
-                        self.item_qty[item_index].append(sum(item_qty))  # add total qty from previous bill
+                for itemno in itemnos:
+                    if itemno in self.prev_bill.item_qty:
+                        if sum(self.prev_bill.item_qty[itemno]) != 0:
+                            self.item_cmb_ref[item_index] = -1  # use -1 as marker for prev abstract
+                            self.item_paths[item_index] = [self.data.prev_bill, item_index]
+                            self.item_qty[item_index] = sum(item_qty)  # add total qty from previous bill
 
-            # fill in from measurement items
+            # Fill in values from measurement items
             for mitem in self.data.mitems:
                 item = self.cmbs[mitem[0]][mitem[1]][mitem[2]]
                 if not isinstance(item, MeasurementItemHeading):
-                    for count, itemno, item_qty in zip(list(range(len(item.itemnos))), item.itemnos, item.get_total()):
-                        item_index = self.schedule.get_item_index(itemno)
-                        if item_index is not None:
-                            self.item_cmb_ref[item_index].append(mitem[0])
-                            self.item_paths[item_index].append(mitem + [count])
-                            self.item_qty[item_index].append(item_qty)
+                    for count, itemno, item_qty in zip(enumerate(item.itemnos), item.get_total()):
+                        if itemno in itemnos:
+                            self.item_cmb_ref[itemno] = mitem[0]
+                            self.item_paths[itemno] = mitem + [count]
+                            self.item_qty[itemno] = item_qty
+                        else:
+                            log.warning('Bill - Item No ' + str([itemno, mitem]) + ' not updated in bill')
 
             # Evaluate remaining variables from above data
-            for item_index in range(sch_len):
-                item = self.schedule[item_index]
-                # determine total qty
-                total_qty = sum(self.item_qty[item_index])
-                # determin items above and at normal rates
-                if total_qty > item.qty * (1 + 0.01 * item.excess_rate_percent):
-                    if item.unit.lower() in INT_ITEMS:
-                        self.item_normal_qty[item_index] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
+            for itemno in itemnos:
+                # If item measured, calculate values
+                if itemno in self.item_qty:
+                    item = self.schedule[itemno]
+                    # Determine total qty
+                    total_qty = sum(self.item_qty[itemno])
+                    # Determine items above and at normal rates
+                    if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
+                        if item.unit.lower() in misc.INT_ITEMS:
+                            self.item_normal_qty[itemno] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
+                        else:
+                            self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
+                        self.item_excess_qty[itemno] = total_qty - self.item_normal_qty[itemno]
                     else:
-                        self.item_normal_qty[item_index] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
-                    self.item_excess_qty[item_index] = total_qty - self.item_normal_qty[item_index]
-                else:
-                    self.item_normal_qty[item_index] = total_qty
-                # determine amounts
-                self.item_normal_amount[item_index] = round(
-                    self.item_normal_qty[item_index] * self.data.item_part_percentage[item_index] * 0.01 *
-                    self.schedule[item_index].rate, 2)
-                self.item_excess_amount[item_index] = round(
-                    self.item_excess_qty[item_index] * self.data.item_excess_part_percentage[item_index] * 0.01 *
-                    self.data.item_excess_rates[item_index], 2)
-                # mbs refered to the bill
-                self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[item_index])  # Add any unique cmb (find union)
+                        self.item_normal_qty[itemno] = total_qty
+                        self.item_excess_qty[itemno] = 0
+                    # Determine amounts
+                    self.item_normal_amount[itemno] = round(
+                        self.item_normal_qty[itemno] * self.data.item_part_percentage[itemno] * 0.01 *
+                        self.schedule[itemno].rate, 2)
+                    self.item_excess_amount[itemno] = round(
+                        self.item_excess_qty[itemno] * self.data.item_excess_part_percentage[itemno] * 0.01 *
+                        self.data.item_excess_rates[itemno], 2)
+                    # Update cmbs refered to by the bill
+                    self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
-            # evaluate total
-            self.bill_total_amount = round(sum(self.item_normal_amount) + sum(self.item_excess_amount), 2)
+            # Evaluate total
+            self.bill_total_amount = round(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()), 2)
             if self.prev_bill is not None:
                 self.bill_since_prev_amount = round(self.bill_total_amount - self.prev_bill.bill_total_amount, 2)
             else:
                 self.bill_since_prev_amount = self.bill_total_amount
+        
+        # If bill is a Custom bill
         elif self.data.bill_type == BILL_CUSTOM:
-            # expand variables to schedule length
-            existing_length = len(self.data.item_excess_rates)
-            if sch_len > existing_length:
-                for i in range(sch_len - existing_length):
-                    self.data.item_qty.append([0])
-                self.item_normal_qty += [0] * (sch_len - existing_length)
-                self.item_excess_qty += [0] * (sch_len - existing_length)
-                self.data.item_normal_amount += [0] * (sch_len - existing_length)
-                self.data.item_excess_amount += [0] * (sch_len - existing_length)
             self.item_qty = self.data.item_qty
             self.item_normal_amount = self.data.item_normal_amount
             self.item_excess_amount = self.data.item_excess_amount
-            self.bill_total_amount = round(sum(self.data.item_normal_amount) + sum(self.data.item_excess_amount), 2)
+            self.bill_total_amount = round(sum(self.data.item_normal_amount.values()) + sum(self.data.item_excess_amount.values()), 2)
             self.bill_since_prev_amount = self.bill_total_amount
 
-    def get_latex_buffer(self, thisbillpath):
-        file_preamble = open(abs_path('latex','preamble.tex'), 'r')
-        file_abstractopening = open(abs_path('latex','abstractopening.tex'), 'r')
-        file_abstractitem = open(abs_path('latex','abstractitem.tex'), 'r')
-        file_abstractitemelement = open(abs_path('latex','abstractitemelement.tex'), 'r')
-        file_end = open(abs_path('latex','endabstract.tex'), 'r')
+    def get_latex_buffer(self, thisbillpath, schedule):
+        # Main latex buffer
+        latex_buffer = misc.LatexFile()
+                
+        # Read preamble and abstract opening into main buffer
+        latex_buffer.add_preffix_from_file('../latex/preamble.tex')
+        latex_buffer.add_preffix_from_file(abs_path('../latex/abstractopening.tex')
 
-        latex_buffer = file_preamble.read()
-        latex_buffer += file_abstractopening.read()  # red the abstract opening
-
+        # Setup substitution dictionary
         bill_local_vars = {}  # bill substitution dictionary
         bill_local_vars['$cmbbookno$'] = self.data.cmb_name
         bill_local_vars['$cmbheading$'] = self.data.title
@@ -240,23 +224,28 @@ class Bill:
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
-
-        sch_len = self.schedule.length()
-        for count, qty_items, cmb_refs, item_paths in zip(list(range(sch_len)), self.item_qty, self.item_cmb_ref,
-                                                          self.item_paths):
-            if qty_items:  # for every non empty item, include in bill
-                # setup required values
+        
+        # Loop over each item in schedule
+        for itemno in itemnos:
+            # If item measured, include in bill
+            if itemno in self.item_qty:
+                # Setup required values
+                qty_items = self.item_qty[itemno]
+                cmb_refs = self.item_cmb_ref[itemno]
+                item_paths = self.item_paths[itemno]
+                item = schedule[itemno]
                 item_local_vars = {}
                 item_local_vars_vanilla = {}
-                item = self.schedule.get_item_by_index(count)
-                if self.item_excess_qty[count] > 0:
+                if self.item_excess_qty[itemno] > 0:
                     excess_flag = '\iftrue'
                 else:
                     excess_flag = '\iffalse'
-                latex_records = ''
+                
+                # Include records of each item to bill
+                latex_records = misc.LatexFile()
                 for qty_item, cmb_ref, item_path in zip(qty_items, cmb_refs, item_paths):
                     if qty_item != 0:
-                        # setup variables
+                        # Setup variables
                         item_record_vars = {}
                         item_record_vars['$cmbqtybf$'] = str(qty_item)
                         item_record_vars['$cmbunit$'] = str(item.unit)
@@ -267,7 +256,7 @@ class Bill:
                             item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                         else:  # if prev abstract
                             if self.prev_bill.data.bill_type == BILL_NORMAL:
-                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, count])
+                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, itemno])
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                             elif self.prev_bill.data.bill_type == BILL_CUSTOM:
@@ -275,52 +264,45 @@ class Bill:
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iffalse'
 
-                        # read in record entries to buffer
-                        file_abstractitemelement.seek(0)  # seek file to start
-                        latex_record = file_abstractitemelement.read()
-                        # make item substitutions in buffer
-                        latex_record = replace_all(latex_record, item_record_vars)
-                        # add to master buffer
+                        # Read in latex records to buffer
+                        latex_record = misc.LatexFile()
+                        latex_record.add_preffix_from_file('../latex/abstractitemelement.tex')
+                        # Make item substitutions in buffer
+                        latex_record.replace_and_clean(item_record_vars)
+                        # Add to master buffer
                         latex_records += latex_record
 
-                # add all values to substitution dict
+                # Add all values to substitution dict
                 item_local_vars['$cmbitemno$'] = str(item.itemno)
                 item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
                 item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[count])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[count])
-                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[count])
+                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[itemno])
+                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
+                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[count] * 0.01 * self.schedule[count].rate, 2))
+                    round(self.data.item_part_percentage[itemno] * 0.01 * self.schedule[itemno].rate, 2))
                 item_local_vars['$cmbexcesspr$'] = str(
-                    round(self.data.item_excess_part_percentage[count] * 0.01 * self.data.item_excess_rates[count], 2))
-                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[count])
-                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[count])
-                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + str(thisbillpath + [count])
+                    round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
+                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
+                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[itemno])
+                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + str(thisbillpath + [itemno])
 
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
-                item_local_vars_vanilla['$cmbrecords$'] = latex_records
+                item_local_vars_vanilla['$cmbrecords$'] = latex_records.latex_buffer
 
-                # write entries
-                file_abstractitem.seek(0)  # seek to start
-                latex_buffer += file_abstractitem.read()  # read item template
-                # make item substitutions
-                latex_buffer = replace_all(latex_buffer, item_local_vars)
-                latex_buffer = replace_all_vanilla(latex_buffer, item_local_vars_vanilla)
+                # Write entries
+                latex_buffer.add_suffix_from_file('../latex/abstractitem.tex') # Read item template
+                # Make item substitutions
+                latex_buffer.replace_and_clean(item_local_vars)
+                latex_buffer.replace(item_local_vars_vanilla)
 
-        latex_buffer += file_end.read()
-        latex_buffer = replace_all(latex_buffer, bill_local_vars)
-
-        # close all files
-        file_preamble.close()
-        file_abstractopening.close()
-        file_abstractitem.close()
-        file_abstractitemelement.close()
-        file_end.close()
-
+        # Add abstract end latex block
+        latex_buffer.add_suffix_from_file('../latex/endabstract.tex')
+        latex_buffer.replace_and_clean(bill_local_vars)
+        
         return latex_buffer
 
     def get_latex_buffer_bill(self):
