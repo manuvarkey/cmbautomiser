@@ -25,6 +25,10 @@
 from gi.repository import Gtk, Gdk, GLib
 import copy, math, logging
 
+from openpyxl import Workbook, load_workbook, worksheet
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.cell import get_column_letter
+
 # local files import
 from __main__ import misc
 
@@ -99,6 +103,12 @@ class Bill:
         self.bill_since_prev_amount = 0  # since previous amount of work done
 
     def clear(self, clear_all = False):
+        """Clear bill data
+        
+            Arguments:
+                clear_all: Takes values
+                             True: Clears all data
+                             False: Clears only derived data"""
         if clear_all:
             self.data = BillData(self.data.bill_type)
         # Derived data
@@ -116,11 +126,16 @@ class Bill:
         self.bill_since_prev_amount = 0  # since previous amount of work done
 
     def get_model(self):
+        """Return base model"""
         return self.data.get_model()
 
     def set_model(self, model):
+        """Set base model"""
         self.data.set_model(model)
-        self.update()
+    
+    def get_billed_items(self):
+        """Return paths to billed items"""
+        return self.data.mitems
 
     def update(self, schedule, cmbs, bills):
         """Update bill data structures from other objects"""
@@ -204,8 +219,12 @@ class Bill:
             self.bill_since_prev_amount = self.bill_total_amount
 
     def get_latex_buffer(self, thisbillpath, schedule):
+        """Return abstract latex buffer"""
         # Main latex buffer
         latex_buffer = misc.LatexFile()
+        
+        # Get required datas
+        itemnos = schedule.itemnos
                 
         # Read preamble and abstract opening into main buffer
         latex_buffer.add_preffix_from_file('../latex/preamble.tex')
@@ -305,14 +324,19 @@ class Bill:
         
         return latex_buffer
 
-    def get_latex_buffer_bill(self):
-        file_billopening = open(abs_path('latex','billopening.tex'), 'r')
-        file_billitem = open(abs_path('latex','billitem.tex'), 'r')
-        file_end = open(abs_path('latex','endbill.tex'), 'r')
-
-        latex_buffer = file_billopening.read()
-
-        bill_local_vars = {}  # bill substitution dictionary
+    def get_latex_buffer_bill(self, schedule):
+        """Return bill latex buffer"""
+        # Main latex buffer
+        latex_buffer = LatexFile()
+        
+        # Get required datas
+        itemnos = schedule.itemnos
+        
+        # Read prefix
+        latex_buffer.add_preffix_from_file('../latex/billopening.tex')
+        
+        # Setup substitution dictionary
+        bill_local_vars = {}
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
@@ -321,68 +345,69 @@ class Bill:
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
-
-        sch_len = self.schedule.length()
-        for count, qty_items, item_paths in zip(list(range(sch_len)), self.item_qty,
-                                                          self.item_paths):
-            if self.prev_bill is not None:
-                sprev_item_normal_amount = self.item_normal_amount[count] - \
-                                           self.prev_bill.item_normal_amount[count]
-                sprev_item_excess_amount = self.item_excess_amount[count] - \
-                                           self.prev_bill.item_excess_amount[count]
-            else:
-                sprev_item_normal_amount = self.item_normal_amount[count]
-                sprev_item_excess_amount = self.item_excess_amount[count]
-
-            if qty_items:  # for every non empty item, include in bill
-                # setup required values
+        
+        # Write each item to bill
+        for itemno in itemnos:
+            # If item measured, include in bill
+            if itemno in self.item_qty:
+                # Setup required values
+                qty_items = self.item_qty[itemno]
+                item_paths = self.item_paths[itemno]
+                item = schedule[itemno]
+                
+                if self.prev_bill is not None:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                                               - self.prev_bill.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                                               - self.prev_bill.item_excess_amount[itemno]
+                else:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    
                 item_local_vars = {}
                 item_local_vars_vanilla = {}
-                item = self.schedule.get_item_by_index(count)
+
                 if self.item_excess_qty[count] > 0:
                     excess_flag = '\iftrue'
                 else:
                     excess_flag = '\iffalse'
 
-                # add all values to substitution dict
+                # Add all values to substitution dict
                 item_local_vars['$cmbitemno$'] = str(item.itemno)
                 item_local_vars['$cmbdescription$'] = str(item.extended_description_limited)
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
                 item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[count])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[count])
-                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[count])
+                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[itemno])
+                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
+                item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[count] * 0.01 * self.schedule[count].rate, 2))
+                    round(self.data.item_part_percentage[itemno] * 0.01 * self.schedule[itemno].rate, 2))
                 item_local_vars['$cmbexcesspr$'] = str(
-                    round(self.data.item_excess_part_percentage[count] * 0.01 * self.data.item_excess_rates[count], 2))
-                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[count])
-                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[count])
+                    round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
+                item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
+                item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[itemno])
                 item_local_vars['$cmbnormalsinceprevamount$'] = str(sprev_item_normal_amount)
                 item_local_vars['$cmbexcesssinceprevamount$'] = str(sprev_item_excess_amount)
 
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
+                
+                # Write entries
+                latex_buffer.add_preffix_from_file('../latex/billitem.tex') # read item template
+                # Make item substitutions
+                latex_buffer.replace_and_clean(item_local_vars)
+                latex_buffer.replace(item_local_vars_vanilla)
 
-                # write entries
-                file_billitem.seek(0)  # seek to start
-                latex_buffer += file_billitem.read()  # read item template
-                # make item substitutions
-                latex_buffer = replace_all(latex_buffer, item_local_vars)
-                latex_buffer = replace_all_vanilla(latex_buffer, item_local_vars_vanilla)
-
-        latex_buffer += file_end.read()
-        latex_buffer = replace_all(latex_buffer, bill_local_vars)
-
-        # close all files
-        file_billopening.close()
-        file_billitem.close()
-        file_end.close()
-
+        # Read suffix
+        latex_buffer.add_suffix_from_file('../latex/endbill.tex')
+        # Make replacements
+        latex_buffer.replace_and_clean(bill_local_vars)
+        
         return latex_buffer
 
-    def export_ods_bill(self,filename,project_settings_dict):
+    def export_ods_bill(self, filename, project_settings_dict):
+        """Export bill to spreadsheetc file"""
         spreadsheet = Workbook()
 
         # Sheet 1
@@ -397,36 +422,40 @@ class Bill:
             sheet.cell(row=1,column=c+1).font = Font(bold=True)
             sheet.cell(row=1,column=c+1).alignment = Alignment(wrap_text=True, vertical='center')
         for count in range(self.schedule.length()):
-            if self.prev_bill is not None:
-                sprev_item_normal_amount = self.item_normal_amount[count] - \
-                                           self.prev_bill.item_normal_amount[count]
-                sprev_item_excess_amount = self.item_excess_amount[count] - \
-                                           self.prev_bill.item_excess_amount[count]
-            else:
-                sprev_item_normal_amount = self.item_normal_amount[count]
-                sprev_item_excess_amount = self.item_excess_amount[count]
-
             item = self.schedule.get_item_by_index(count)
+            
             sheet.cell(row=count+2, column=1).value = item.itemno
             sheet.cell(row=count+2, column=2).value = item.description
             sheet.cell(row=count+2, column=2).alignment = Alignment(wrap_text=True)
             sheet.cell(row=count+2, column=3).value = item.unit
-            sheet.cell(row=count+2, column=4).value = sum(self.item_qty[count])
-            sheet.cell(row=count+2, column=5).value = self.item_normal_qty[count]
-            sheet.cell(row=count+2, column=6).value = self.item_excess_qty[count]
             sheet.cell(row=count+2, column=7).value = item.rate
-            sheet.cell(row=count+2, column=8).value = round(self.data.item_part_percentage[count] *
-                                             0.01 * self.schedule[count].rate, 2)
-            sheet.cell(row=count+2, column=9).value = self.data.item_excess_rates[count]
-            sheet.cell(row=count+2, column=10).value = round(self.data.item_excess_part_percentage[count] *
-                                             0.01 * self.data.item_excess_rates[count], 2)
-            sheet.cell(row=count+2, column=11).value = self.item_normal_amount[count]
-            sheet.cell(row=count+2, column=12).value = self.item_excess_amount[count]
-            sheet.cell(row=count+2, column=13).value = sprev_item_normal_amount
-            sheet.cell(row=count+2, column=14).value = sprev_item_excess_amount
             sheet.cell(row=count+2, column=15).value = item.excess_rate_percent
+            
+            # Fill in values for measured items
+            if item.itemno in self.item_qty:
+                itemno = item.itemno
+                sheet.cell(row=count+2, column=4).value = sum(self.item_qty[itemno])
+                sheet.cell(row=count+2, column=5).value = self.item_normal_qty[itemno]
+                sheet.cell(row=count+2, column=6).value = self.item_excess_qty[itemno]
+                sheet.cell(row=count+2, column=8).value = round(self.data.item_part_percentage[itemno] *
+                                                 0.01 * self.schedule[itemno].rate, 2)
+                sheet.cell(row=count+2, column=9).value = self.data.item_excess_rates[itemno]
+                sheet.cell(row=count+2, column=10).value = round(self.data.item_excess_part_percentage[itemno] *
+                                                 0.01 * self.data.item_excess_rates[itemno], 2)
+                sheet.cell(row=count+2, column=11).value = self.item_normal_amount[itemno]
+                sheet.cell(row=count+2, column=12).value = self.item_excess_amount[itemno]
+                if self.prev_bill is not None:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                                               - self.prev_bill.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                                               - self.prev_bill.item_excess_amount[itemno]
+                else:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                sheet.cell(row=count+2, column=13).value = sprev_item_normal_amount
+                sheet.cell(row=count+2, column=14).value = sprev_item_excess_amount
 
-        # sheet formatings
+        # Sheet formatings
         sheet.column_dimensions['B'].width = 50
         sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
         sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_LEGAL
@@ -440,35 +469,51 @@ class Bill:
         rowend = 12
         colend = 18
         rowend_end = 3
+        
         # Copy all from dev start
         template_start_sheet = template.get_sheet_by_name('start')
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet2.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
                 sheet2.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
-        # copy all values
+        
+        # Copy all values
         for count in range(self.schedule.length()):
             item = self.schedule.get_item_by_index(count)
             sheet2.cell(row=count+rowend+1, column=1).value = '=IF(INDIRECT(ADDRESS(ROW(),5))<>0,MAX(INDIRECT("A$12:" & ADDRESS(ROW()-1,1)))+1,"")'
             sheet2.cell(row=count+rowend+1, column=2).value = item.itemno
             sheet2.cell(row=count+rowend+1, column=3).value = item.description
             if item.qty > 0:
-                percent_dev = round((sum(self.item_qty[count]) - item.qty)/item.qty*100,2) if item.qty != 0 else 0
-                # Fill in values
                 sheet2.cell(row=count+rowend+1, column=4).value = item.unit
                 sheet2.cell(row=count+rowend+1, column=5).value = item.qty
-                sheet2.cell(row=count+rowend+1, column=6).value = sum(self.item_qty[count])
-                sheet2.cell(row=count+rowend+1, column=7).value = sum(self.item_qty[count]) - item.qty
-                sheet2.cell(row=count+rowend+1, column=8).value = percent_dev
-                if self.item_normal_qty[count]-item.qty > 0:
-                    sheet2.cell(row=count+rowend+1, column=9).value = self.item_normal_qty[count] - item.qty
-                if self.item_excess_qty[count] > 0:
-                    sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[count]
-                sheet2.cell(row=count+rowend+1, column=11).value = \
-                        '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(DEV_LIMIT_STATEMENT) + ',' + \
-                        str(self.item_normal_qty[count] - item.qty) + ',0)'
+                # Fill in values for measured items
+                if item.itemno in self.item_qty:
+                    itemno = item.itemno
+                    percent_dev = round((sum(self.item_qty[itemno]) - item.qty)/item.qty*100,2) if item.qty != 0 else 0
+                    sheet2.cell(row=count+rowend+1, column=6).value = sum(self.item_qty[itemno])
+                    sheet2.cell(row=count+rowend+1, column=7).value = sum(self.item_qty[itemno]) - item.qty
+                    if self.item_normal_qty[count]-item.qty > 0:
+                        sheet2.cell(row=count+rowend+1, column=9).value = self.item_normal_qty[itemno] - item.qty
+                    if self.item_excess_qty[itemno] > 0:
+                        sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[itemno]
+                    sheet2.cell(row=count+rowend+1, column=11).value = \
+                            '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(misc.DEV_LIMIT_STATEMENT) + ',' + \
+                            str(self.item_normal_qty[itemno] - item.qty) + ',0)'
+                    sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[itemno]
+                # Fill in values for items not measured
+                else:
+                    percent_dev = -100
+                    sheet2.cell(row=count+rowend+1, column=6).value = 0
+                    sheet2.cell(row=count+rowend+1, column=7).value = -item.qty
+                    sheet2.cell(row=count+rowend+1, column=9).value = -item.qty
+                    sheet2.cell(row=count+rowend+1, column=10).value = 0
+                    sheet2.cell(row=count+rowend+1, column=11).value = \
+                            '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(misc.DEV_LIMIT_STATEMENT) + ',' + \
+                            str(self.item_normal_qty[itemno] - item.qty) + ',0)'
+                    sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[itemno]
+                    
                 sheet2.cell(row=count+rowend+1, column=12).value = item.rate
-                sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[count]
+                sheet2.cell(row=count+rowend+1, column=8).value = percent_dev
                 # Fill in formulas
                 sheet2.cell(row=count+rowend+1, column=13).value = \
                     '=INDIRECT(ADDRESS(ROW(),11))*INDIRECT(ADDRESS(ROW(),12))'
@@ -477,11 +522,12 @@ class Bill:
                     '=INDIRECT(ADDRESS(ROW(),14))*INDIRECT(ADDRESS(ROW(),15))'
                 sheet2.cell(row=count+rowend+1, column=17).value = \
                     '=ABS(INDIRECT(ADDRESS(ROW(),13)))+ABS(INDIRECT(ADDRESS(ROW(),16)))'
-            # formatings
+            # Formatings
             sheet2.cell(row=count+rowend+1, column=1).alignment = Alignment(horizontal='center')
             sheet2.cell(row=count+rowend+1, column=2).alignment = Alignment(horizontal='center')
             sheet2.cell(row=count+rowend+1, column=3).alignment = Alignment(wrap_text=True)
-         # Copy all from dev end
+            
+        # Copy all from dev end
         template_end_sheet = template.get_sheet_by_name('end')
         for row,row_ in zip(list(range(rowend+self.schedule.length()+1,rowend+self.schedule.length()+rowend_end+1)),list(range(1,rowend_end+1))):
             for column,column_ in zip(list(range(1,colend+1)),list(range(1,colend+1))):
@@ -490,6 +536,7 @@ class Bill:
         sheet2.cell(row=rowend+self.schedule.length()+1, column=colend-1).value = \
             '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
             str(rowend+self.schedule.length())+')'
+            
         # sheet2 formatings
         for column in range(1,colend+1):
             # copy coumn widths
@@ -519,7 +566,6 @@ class Bill:
             return '<span foreground="red"><b>' + clean_markup(self.data.title) + '</b> | CMB.No.<b>' + clean_markup(
                 self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
                 total) + '</b></span>'
-
 
     def print_item(self):
         print(("bill " + self.data.title + " start"))

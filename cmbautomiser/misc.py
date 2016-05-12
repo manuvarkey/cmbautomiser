@@ -206,16 +206,16 @@ class Spreadsheet:
         self.filename = filename
         self.mode = mode
         self.spreadsheet = None
-        self.file = None
+        self.file_ = None
         
         if self.mode == 'r':
             self.spreadsheet = openpyxl.load_workbook(filename)
         elif self.mode == 'w':
-            self.file = open(filename,'w')
+            self.file_ = open(filename,'w')
         elif self.mode == 'a':
-            self.file = open(filename,'a')
+            self.file_ = open(filename,'a')
         else:
-            self.file = None
+            self.file_ = None
             
     def read_rows(self,columntypes = [], start=0, end=-1, sheet_no = 0):  
         sheet = self.spreadsheet.active #TODO
