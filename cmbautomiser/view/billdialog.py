@@ -35,9 +35,11 @@ from misc import *
 log = logging.getLogger(__name__)
 
 class BillDialog:
-    # General signal handler Methods
+    
+    # Callbacks for GUI elements
 
     def OnNumberTextChanged(self, entry):
+        """Set text in text entry"""
         try:
             val = int(entry.get_text())
             entry.set_text(str(val))
@@ -45,8 +47,7 @@ class BillDialog:
             entry.set_text('')
 
     def onComboChanged(self, combo):
-    # for selecting item bill
-
+    """For selecting bill item from combobox"""
         tree_iter = combo.get_active_iter()
         if tree_iter is not None or tree_iter != 0:
             model = combo.get_model()
@@ -56,9 +57,10 @@ class BillDialog:
             self.data.previous_bill = None
 
     def onButtonPropertiesPressed(self, button):
-        # Create schedule window
-
-        # variables
+        """Create a bill properties dialog window"""
+        
+        # Variables
+        
         toplevel = self.window
         itemnos = []
         item_schedule = self.schedule
@@ -66,57 +68,63 @@ class BillDialog:
         columntypes = []
         populated_items = []
         cellrenderers = []
-        # call backs
+        
+        # Call backs
+        
         def callback_agmntno(value, row):
-            return populated_items[row][1]  # hack for unicode support
+            return populated_items[row][0]
 
         def callback_description(value, row):
-            return populated_items[row][2]  # hack for unicode support
+            return populated_items[row][1]
 
         def callback_unit(value, row):
-            return populated_items[row][3]  # hack for unicode support
+            return populated_items[row][2]
 
         def callback_rate(value, row):
-            if populated_items[row][4] != 0:
-                return str(populated_items[row][4])
+            if populated_items[row][3] != 0:
+                return str(populated_items[row][3])
             else:
                 return ''
 
         def callback_flag(value, row):
             return str(populated_items[row][5])
-
+        
+        # Obtain values to be passed
+        
+        itemnos = self.data.bills[self.this_bill].item_qty.keys
+        # Items specific to normal bill
         if self.data.bill_type == BILL_NORMAL:
-            self.evaluate_qtys()
-            for item_index in range(self.schedule.length()):
-                item = self.schedule.get_item_by_index(item_index)
-                itemno = item.itemno
-                description = item.description
+            for itemno in itemnos:
+                item = self.schedule.[itemno]
+                description = item.extended_description_limited
                 unit = item.unit
                 rate = item.rate
-                if self.item_excess_qty[item_index] > 0:
+                if self.data.bills[self.this_bill].item_excess_qty[itemno] > 0:
                     flag = 'EXCEEDED'
                 else:
                     flag = ''
-                populated_items.append([item_index, itemno, description, unit, rate, flag])
-            captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Excess Rate', 'P.R.(%)', 'Excess P.R(%)','Excess ?']
-            columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L,MEAS_CUST]
-            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
-                            [None] * 3 + [callback_flag]
+                populated_items.append([itemno, description, unit, rate, flag])
+                captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Excess Rate', 'P.R.(%)', 'Excess P.R(%)','Excess ?']
+                columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L, MEAS_CUST]
+                cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
+                                [None] * 3 + [callback_flag]
+        
+        # Items specific to custom bill
         elif self.data.bill_type == BILL_CUSTOM:
-            for item_index in range(self.schedule.length()):
-                item = self.schedule.get_item_by_index(item_index)
-                itemno = item.itemno
-                description = item.description
+            for itemno in itemnos:
+                item = self.schedule.[itemno]
+                description = item.extended_description_limited
                 unit = item.unit
                 rate = item.rate
                 populated_items.append([item_index, itemno, description, unit, rate])
-            captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Total Qty', 'Amount', 'Excess Amount']
-            columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L]
-            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
-
+                captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Total Qty', 'Amount', 'Excess Amount']
+                columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L]
+                cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
+            
+        # Raise Dialog for entry of per item values
         dialog = ScheduleDialog(toplevel, itemnos, captions, columntypes, cellrenderers, item_schedule)
 
-        # deactivate add and delete buttons, remarks column in dialog
+        # Deactivate add and delete buttons, remarks column in dialog
         dialog.builder.get_object("toolbutton_schedule_add").set_sensitive(False)
         dialog.builder.get_object("toolbutton_schedule_add_mult").set_sensitive(False)
         dialog.builder.get_object("toolbutton_schedule_delete").set_sensitive(False)
@@ -126,7 +134,7 @@ class BillDialog:
         dialog.builder.get_object("toolbutton_schedule_import").set_sensitive(False)
         dialog.remark_cell.set_sensitive(False)
 
-        # create data object for current data
+        # Create data object for current data
         records = []
         for item in populated_items:
             if self.data.bill_type == BILL_NORMAL:
@@ -139,14 +147,15 @@ class BillDialog:
                 y = self.data.item_normal_amount[item[0]]
                 z = self.data.item_excess_amount[item[0]]
                 records.append(['', '', '', '', str(x), str(y), str(z)])
-        old_val = [[], [], records, '', []]
+        old_val = [[], records, '', []]
 
         dialog.set_model(old_val)  # modify dialog with current values of data
 
-        data = dialog.run()  # get modified values of data
+        # Run Dialog and get modified values
+        data = dialog.run()
 
         if data is not None:
-            records = data[2]
+            records = data[1]
             for count, item in enumerate(populated_items):
                 if self.data.bill_type == BILL_NORMAL:
                     self.data.item_excess_rates[item[0]] = float(eval(records[count][4]))
@@ -158,76 +167,45 @@ class BillDialog:
                     self.data.item_excess_amount[item[0]] = float(eval(records[count][6]))
 
     def onToggleCellRendererToggle(self, toggle, path_str):
+        """On toggle clicked"""
         path_obj = Gtk.TreePath.new_from_string(path_str)
         path = path_obj.get_indices()
+        
+        def select_item(item, path, state = None):
+            """Change state of item at path if item is toggleable
+            
+                Arguments:
+                    item: Item selected
+                    path: Path to item selected
+                    state: Final state of item. Toggles on None"""
+            if not isinstance(item, data.measurement.MeasurementItemHeading) and self.locked[path] != True:
+                if state != None:
+                    self.selected[path[0]][path[1]][path[2]] = state
+                else:
+                    state = self.selected[path[0]][path[1]][path[2]]
+                    if state is None:
+                        state = False
+                    self.selected[path[0]][path[1]][path[2]] = not(state)
+            
         if len(path) == 1:
-            for meas in self.measurements_view.cmbs[path[0]]:
+            # Measure all items under CMB
+            for p2, meas in enumerate(self.measurements_view.cmbs[path[0]]):
                 if not isinstance(meas, Completion):
-                    for meas_item in meas:
-                        if not isinstance(meas_item, MeasurementItemHeading) and not (path in self.locked):
-                            meas_item.set_billed_flag(True)
+                    for p3, meas_item in enumerate(meas):
+                        select_item(meas_item, path + [p2, p3], True)
         elif len(path) == 2:
+            # Measure all items under Measurement
             meas = self.measurements_view.cmbs[path[0]][path[1]]
             if not isinstance(meas, Completion):
-                for meas_item in meas:
-                    if not isinstance(meas_item, MeasurementItemHeading) and not (path in self.locked):
-                        meas_item.set_billed_flag(True)
+                for p3, meas_item in enumerate(meas):
+                    select_item(meas_item, path + [p3], True)
         elif len(path) == 3:
             meas_item = self.measurements_view.cmbs[path[0]][path[1]][path[2]]
-            if not isinstance(meas_item, MeasurementItemHeading) and not (path in self.locked):
-                meas_item.set_billed_flag(not (meas_item.get_billed_flag()))
+            select_item(meas_item, path)
+            
         self.update_store()
 
-    # Class methods
-
-    def evaluate_qtys(self):
-        self.update_store()
-        # Update schedule item vars
-        if self.data.prev_bill is not None:
-            self.prev_bill = self.bill_view.bills[self.data.prev_bill]  # get prev_bill object
-        else:
-            self.prev_bill = None
-
-        sch_len = self.schedule.length()
-        # initialise variables to schedule length
-        self.item_cmb_ref = []
-        self.item_qty = []
-        for i in range(sch_len):  # make a list of empty lists
-            self.item_cmb_ref.append([])
-            self.item_qty.append([])
-        self.item_normal_qty = [0] * sch_len
-        self.item_excess_qty = [0] * sch_len
-
-        # fill in from measurement items
-        for mitem in self.data.mitems:
-            item = self.cmbs[mitem[0]][mitem[1]][mitem[2]]
-            if not isinstance(item, MeasurementItemHeading):
-                for itemno, item_qty in zip(item.itemnos, item.get_total()):
-                    item_index = self.schedule.get_item_index(itemno)
-                    if item_index is not None:
-                        self.item_cmb_ref[item_index].append(mitem[0])
-                        self.item_qty[item_index].append(item_qty)
-
-        # fill in from Prev Bill
-        if self.prev_bill is not None:
-            for item_index, item_qty in enumerate(self.item_qty):
-                self.item_cmb_ref[item_index].append(-1)  # use -1 as marker for prev abstract
-                self.item_qty[item_index].append(sum(self.prev_bill.item_qty[item_index]))  # add total qty from previous bill
-
-        # Evaluate remaining variables from above data
-        for item_index in range(sch_len):
-            item = self.schedule[item_index]
-            # determine total qty
-            total_qty = sum(self.item_qty[item_index])
-            # determine items above and at normal rates
-            if total_qty > item.qty * (1 + 0.01 * item.excess_rate_percent):
-                if item.unit.lower() in INT_ITEMS:
-                    self.item_normal_qty[item_index] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
-                else:
-                    self.item_normal_qty[item_index] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
-                self.item_excess_qty[item_index] = total_qty - self.item_normal_qty[item_index]
-            else:
-                self.item_normal_qty[item_index] = total_qty
+    # General class methods
 
     def get_model(self):
         self.update_store()
@@ -237,9 +215,33 @@ class BillDialog:
         self.data = None
 
     def update_store(self):
-        # Update measurements store
+        
+        # Update mitems
+        self.data.mitems = self.selected.get_paths()
+        
+        # Update locked states
+        self.locked = self.data.get_lock_states() - self.selected
+        
+        # Update store from lock states
         self.measurements_view.update_store()
-
+        for count_cmb, cmb in enumerate(self.data.cmbs):
+            for count_meas, meas in enumerate(cmb):
+                if isinstance(meas, Measurement):
+                    for count_meas_item, meas_item in enumerate(meas):
+                        path = [count_cmb, count_meas, count_meas_item]
+                        if self.locked[path]:
+                            # Apply color to locked items
+                            self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
+                        elif self.selected[path]:
+                            # Apply color to selected items
+                            self.measurements_view.set_colour(path, misc.MEAS_COLOR_SELECTED)
+                        elif isinstance(meas_item, MeasurementItemHeading):
+                            self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
+                else:
+                    path = [count_cmb, count_meas]
+                    # Apply color to locked items
+                    self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
+        
         # Update Data elements
         if self.combobox_bill_last_bill.get_active() != 0:
             self.data.prev_bill = self.combobox_bill_last_bill.get_active() - 1
@@ -250,51 +252,19 @@ class BillDialog:
         self.data.bill_date = self.entry_bill_bill_date.get_text()
         self.data.starting_page = int(self.entry_bill_starting_page.get_text())
 
-        # update data.mitems from self.cmbs
-        self.data.mitems = []  # clear mitems
-        for count_cmb, cmb in enumerate(self.cmbs):
-            for count_meas, meas in enumerate(cmb):
-                if isinstance(meas, Measurement):
-                    for count_meas_item, meas_item in enumerate(meas):
-                        path = Gtk.TreePath.new_from_string(
-                            str(count_cmb) + ':' + str(count_meas) + ':' + str(count_meas_item))
-                        path_iter = self.measurements_view.store.get_iter(path)
-                        if [count_cmb, count_meas, count_meas_item] in self.locked:
-                            self.measurements_view.store.set_value(path_iter, 3,
-                                                                   MEAS_COLOR_LOCKED)  # apply color to locked items
-                        elif meas_item.get_billed_flag() is True:
-                            self.data.mitems.append([count_cmb, count_meas, count_meas_item])
-                            self.measurements_view.store.set_value(path_iter, 3,
-                                                                   MEAS_COLOR_SELECTED)  # apply color to selected items
-                        elif isinstance(meas_item, MeasurementItemHeading):
-                            self.measurements_view.store.set_value(path_iter, 3, MEAS_COLOR_LOCKED)
-                else:
-                    path = Gtk.TreePath.new_from_string(str(count_cmb) + ':' + str(count_meas))
-                    path_iter = self.measurements_view.store.get_iter(path)
-                    self.measurements_view.store.set_value(path_iter, 3, MEAS_COLOR_LOCKED)  # apply color to locked
-
-    def __init__(self, parent, data, bill_view, this_bill=None):
+    def __init__(self, parent, data, bill_data, this_bill=None):
         # Setup variables
-
         self.parent = parent
         self.data = data
-        self.bill_view = bill_view
-        self.schedule = bill_view.schedule
+        self.billdata = data
         self.this_bill = this_bill  # if in edit mode, use this to filter out this bill entries
-        self.bills = bill_view.bills  # reference to bill
-        self.cmbs = copy.deepcopy(self.bill_view.cmbs)  # make copy of cmbs for tinkering
-        self.locked = []  # paths to items loacked from changing
-        # expand variables to schedule length
-        sch_len = self.schedule.length()
-        existing_length = len(self.data.item_excess_rates)
-        if sch_len > existing_length:
-            self.data.item_part_percentage += [100] * (sch_len - existing_length)
-            self.data.item_excess_part_percentage += [100] * (sch_len - existing_length)
-            self.data.item_excess_rates += [0] * (sch_len - existing_length)
-            for i in range(sch_len - existing_length):
-                self.data.item_qty.append([0])
-            self.data.item_normal_amount += [0] * (sch_len - existing_length)
-            self.data.item_excess_amount += [0] * (sch_len - existing_length)
+        # Derived data
+        self.schedule = data.schedule
+        self.bills = data.bills
+        self.cmbs = data.cmbs
+        self.selected = data.datamodel.LockState()
+        self.locked = data.get_lock_states()
+                
         # Setup dialog window
         self.builder = Gtk.Builder()
         self.builder.add_from_file(abs_path("interface","billdialog.glade"))
@@ -303,7 +273,6 @@ class BillDialog:
         self.builder.connect_signals(self)
         # Get required objects
         self.treeview_bill = self.builder.get_object("treeview_bill")
-        self.liststore_bill = self.builder.get_object("liststore_bill")
         self.tree_bill_text_billed = self.builder.get_object("tree_bill_text_billed")
         self.liststore_previous_bill = self.builder.get_object("liststore_previous_bill")
         self.combobox_bill_last_bill = self.builder.get_object("combobox_bill_last_bill")
@@ -313,37 +282,20 @@ class BillDialog:
         self.entry_bill_bill_date = self.builder.get_object("entry_bill_bill_date")
         self.entry_bill_starting_page = self.builder.get_object("entry_bill_starting_page")
 
-        # setup cmb tree view
-        self.measurements_view = MeasurementsView(self.schedule, self.liststore_bill, self.treeview_bill)
-        self.measurements_view.set_data_object(self.schedule, self.cmbs)
-        # setup previous bill combo box list store
+        # Setup cmb tree view
+        self.measurements_view = measurement.MeasurementsView(self.schedule, self.data, self.treeview_bill)
+        # Setup previous bill combo box list store
         self.liststore_previous_bill.append([0, 'None'])  # Add nil entry
         for row, bill in enumerate(self.bills):
             if row != self.this_bill:
                 self.liststore_previous_bill.append([row + 1, bill.get_text()])
             else:
                 break  # do not add entries beyond
-                # self.liststore_previous_bill.append([0,'None']) # Add nil entry
-        self.combobox_bill_last_bill.set_active(0)
 
-        # Connect signals
+        # Connect toggled signal of measurement view to callback
         self.tree_bill_text_billed.connect("toggled", self.onToggleCellRendererToggle)
-        # Restore UI elements from data
-        # Measured Items
-        # lock all measured items
-        for count_cmb, cmb in enumerate(self.cmbs):
-            for count_meas, meas in enumerate(cmb):
-                if isinstance(meas, Measurement):
-                    for count_meas_item, meas_item in enumerate(meas):
-                        if meas_item.get_billed_flag() is True:
-                            self.locked.append([count_cmb, count_meas, count_meas_item])
-        # unlock any measured items
-        for path in self.data.mitems:
-            try:
-                self.locked.remove([path[0], path[1], path[2]])
-            except ValueError:
-                log.warning(('Unable to release lock on item :' + str(path)))
-
+        
+        # Load data
         if self.data.prev_bill is not None:
             self.combobox_bill_last_bill.set_active(self.data.prev_bill + 1)
         else:
@@ -352,12 +304,12 @@ class BillDialog:
         self.entry_bill_cmbname.set_text(self.data.cmb_name)
         self.entry_bill_bill_date.set_text(self.data.bill_date)
         self.entry_bill_starting_page.set_text(str(self.data.starting_page))
-        # special conditions for custom bill
+        # Special conditions for custom bill
         if self.data.bill_type == BILL_CUSTOM:
-            self.treeview_bill.set_sensitive(False)  # deactivate measurement item entry
-            self.combobox_bill_last_bill.set_sensitive(False)  # deactivate last bill selection
-        else:
-            self.evaluate_qtys()
+            self.treeview_bill.set_sensitive(False)  # Deactivate measurement item entry
+            self.combobox_bill_last_bill.set_sensitive(False)  # Deactivate last bill selection
+        
+        # Update GUI
         self.update_store()
 
     def run(self):

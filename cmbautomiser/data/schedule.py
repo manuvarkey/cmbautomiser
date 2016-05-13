@@ -98,7 +98,7 @@ class ScheduleGeneric:
     def get_model(self):
         items = []
         for item in self.items:
-            items.append(item.get())
+            items.append(item.get_model())
         return self.items
         
     def set_model(self,items):

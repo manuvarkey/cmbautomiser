@@ -407,7 +407,7 @@ class Bill:
         return latex_buffer
 
     def export_ods_bill(self, filename, project_settings_dict, schedule):
-        """Export bill to spreadsheetc file"""
+        """Export bill to spreadsheet file"""
         spreadsheet = Workbook()
 
         # Sheet 1

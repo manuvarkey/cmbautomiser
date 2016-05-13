@@ -112,6 +112,7 @@ class AbstractDialog:
         self.int_m_item.set_remark(self.entry_abstract_remark.get_text())
         
         # Update store from lock states
+        self.measurements_view.update_store()
         for count_cmb, cmb in enumerate(self.data.cmbs):
             for count_meas, meas in enumerate(cmb):
                 if isinstance(meas, Measurement):
@@ -129,9 +130,6 @@ class AbstractDialog:
                     path = [count_cmb, count_meas]
                     # Apply color to locked items
                     self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
-        
-        # Update measurements view
-        self.measurements_view.update_store()
 
     def __init__(self, parent, data, model):
         # Setup variables

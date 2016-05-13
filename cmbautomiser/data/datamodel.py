@@ -373,8 +373,7 @@ class DataModel:
         
     def render_bill(self, folder, replacement_dict, path, recursive=True):
         """Render bill to file"""
-        #TODO fix render of abstracted items from a third mb
-        
+                
         # Build all data structures
         self.update()
         
@@ -390,9 +389,13 @@ class DataModel:
             latex_buffer_bill = replace_and_clean(replacement_dict)
             
             # Include linked cmbs
+            cmb_refs = bill.cmb_ref[:]
             replacement_dict_cmbs = {}
             external_docs = ''
-            for cmbpath in bill.cmb_ref:
+            # Add all cmbs depending on cmbs billed to include abstracted items
+            for count in bill.cmb_ref:
+                cmb_refs |= self.cmb_ref[count]
+            for cmbpath in cmb_refs:
                 if cmbpath != -1:
                     external_docs += '\externaldocument{cmb_' + str(cmbpath + 1) + '}\n'
                 elif bill.data.prev_bill is not None: # prev abstract
@@ -409,7 +412,7 @@ class DataModel:
             # run latex on file and dependencies
             if recursive:  # if recursive call
                 # Render all cmbs depending on the bill
-                for cmb_ref in bill.cmb_ref:
+                for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
                         code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
                         if code[0] == misc.CMB_ERROR:
@@ -430,7 +433,7 @@ class DataModel:
 
             # Render all cmbs again to rebuild indexes on recursive run
             if recursive:  # if recursive call
-                for cmb_ref in bill.cmb_ref:
+                for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
                         code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
                         if code[0] == misc.CMB_ERROR:
