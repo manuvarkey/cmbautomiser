@@ -226,7 +226,7 @@ class MeasurementsView:
             except:
                 log.warning('MeasurementsView - paste_at_selection - No valid data in clipboard')
         else:
-            log.warning("MeasurementsView - paste_at_selection - No text on the clipboard.")
+            log.warning('MeasurementsView - paste_at_selection - No text on the clipboard')
 
     def update_store(self):
         """Update GUI of MeasurementsView from data model while trying to preserve selection"""

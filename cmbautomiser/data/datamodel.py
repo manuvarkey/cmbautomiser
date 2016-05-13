@@ -71,6 +71,36 @@ class DataModel:
     def set_model(self, model):
         if model[0] == 'DataModel':
             self.__init__(model[1])
+    
+    def update(self):
+        """Update derived data values"""
+        # Update all bills
+        for bill in self.bills:
+            bill.update(self.schedule, self.cmbs, self.bills)
+        
+        # Update locks
+        self.lock_state = LockState()
+        for bill in self.bills:
+            self.lock_state += LockState(bill.get_billed_items())
+        for cmb in self.cmbs:
+            for meas in cmb:
+                if isinstance(meas, measurement.Measurement):
+                    for measitem in meas:
+                        if isinstance(meas, measurement.MeasurementItemAbstract):
+                            self.lock_state += LockState(measitem.get_abstracted_items())
+        
+        # Update dependency tree of cmbs
+        self.cmb_ref = []
+        for cmb_no, cmb in enumerate(self.cmbs):
+            ref = set()
+            for meas in cmb.items:
+                if isinstance(meas, measurement.Measurement):
+                    for meas_item in meas.items:
+                        if isinstance(meas_item, measurement.MeasurementItemAbstract):
+                            for m_item in meas_item.m_items:
+                                if m_item[0] != cmb_no:
+                                    ref |= set(m_item[0])
+            self.cmb_ref.append(ref)
             
     def get_lock_states(self):
         self.update()
@@ -230,6 +260,10 @@ class DataModel:
         
     def render_cmb(self, folder, replacement_dict, path, recursive = True):
         """Render CMB"""
+        
+        # Build all data structures
+        self.update()
+        
         # Fill in latex buffer
         latex_buffer = self.cmbs[path[0]].get_latex_buffer([path[0]], self.schedule)
 
@@ -295,35 +329,119 @@ class DataModel:
         # Return status code for main application interface
         return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
     
-    def update(self):
-        """Update derived data values"""
-        # Update all bills
-        for bill in self.bills:
-            bill.update(self.schedule, self.cmbs, self.bills)
+    # Bill methods
+    
+    @undoable
+    def insert_bill_at_row(self, data, row):  # note needs rows to be sorted
+        item = bill.Bill(data)
+        if row is not None:
+            new_row = row
+            self.bills.insert(row, item)
+        else:
+            self.bills.append(item)
+            new_row = len(self.bills) - 1
+        self.update_store()
+
+        yield "Insert data items to bill at row '{}'".format(new_row)
+        # Undo action
+        self.delete_bill(new_row)
+        self.update()
         
-        # Update locks
-        self.lock_state = LockState()
-        for bill in self.bills:
-            self.lock_state += LockState(bill.get_billed_items())
-        for cmb in self.cmbs:
-            for meas in cmb:
-                if isinstance(meas, measurement.Measurement):
-                    for measitem in meas:
-                        if isinstance(meas, measurement.MeasurementItemAbstract):
-                            self.lock_state += LockState(measitem.get_abstracted_items())
+    @undoable
+    def edit_bill_at_row(self, data, row):
+        if row is not None:
+            old_data = copy.deepcopy(self.bills[row].get_modal())
+            self.bills[row].set_modal(data)
+        self.update_store()
+
+        yield "Edit bill item at row '{}'".format(row)
+        # Undo action
+        if row is not None:
+            self.bills[row].set_modal(old_data)
+        self.update()
+    
+    @undoable
+    def delete_bill(self, row):
+        data = self.bills[row].get_model()
+        del self.bills[row]
+        self.update()
+
+        yield "Delete data items from bill at row '{}'".format(row)
+        # Undo action
+        self.insert_bill_at_row(data, row)
+        self.update()
         
-        # Update dependency tree of cmbs
-        self.cmb_ref = []
-        for cmb_no, cmb in enumerate(self.cmbs):
-            ref = set()
-            for meas in cmb.items:
-                if isinstance(meas, measurement.Measurement):
-                    for meas_item in meas.items:
-                        if isinstance(meas_item, measurement.MeasurementItemAbstract):
-                            for m_item in meas_item.m_items:
-                                if m_item[0] != cmb_no:
-                                    ref |= set(m_item[0])
-            self.cmb_ref.append(ref)
+    def render_bill(self, folder, replacement_dict, path, recursive=True):
+        """Render bill to file"""
+        #TODO fix render of abstracted items from a third mb
+        
+        # Build all data structures
+        self.update()
+        
+        # Render only if bill is a normal bill
+        if self.bills[path[0]].data.bill_type == misc.BILL_NORMAL:
+            bill = self.bills[path[0]]
+            
+            # Fill in latex buffer
+            latex_buffer = bill.get_latex_buffer([path[0]])
+            latex_buffer_bill = bill.get_latex_buffer_bill()
+            # Make global variables replacements
+            latex_buffer.replace_and_clean(replacement_dict)
+            latex_buffer_bill = replace_and_clean(replacement_dict)
+            
+            # Include linked cmbs
+            replacement_dict_cmbs = {}
+            external_docs = ''
+            for cmbpath in bill.cmb_ref:
+                if cmbpath != -1:
+                    external_docs += '\externaldocument{cmb_' + str(cmbpath + 1) + '}\n'
+                elif bill.data.prev_bill is not None: # prev abstract
+                    external_docs += '\externaldocument{abs_' + str(bill.data.prev_bill + 1) + '}\n'
+            replacement_dict_cmbs['$cmbexternaldocs$'] = external_docs
+            latex_buffer.replace(replacement_dict_cmbs)
+
+            # Write output
+            filename = posix_path(folder, 'abs_' + str(path[0] + 1) + '.tex')
+            latex_buffer.write(filename)
+            filename_bill = posix_path(folder, 'bill_' + str(path[0] + 1) + '.tex')
+            latex_buffer_bill.write(filename_bill)
+
+            # run latex on file and dependencies
+            if recursive:  # if recursive call
+                # Render all cmbs depending on the bill
+                for cmb_ref in bill.cmb_ref:
+                    if cmb_ref is not -1:  # if not prev bill
+                        code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
+                        if code[0] == misc.CMB_ERROR:
+                            return code
+                # Render prev bill
+                if bill.prev_bill is not None and bill.prev_bill.data.bill_type == misc.BILL_NORMAL:
+                    code = self.render_bill(folder, replacement_dict, [bill.data.prev_bill], False)
+                    if code[0] == misc.CMB_ERROR:
+                        return code
+
+            # Render this bill
+            code = run_latex(posix_path(folder), filename)
+            if code == misc.CMB_ERROR:
+                return (misc.CMB_ERROR, 'Rendering of Bill: ' + self.bill.data.title + ' failed')
+            code_bill = run_latex(posix_path(folder), filename_bill)
+            if code_bill == misc.CMB_ERROR:
+                return (misc.CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed')
+
+            # Render all cmbs again to rebuild indexes on recursive run
+            if recursive:  # if recursive call
+                for cmb_ref in bill.cmb_ref:
+                    if cmb_ref is not -1:  # if not prev bill
+                        code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
+                        if code[0] == misc.CMB_ERROR:
+                            return code
+                # Write spreadsheet output
+                filename_bill_ods = posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
+                bill.export_ods_bill(filename_bill_ods, replacement_dict)
+
+            return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
+        else:
+            return (misc.CMB_WARNING, 'Rendering of custom bill not supported')
 
         
 class LockState:
