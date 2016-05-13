@@ -110,8 +110,8 @@ class DataModel:
     
     def get_custom_item_template(self, module):
         '''Get custom item template for ScheduleDialog and others'''
-        item = data.measurement.MeasurementItemCustom(None,module)
-        return [item.itemnos_mask, item.captions, item.columntypes, item.cellrenderers]
+        item = measurement.MeasurementItemCustom(None,module)
+        return [item.itemnos_mask, item.captions, item.columntypes, item.cust_funcs]
         
     def get_schmod_from_custmod(self, model):
         '''Get custom item template for ScheduleDialog and others'''
@@ -120,16 +120,17 @@ class DataModel:
     def get_custmod_from_schmod(self, schmod, custmodel, itemtype):
         '''Get custom item template for ScheduleDialog and others'''
         if custmodel is not None:
-            return ['MeasurementItemCustom', schmod + [custmodel[1][4:6]]]
+            return ['MeasurementItemCustom', schmod + custmodel[1][4:6]]
         else:
-            item = data.measurement.MeasurementItemCustom(None, itemtype)
+            item = measurement.MeasurementItemCustom(None, itemtype)
             nullmodel = item.get_model()
-            return ['MeasurementItemCustom', schmod + [nullmodel[1][4:6]]]
+            return ['MeasurementItemCustom', schmod + nullmodel[1][4:6]]
     
     @undoable
     def add_cmb_at_node(self, cmb_model, row):
         # Obtain CMB item
-        cmb = measurement.Cmb(cmb_model)
+        if cmb_model[0] == 'CMB':
+            cmb = measurement.Cmb(cmb_model[1])
         if row != None:
             self.cmbs.insert(row,cmb)
             row_delete = row
@@ -146,9 +147,9 @@ class DataModel:
     def add_measurement_at_node(self, meas_model, path):
         # Obtain Measurement item
         if meas_model[0] == 'Measurement':
-            meas = measurement.Measurement(meas_model)
+            meas = measurement.Measurement(meas_model[1])
         elif meas_model[0] == 'Completion':
-            meas = measurement.Completion(meas_model)
+            meas = measurement.Completion(meas_model[1])
         
         delete_path = None
         if path != None:
@@ -169,8 +170,15 @@ class DataModel:
         self.delete_row_meas(delete_path)
         
     @undoable
-    def add_measurement_item_at_node(self,item,path):
+    def add_measurement_item_at_node(self,item_model,path):
         delete_path = None
+        if item_model[0] == 'MeasurementItemHeading':
+            item = measurement.MeasurementItemHeading(item_model[1])
+        elif item_model[0] == 'MeasurementItemCustom':
+            item = measurement.MeasurementItemCustom(item_model[1], item_model[1][5])
+        elif item_model[0] == 'MeasurementItemAbstract':
+            item = measurement.MeasurementItemAbstract(item_model[1])
+            
         if path != None:
             if len(path) > 2: # if a measurement item selected
                 self.cmbs[path[0]][path[1]].insert_item(path[2],item)

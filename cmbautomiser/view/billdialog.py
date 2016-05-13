@@ -23,13 +23,10 @@
 #  
 
 import copy, logging
-
 from gi.repository import Gtk, Gdk, GLib
 
-from data.schedule import *
-from bill import *
-from view.scheduledialog import *
-from misc import *
+from __main__ import misc, data
+from . import measurement, scheduledialog
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -47,7 +44,7 @@ class BillDialog:
             entry.set_text('')
 
     def onComboChanged(self, combo):
-    """For selecting bill item from combobox"""
+        """For selecting bill item from combobox"""
         tree_iter = combo.get_active_iter()
         if tree_iter is not None or tree_iter != 0:
             model = combo.get_model()
@@ -95,7 +92,7 @@ class BillDialog:
         # Items specific to normal bill
         if self.data.bill_type == BILL_NORMAL:
             for itemno in itemnos:
-                item = self.schedule.[itemno]
+                item = self.schedule[itemno]
                 description = item.extended_description_limited
                 unit = item.unit
                 rate = item.rate
@@ -112,7 +109,7 @@ class BillDialog:
         # Items specific to custom bill
         elif self.data.bill_type == BILL_CUSTOM:
             for itemno in itemnos:
-                item = self.schedule.[itemno]
+                item = self.schedule[itemno]
                 description = item.extended_description_limited
                 unit = item.unit
                 rate = item.rate
@@ -122,7 +119,7 @@ class BillDialog:
                 cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
             
         # Raise Dialog for entry of per item values
-        dialog = ScheduleDialog(toplevel, itemnos, captions, columntypes, cellrenderers, item_schedule)
+        dialog = scheduledialog.ScheduleDialog(toplevel, itemnos, captions, columntypes, cellrenderers, item_schedule)
 
         # Deactivate add and delete buttons, remarks column in dialog
         dialog.builder.get_object("toolbutton_schedule_add").set_sensitive(False)

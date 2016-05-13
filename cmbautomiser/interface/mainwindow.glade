@@ -67,42 +67,6 @@
       </object>
     </child>
     <child>
-      <object class="GtkMenuItem" id="popupmenuitem_meas_nlbh">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Item NLBH</property>
-        <property name="use_underline">True</property>
-        <signal name="activate" handler="onAddNLBHClicked" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="popupmenuitem_meas_lllll">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Item LLLLL</property>
-        <property name="use_underline">True</property>
-        <signal name="activate" handler="onAddLLLLLClicked" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="popupmenuitem_meas_nnnnnnnn">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Item NNNNNNNN</property>
-        <property name="use_underline">True</property>
-        <signal name="activate" handler="onAddNNNNNNNNClicked" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="popupmenuitem_meas_nnnnnt">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Item nnnnnT</property>
-        <property name="use_underline">True</property>
-        <signal name="activate" handler="onAddnnnnnTClicked" swapped="no"/>
-      </object>
-    </child>
-    <child>
       <object class="GtkMenuItem" id="popupmenuitem_meas_abstract">
         <property name="visible">True</property>
         <property name="can_focus">False</property>

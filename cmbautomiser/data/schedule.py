@@ -173,6 +173,11 @@ class Schedule(ScheduleGeneric):
                 if item.itemno == index:
                     return item
             return None
+    
+    def set_model(self,items):
+        for item in items:
+            self.append(ScheduleItem(item))
+        return self.items
             
     def get_itemnos(self):
         """Returns a list of itemnos with order as in schedule"""

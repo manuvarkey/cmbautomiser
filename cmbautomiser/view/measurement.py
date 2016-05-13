@@ -56,7 +56,7 @@ class MeasurementsView:
             path_formated = Gtk.TreePath.new_from_string(str(path[0]) + ':' + str(path[1]))
         elif len(path == 3):
             path_formated = Gtk.TreePath.new_from_string(str(path[0]) + ':' + str(path[1]) + ':' + str(path[2]))
-        else
+        else:
             return
         path_iter = self.store.get_iter(path_formated)
         self.measurements_view.store.set_value(path_iter, 3, color)
@@ -72,7 +72,7 @@ class MeasurementsView:
                 [model, paths] = selection.get_selected_rows()
                 self.add_cmb_at_node(cmb, paths[0].get_indices()[0])
             else:  # If no selection append at end
-                self.add_cmb_at_node(cmb, None)
+                self.data.add_cmb_at_node(cmb, None)
             self.update_store()
         
     def add_measurement(self):
@@ -85,9 +85,9 @@ class MeasurementsView:
             if selection.count_selected_rows() != 0:  # If selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
-                self.add_measurement_at_node(meas,path)
+                self.data.add_measurement_at_node(meas,path)
             else: # If no selection append at end
-                self.add_measurement_at_node(meas,None)
+                self.data.add_measurement_at_node(meas,None)
             self.update_store()
 
     def add_completion(self):
@@ -100,9 +100,9 @@ class MeasurementsView:
             if selection.count_selected_rows() != 0: # If selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
-                self.add_measurement_at_node(compl,path)
+                self.data.add_measurement_at_node(compl,path)
             else: # If no selection append at end
-                self.add_measurement_at_node(compl,None)
+                self.data.add_measurement_at_node(compl,None)
             self.update_store()
         
     def add_heading(self):
@@ -116,9 +116,9 @@ class MeasurementsView:
             if selection.count_selected_rows() != 0: # if selection exists
                 [model, paths] = selection.get_selected_rows()
                 path = paths[0].get_indices()
-                self.add_measurement_item_at_node(heading,path)
+                self.data.add_measurement_item_at_node(heading,path)
             else: # if no selection append at end
-                self.add_measurement_item_at_node(heading,None)
+                self.data.add_measurement_item_at_node(heading,None)
             self.update_store()
                     
     def add_custom(self, oldval=None, itemtype=None):
@@ -140,15 +140,16 @@ class MeasurementsView:
         else: # if normal mode
             data = dialog.run()
             if data is not None:
-                custmod = data.get_custmod_from_schmod(data, None, itemtype)
+                # Obtain custom item model from returned data
+                custmod = self.data.get_custmod_from_schmod(data, None, itemtype)
                 # get selection
                 selection = self.tree.get_selection()
                 if selection.count_selected_rows() != 0: # if selection exists
                     [model, paths] = selection.get_selected_rows()
                     path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(custmod, path)
+                    self.data.add_measurement_item_at_node(custmod, path)
                 else: # if no selection append at end
-                    self.add_measurement_item_at_node(custmod, None)
+                    self.data.add_measurement_item_at_node(custmod, None)
 
     def add_abstract(self,oldval=None):
         """Add an Abstract item to measurement view"""
@@ -168,16 +169,16 @@ class MeasurementsView:
                 if selection.count_selected_rows() != 0: # if selection exists
                     [model, paths] = selection.get_selected_rows()
                     path = paths[0].get_indices()
-                    self.add_measurement_item_at_node(model, path)
+                    self.data.add_measurement_item_at_node(model, path)
                 else: # if no selection append at end
-                    self.add_measurement_item_at_node(model, None)
+                    self.data.add_measurement_item_at_node(model, None)
         
     def delete_selected_row(self):
         """Delete selected rows"""
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
-            self.delete_row(paths[0].get_indices())
+            self.data.delete_row(paths[0].get_indices())
 
     def copy_selection(self):
         """Copy selected row to clipboard"""
@@ -211,18 +212,18 @@ class MeasurementsView:
                         [model, paths] = selection.get_selected_rows()
                         path = paths[0].get_indices()
                         if isinstance(item, data.measurement.Cmb):
-                            self.add_cmb_at_node(item,path[0])
+                            self.data.add_cmb_at_node(item,path[0])
                         elif isinstance(item, data.measurement.Measurement) or isinstance(item, data.measurement.Completion):
-                            self.add_measurement_at_node(item,path)
+                            self.data.add_measurement_at_node(item,path)
                         elif isinstance(item, data.measurement.MeasurementItem):
-                            self.add_measurement_item_at_node(item,path)
+                            self.data.add_measurement_item_at_node(item,path)
                     else:
                         if isinstance(item, data.measurement.Cmb):
-                            self.add_cmb_at_node(item,None)
+                            self.data.add_cmb_at_node(item,None)
                         elif isinstance(item, data.measurement.Measurement) or isinstance(item, data.measurement.Completion):
-                            self.add_measurement_at_node(item,None)
+                            self.data.add_measurement_at_node(item,None)
                         elif isinstance(item, data.measurement.MeasurementItem):
-                            self.add_measurement_item_at_node(item,None)
+                            self.data.add_measurement_item_at_node(item,None)
             except:
                 log.warning('MeasurementsView - paste_at_selection - No valid data in clipboard')
         else:
@@ -239,13 +240,14 @@ class MeasurementsView:
 
         # Update StoreView
         self.store.clear()
-        for cmb in self.cmbs:
+        for p1, cmb in enumerate(self.cmbs):
             iter_cmb = self.store.append(None,[cmb.get_text(),False,cmb.get_tooltip(),misc.MEAS_COLOR_NORMAL])
-            for meas in cmb.items:
+            for p2, meas in enumerate(cmb.items):
                 iter_meas = self.store.append(iter_cmb,[meas.get_text(),False,meas.get_tooltip(),misc.MEAS_COLOR_NORMAL])
                 if isinstance(meas, data.measurement.Measurement):
-                    for mitem in meas.items:
-                        self.store.append(iter_meas,[mitem.get_text(),mitem.get_billed_flag(),mitem.get_tooltip(),misc.MEAS_COLOR_NORMAL])
+                    for p3, mitem in enumerate(meas.items):
+                        m_flag = self.data.lock_state[p1, p2, p3]
+                        self.store.append(iter_meas,[mitem.get_text(), m_flag, mitem.get_tooltip(),misc.MEAS_COLOR_NORMAL])
                 elif isinstance(meas, data.measurement.Completion):
                     pass
         self.tree.expand_all()
@@ -376,18 +378,21 @@ class MeasurementsView:
         self.parent = parent        
         self.tree = tree
         self.data = data
-        self.schedule = data_model.schedule
-        self.cmbs = data_model.cmbs
+        self.schedule = data.schedule
+        self.cmbs = data.cmbs
         
         ## Setup treeview store
         # Item Description, Billed Flag, Tooltip, Colour
-        self.store = Gtk.ListStore([str,bool,str,str])
+        self.store = Gtk.TreeStore(str,bool,str,str)
         # Treeview columns
         self.column_desc = Gtk.TreeViewColumn('Item Description')
         self.column_desc.props.expand = True
         self.column_toggle = Gtk.TreeViewColumn('Billed ?')
-        self.column_toggle.props.fixed_width = 150
-        self.column_toggle.props.min_width = 150
+        self.column_toggle.props.fixed_width = 100
+        self.column_toggle.props.min_width = 100
+        # Pack Columns
+        self.tree.append_column(self.column_desc)
+        self.tree.append_column(self.column_toggle)
         # Treeview renderers
         self.renderer_desc = Gtk.CellRendererText()
         self.renderer_toggle = Gtk.CellRendererToggle()
@@ -395,7 +400,7 @@ class MeasurementsView:
         self.column_desc.pack_start(self.renderer_desc, True)
         self.column_toggle.pack_start(self.renderer_toggle, True)
         # Add attributes
-        self.column_desc.add_attribute(self.renderer_desc, "text", 0)
+        self.column_desc.add_attribute(self.renderer_desc, "markup", 0)
         self.column_toggle.add_attribute(self.renderer_toggle, "active", 1)
         # Set model for store
         self.tree.set_model(self.store)

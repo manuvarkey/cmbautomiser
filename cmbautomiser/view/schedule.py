@@ -245,7 +245,7 @@ class ScheduleViewGeneric:
                         [model, paths] = selection.get_selected_rows()
                         rows = []
                         for i in range(0, len(itemlist[1])):
-                            rows.append(int(paths[0].get_indices()[0] + 1))
+                            rows.append(int(paths[0].get_indices()[0]))
                         self.insert_item_at_row(itemlist[1], rows)
                     else:  # if no selection
                         self.append_item(itemlist[1])
@@ -351,7 +351,7 @@ class ScheduleViewGeneric:
         self.columns = []
 
         for columntype, caption, render_func, i in zip(self.columntypes, self.captions, self.render_funcs,
-                                                       list(range(len(self.columntypes)))):
+                                                       range(len(self.columntypes))):
             cell = Gtk.CellRendererText()
 
             column = Gtk.TreeViewColumn(caption, cell, text=i)

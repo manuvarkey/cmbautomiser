@@ -99,7 +99,7 @@ class CustomItem:
         self.columntypes_udata = []
         self.user_data_default = []
         # Define functions here
-        self.cust_funcs = [callback_total_item]
+        self.cust_funcs = [None, None, None, None, None, None, None, callback_total_item]
         self.total_func = total_func
         self.total_func_item = total_func_item
         self.latex_postproc_func = latex_postproc_func

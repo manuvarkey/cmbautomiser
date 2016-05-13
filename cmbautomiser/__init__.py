@@ -22,20 +22,13 @@
 #  
 #  
 
-import subprocess, os, sys, tempfile, logging, json
-import dill as pickle
-
+import subprocess, os, platform, sys, tempfile, logging, json
 from gi.repository import Gtk, Gdk, GLib
 
 import undo
-from openpyxl import Workbook, load_workbook
 
 # local files import
-import misc, data, view
-# from schedule import *
-from cmb import *
-from bill import *
-from misc import *
+import misc, data.datamodel, data.schedule, view.measurement, view.bill
 
 # Get logger object
 log = logging.getLogger()
@@ -86,7 +79,7 @@ class MainWindow:
     def onHelpClick(self, button):
         """Launch help file"""
         if platform.system() == 'Linux':
-            subprocess.call(('xdg-open', abs_path('documentation/cmbautomisermanual.pdf')))
+            subprocess.call(('xdg-open', misc.abs_path('documentation/cmbautomisermanual.pdf')))
         elif platform.system() == 'Windows':
             os.startfile(abs_path('documentation\\cmbautomisermanual.pdf'))
 
@@ -117,51 +110,42 @@ class MainWindow:
 
     def onOpenProjectClicked(self, button):
         """Open project selected by  the user"""
-        # create a filechooserdialog to open:
-        # the arguments are: title of the window, parent_window, action,
+        
+        # Create a filechooserdialog to open:
+        # The arguments are: title of the window, parent_window, action,
         # (buttons, response)
         open_dialog = Gtk.FileChooserDialog("Open project File", self.window,
                                             Gtk.FileChooserAction.OPEN,
                                             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                              Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
-        # not only local files can be selected in the file selector
+        # Remote files can be selected in the file selector
         open_dialog.set_local_only(False)
-        # dialog always on top of the textview window
+        # Dialog always on top of the textview window
         open_dialog.set_modal(True)
-        # set filters
+        # Set filters
         open_dialog.set_filter(self.builder.get_object("filefilter_project"))
-        # set window position
+        # Set window position
         open_dialog.set_gravity(Gdk.Gravity.CENTER)
         open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
 
-
         response_id = open_dialog.run()
-        # if response is "ACCEPT" (the button "Save" has been clicked)
+        # If response is "ACCEPT" (the button "Save" has been clicked)
         if response_id == Gtk.ResponseType.ACCEPT:
             # get filename and set project as active
             self.filename = open_dialog.get_filename()
-            fileobj = open(self.filename, 'rb')
+            fileobj = open(self.filename, 'r')
             if fileobj == None:
                 log.error("Error opening file - " + self.filename)
-                self.display_status(misc.CMB_ERROR,"Project could not be opened: Error opening file")
+                self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
             else:
                 try:
-                    data = pickle.load(fileobj)  # load data structure
+                    data = json.load(fileobj)  # load data structure
                     fileobj.close()
                     if data[0] == PROJECT_FILE_VER:
-                        # clear application states
-                        self.schedule_view.clear()
-                        self.measurements_view.clear()
-                        self.bill_view.clear()
-                        # load application data
-
-                        self.schedule = data[1]
-                        self.schedule_view.set_data_object(self.schedule)
-                        self.measurements_view.set_data_object(self.schedule, data[2])
-                        self.bill_view.set_data_object(self.schedule, self.measurements_view, data[3])
-                        self.project_settings_dict = data[4]
-
-                        # set project as active
+                        self.data.set_model(data[1])
+                        self.project_settings_dict = data[2]
+                        
+                        # Set project as active
                         self.PROJECT_ACTIVE = 1
 
                         self.display_status(misc.CMB_INFO, "Project successfully opened")
@@ -170,20 +154,19 @@ class MainWindow:
                             os.path.split(self.filename)[0]))
                         self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
                             os.path.split(self.filename)[0]))
-                        # setup window name
+                        # Setup window name
                         self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
-                        # clear undo/redo stack
+                        # Clear undo/redo stack
                         self.stack.clear()
-
                     else:
                         self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
                 except:
                     log.exception("Error parsing project file - " + self.filename)
-                    self.display_status(misc.CMB_ERROR,"Project could not be opened: Error opening file")
-        # if response is "CANCEL" (the button "Cancel" has been clicked)
+                    self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
+        # If response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
             log.info("cancelled: FileChooserAction.OPEN")
-        # destroy dialog
+        # Destroy dialog
         open_dialog.destroy()
 
     def onSaveProjectClicked(self, button):
@@ -191,67 +174,61 @@ class MainWindow:
         if self.PROJECT_ACTIVE == 0:
             self.onSaveAsProjectClicked(button)
         else:
-            # parse data into object
+            # Parse data into object
             data = []
-            dataschedule = self.schedule_view.get_data_object()
-            datameasurement = self.measurements_view.get_data_object()
-            databill = self.bill_view.get_data_object()
-
             data.append(PROJECT_FILE_VER)
-            data.append(dataschedule)
-            data.append(datameasurement)
-            data.append(databill)
+            data.append(self.data.get_model())
             data.append(self.project_settings_dict)
 
-            # try to open file
-            fileobj = open(self.filename, 'wb')
+            # Try to open file
+            fileobj = open(self.filename, 'w')
             if fileobj == None:
                 log.error("Error opening file " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
-            pickle.dump(data, fileobj)
+            json.dump(data, fileobj)
             fileobj.close()
             self.display_status(misc.CMB_INFO, "Project successfully saved")
             self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
         """Save project to file selected by the user"""
-        # create a filechooserdialog to open:
-        # the arguments are: title of the window, parent_window, action,
+        # Create a filechooserdialog to open:
+        # The arguments are: title of the window, parent_window, action,
         # (buttons, response)
         open_dialog = Gtk.FileChooserDialog("Save project as...", self.window,
                                             Gtk.FileChooserAction.SAVE,
                                             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                              Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
-        # not only local files can be selected in the file selector
+        # Remote files can be selected in the file selector
         open_dialog.set_local_only(False)
-        # dialog always on top of the textview window
+        # Dialog always on top of the textview window
         open_dialog.set_modal(True)
-        # set filters
+        # Set filters
         open_dialog.set_filter(self.builder.get_object("filefilter_project"))
-        # set window position
+        # Set window position
         open_dialog.set_gravity(Gdk.Gravity.CENTER)
         open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-        # set overwrite confirmation
+        # Set overwrite confirmation
         open_dialog.set_do_overwrite_confirmation(True)
-        # set default name
+        # Set default name
         open_dialog.set_current_name("newproject.proj")
         response_id = open_dialog.run()
-        # if response is "ACCEPT" (the button "Save" has been clicked)
+        # If response is "ACCEPT" (the button "Save" has been clicked)
         if response_id == Gtk.ResponseType.ACCEPT:
-            # get filename and set project as active
+            # Get filename and set project as active
             self.filename = open_dialog.get_filename()
             self.PROJECT_ACTIVE = 1
-            # call save project
+            # Call save project
             self.onSaveProjectClicked(button)
             # Setup paths for folder chooser objects
             self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
                 os.path.split(self.filename)[0]))
             self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
                 os.path.split(self.filename)[0]))
-        # if response is "CANCEL" (the button "Cancel" has been clicked)
+        # If response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
             log.info("cancelled: FileChooserAction.OPEN")
-        # destroy dialog
+        # Destroy dialog
         open_dialog.destroy()
         
     def onProjectSettingsClicked(self, button):
@@ -286,7 +263,7 @@ class MainWindow:
     def onButtonScheduleAddPressed(self, button):
         """Add empty row to schedule view"""
         items = []
-        items.append(ScheduleItem())
+        items.append(data.schedule.ScheduleItem())
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleAddMultPressed(self, button):
@@ -300,7 +277,7 @@ class MainWindow:
             return
         items = []
         for i in range(0, number_of_rows):
-            items.append(ScheduleItem())
+            items.append(data.schedule.ScheduleItem())
         self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleDeletePressed(self, button):
@@ -342,22 +319,6 @@ class MainWindow:
     def onAddHeadingClicked(self, button):
         """Add a Heading object to measurement view"""
         self.measurements_view.add_heading()
-
-    def onAddNLBHClicked(self, button):
-        """Add a NLBH object to measurement view"""
-        self.measurements_view.add_nlbh(None)
-
-    def onAddLLLLLClicked(self, button):
-        """Add a LLLLL object to measurement view"""
-        self.measurements_view.add_lllll(None)
-
-    def onAddNNNNNNNNClicked(self, button):
-        """Add a NNNNNNNN object to measurement view"""
-        self.measurements_view.add_nnnnnnnn(None)
-
-    def onAddnnnnnTClicked(self, button):
-        """Add a nnnnnT object to measurement view"""
-        self.measurements_view.add_nnnnnt(None)
 
     def onAddAbstractClicked(self, button):
         """Add a measurement abstract object to measurement view"""
@@ -467,18 +428,22 @@ class MainWindow:
         # Variable used to store handles for child window processes
         self.child_windows = []
 
-        # check for project active state
+        # Check for project active state
         self.PROJECT_ACTIVE = 0
+        
+        # Setup main data model
+        self.data = data.datamodel.DataModel()
 
-        # other variables
-
+        # Other variables
         self.filename = None
 
         # Setup main window
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(abs_path("interface","mainwindow.glade"))
+        self.builder.add_from_file(misc.abs_path("interface/mainwindow.glade"))
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
+        # Setup infobar
+        self.builder.get_object("infobar_main").hide()
 
         # Setup project settings dictionary
         self.project_settings_dict = dict()
@@ -490,17 +455,25 @@ class MainWindow:
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")
+        
+        # Initialise undo/redo stack
+        self.stack = undo.Stack()
+        undo.setstack(self.stack)
 
-        # Setup a schedule of items
-        self.schedule = data.schedule.Schedule()  # initialise a schedule
-
+        # Setup schedule View
+        self.treeview_schedule = self.builder.get_object("treeview_schedule")
+        self.schedule_view = view.schedule.ScheduleView(self.window, self.treeview_schedule, self.data.schedule, self.stack)
+        
+        # Setup bill View
+        self.treeview_bill = self.builder.get_object("treeview_bill")
+        self.bill_view = view.bill.BillView(self.window, self.data, self.treeview_bill)
+        
         # Setup measurement View
         self.treeview_meas = self.builder.get_object("treeview_meas")
-        self.liststore_meas = self.builder.get_object("liststore_meas")
-        self.measurements_view = MeasurementsView(self.schedule, self.liststore_meas, self.treeview_meas)
+        self.measurements_view = view.measurement.MeasurementsView(self.window, self.data, self.treeview_meas)
         
         # Setup custom measurement items
-        file_names = [f for f in os.listdir(abs_path('templates'))]
+        file_names = [f for f in os.listdir(misc.abs_path('templates'))]
         module_names = []
         for f in file_names:
             if f[-3:] == '.py' and f != '__init__.py':
@@ -521,25 +494,6 @@ class MainWindow:
                 self.custom_menus.append(menuitem)
             except ImportError:
                 log.error('Error Loading plugin - ' + module_name)
-
-        # Setup bill View
-        self.treeview_bill = self.builder.get_object("treeview_bill")
-        self.liststore_bill = self.builder.get_object("liststore_bill")
-        self.bill_view = BillView(self.schedule, self.measurements_view, self.liststore_bill, self.treeview_bill)
-        
-        # Initialise undo/redo stack
-        self.stack = undo.Stack()
-        undo.setstack(self.stack)
-
-        # Setup schedule View
-        self.treeview_schedule = self.builder.get_object("treeview_schedule")
-        self.schedule_view = view.schedule.ScheduleView(self.window, self.treeview_schedule, self.schedule, self.stack)
-        
-        # setup infobar
-        self.builder.get_object("infobar_main").hide()
-
-        # setup class for intra process communication
-        self.manage_resources = ManageResourses(self.schedule_view,self.measurements_view,self.bill_view)
 
     def run(self, *args):
         self.window.show_all()

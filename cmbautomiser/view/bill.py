@@ -181,7 +181,7 @@ class BillView:
     def update_store(self):
         """Update Bill Store"""
         self.store.clear()
-        for count, bill in enumerate(data.bills):
+        for count, bill in enumerate(self.data.bills):
             self.store.append()
             self.store[count][0] = str(count + 1)
             self.store[count][1] = bill.get_text()
@@ -207,13 +207,16 @@ class BillView:
         
         ## Setup treeview store
         # Item Description, Billed Flag, Tooltip, Colour
-        self.store = Gtk.ListStore([str,str])
+        self.store = Gtk.ListStore(str,str)
         # Treeview columns
         self.column_slno = Gtk.TreeViewColumn('Sl.No.')
-        self.column_slno.props.expand = True
+        self.column_slno.props.fixed_width = 100
+        self.column_slno.props.min_width = 100
         self.column_desc = Gtk.TreeViewColumn('Bill Description')
-        self.column_slno.props.fixed_width = 150
-        self.column_slno.props.min_width = 150
+        self.column_desc.props.expand = True
+        # Pack Columns
+        self.tree.append_column(self.column_slno)
+        self.tree.append_column(self.column_desc)
         # Treeview renderers
         self.renderer_slno = Gtk.CellRendererText()
         self.renderer_desc = Gtk.CellRendererText()
@@ -221,8 +224,8 @@ class BillView:
         self.column_slno.pack_start(self.renderer_slno, True)
         self.column_desc.pack_start(self.renderer_desc, True)
         # Add attributes
-        self.column_slno.add_attribute(self.renderer_desc, "text", 0)
-        self.column_desc.add_attribute(self.renderer_toggle, "text", 1)
+        self.column_slno.add_attribute(self.renderer_slno, "text", 0)
+        self.column_desc.add_attribute(self.renderer_desc, "markup", 1)
         # Set model for store
         self.tree.set_model(self.store)
 

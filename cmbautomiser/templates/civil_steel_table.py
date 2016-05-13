@@ -227,7 +227,7 @@ class CustomItem:
         self.latex_item = latex_item
         self.latex_record = latex_record
         # Define functions here
-        self.cust_funcs = [c_def,c_1,c_2,c_3,c_4,c_5,c_6]
+        self.cust_funcs = [None, None, None, None, None, None, None, None, None, c_def,c_1,c_2,c_3,c_4,c_5,c_6]
         self.total_func = total_func
         self.total_func_item = total_func_item
         self.latex_postproc_func = latex_postproc_func

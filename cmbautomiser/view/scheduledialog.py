@@ -67,8 +67,8 @@ class ScheduleDialog:
 
         combo_divider1.props.text = '|'
         combo_divider2.props.text = '|'
-        combo_text_desc.props.max_width_chars = CMB_DESCRIPTION_WIDTH
-        combo_text_desc.props.wrap_width = CMB_DESCRIPTION_WIDTH
+        combo_text_desc.props.max_width_chars = misc.CMB_DESCRIPTION_WIDTH
+        combo_text_desc.props.wrap_width = misc.CMB_DESCRIPTION_WIDTH
         combo_text_desc.props.ellipsize = 2
         combo_text_desc.set_fixed_size(-1, 5)
         combo_text_desc.set_fixed_height_from_font(1)
@@ -83,7 +83,7 @@ class ScheduleDialog:
         """Get data model"""
         remark = self.remark_cell.get_text()
         item_remarks = [cell.get_text() for cell in self.item_remarks_cell]
-        data = [self.itemnos, self.schedule_view.get_model, remark, item_remarks]
+        data = [self.itemnos, self.schedule_view.get_model(), remark, item_remarks]
         return data
 
     def set_model(self, data):
@@ -117,7 +117,7 @@ class ScheduleDialog:
         """Add row to schedule"""
         items = []
         items.append(data.schedule.ScheduleItemGeneric([""] * self.model_width()))
-        self.self.schedule_view.insert_item_at_selection(items)
+        self.schedule_view.insert_item_at_selection(items)
 
     def onButtonScheduleAddMultPressed(self, button):
         """Add multiple rows to schedule"""
@@ -165,7 +165,7 @@ class ScheduleDialog:
         combo.set_active(-1)
         self.onComboChanged(combo, -1)
 
-    def __init__(self, parent, itemnos, captions, columntypes, render_funcs, item_schedule):
+    def __init__(self, parent, item_schedule, itemnos, captions, columntypes, render_funcs):
         """Initialise ScheduleDialog class
         
             Arguments:
@@ -191,7 +191,7 @@ class ScheduleDialog:
 
         # Setup dialog window
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(abs_path("interface","scheduledialog.glade"))
+        self.builder.add_from_file(misc.abs_path("interface","scheduledialog.glade"))
         self.window = self.builder.get_object("dialog")
         self.window.set_transient_for(self.parent)
         self.builder.connect_signals(self)
@@ -208,7 +208,7 @@ class ScheduleDialog:
         self.item_schedule_store = Gtk.ListStore(str, str, str, float, str)
         for row in range(self.item_schedule.length()):
             item = self.item_schedule.get_item_by_index(row)
-            self.item_schedule_store.append([item.itemno, item.description, item.unit, item.rate, item.reference])
+            self.item_schedule_store.append([item.itemno, item.description, item.unit, float(item.rate), item.reference])
 
         # Setup remarks row
         row = Gtk.ListBoxRow()

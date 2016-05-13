@@ -48,11 +48,9 @@ class Cmb:
             self.items = []
 
     def append_item(self,item):
-        item.set_cmb(self)
         self.items.append(item)
                 
     def insert_item(self,index,item):
-        item.set_cmb(self)
         self.items.insert(index,item)
         
     def remove_item(self,index):
@@ -133,11 +131,9 @@ class Measurement:
             self.items = []
 
     def append_item(self,item):
-        item.set_measurement(self)
         self.items.append(item)
                 
     def insert_item(self,index,item):
-        item.set_measurement(self)
         self.items.insert(index,item)
         
     def remove_item(self,index):
@@ -185,7 +181,7 @@ class Measurement:
         self.items = []
     
     def get_text(self):
-        return "<b>Measurement dated." + clean_markup(self.date) + "</b>"
+        return "<b>Measurement dated." + misc.clean_markup(self.date) + "</b>"
     
     def get_tooltip(self):
         return None
@@ -280,7 +276,7 @@ class RecordCustom:
         self.data = []
         # Populate Data
         for x,columntype in zip(self.data_string,columntypes):
-            if columntype not in [MEAS_DESC,MEAS_CUST]:
+            if columntype not in [misc.MEAS_DESC, misc.MEAS_CUST]:
                 try:
                     num = eval(x)
                     self.data.append(num)
@@ -346,7 +342,7 @@ class MeasurementItemCustom(MeasurementItem):
         # Read description from file
         if plugin is not None:
             try:
-                package = __import__('../templates.' + plugin)
+                package = __import__('templates.' + plugin)
                 module = getattr(package, plugin)
                 self.custom_object = module.CustomItem()
                 self.name = self.custom_object.name
@@ -370,7 +366,6 @@ class MeasurementItemCustom(MeasurementItem):
 
             if data != None:
                 itemnos = data[0]
-                
                 records = []
                 for item_model in data[1]:
                     item = RecordCustom(item_model, self.cust_funcs,
@@ -584,7 +579,7 @@ class Completion:
         return latex_buffer
 
     def get_text(self):
-        return "<b>Completion recorded on " + clean_markup(self.date) + "</b>"
+        return "<b>Completion recorded on " + misc.clean_markup(self.date) + "</b>"
 
     def get_tooltip(self):
         return None

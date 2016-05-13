@@ -228,10 +228,10 @@ class Bill:
                 
         # Read preamble and abstract opening into main buffer
         latex_buffer.add_preffix_from_file('../latex/preamble.tex')
-        latex_buffer.add_preffix_from_file(abs_path('../latex/abstractopening.tex')
+        latex_buffer.add_preffix_from_file('../latex/abstractopening.tex')
 
         # Setup substitution dictionary
-        bill_local_vars = {}  # bill substitution dictionary
+        bill_local_vars = dict()  # bill substitution dictionary
         bill_local_vars['$cmbbookno$'] = self.data.cmb_name
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbtitle$'] = 'ABSTRACT OF COST'
@@ -356,9 +356,9 @@ class Bill:
                 item = schedule[itemno]
                 
                 if self.prev_bill is not None:
-                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
                                                - self.prev_bill.item_normal_amount[itemno]
-                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
                                                - self.prev_bill.item_excess_amount[itemno]
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
@@ -445,9 +445,9 @@ class Bill:
                 sheet.cell(row=count+2, column=11).value = self.item_normal_amount[itemno]
                 sheet.cell(row=count+2, column=12).value = self.item_excess_amount[itemno]
                 if self.prev_bill is not None:
-                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
                                                - self.prev_bill.item_normal_amount[itemno]
-                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
                                                - self.prev_bill.item_excess_amount[itemno]
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
