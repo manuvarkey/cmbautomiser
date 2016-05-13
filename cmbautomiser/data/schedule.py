@@ -99,13 +99,12 @@ class ScheduleGeneric:
         items = []
         for item in self.items:
             items.append(item.get_model())
-        return self.items
+        return items
         
     def set_model(self,items):
         for item in items:
-            self.append(ScheduleItemGeneric(item))
-        return self.items
-
+            self.items.append(ScheduleItemGeneric(item))
+            
     def length(self):
         return len(self.items)
 
@@ -176,8 +175,7 @@ class Schedule(ScheduleGeneric):
     
     def set_model(self,items):
         for item in items:
-            self.append(ScheduleItem(item))
-        return self.items
+            self.items.append(ScheduleItem(item))
             
     def get_itemnos(self):
         """Returns a list of itemnos with order as in schedule"""

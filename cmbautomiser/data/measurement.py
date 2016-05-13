@@ -369,8 +369,8 @@ class MeasurementItemCustom(MeasurementItem):
                 records = []
                 for item_model in data[1]:
                     item = RecordCustom(item_model, self.cust_funcs,
-                                        self.total_func, self.columntypes)
-                    record.append(item)
+                                        self.total_func_item, self.columntypes)
+                    records.append(item)
                 remark = data[2]
                 item_remarks = data[3]
                 self.user_data = data[4]

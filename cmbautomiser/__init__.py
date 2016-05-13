@@ -141,7 +141,7 @@ class MainWindow:
                 try:
                     data = json.load(fileobj)  # load data structure
                     fileobj.close()
-                    if data[0] == PROJECT_FILE_VER:
+                    if data[0] == misc.PROJECT_FILE_VER:
                         self.data.set_model(data[1])
                         self.project_settings_dict = data[2]
                         
@@ -150,12 +150,12 @@ class MainWindow:
 
                         self.display_status(misc.CMB_INFO, "Project successfully opened")
                         # Setup paths for folder chooser objects
-                        self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
+                        self.builder.get_object("filechooserbutton_meas").set_current_folder(misc.posix_path(
                             os.path.split(self.filename)[0]))
-                        self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
+                        self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                             os.path.split(self.filename)[0]))
                         # Setup window name
-                        self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
+                        self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
                         # Clear undo/redo stack
                         self.stack.clear()
                     else:
@@ -176,10 +176,9 @@ class MainWindow:
         else:
             # Parse data into object
             data = []
-            data.append(PROJECT_FILE_VER)
+            data.append(misc.PROJECT_FILE_VER)
             data.append(self.data.get_model())
             data.append(self.project_settings_dict)
-
             # Try to open file
             fileobj = open(self.filename, 'w')
             if fileobj == None:
@@ -188,7 +187,7 @@ class MainWindow:
             json.dump(data, fileobj)
             fileobj.close()
             self.display_status(misc.CMB_INFO, "Project successfully saved")
-            self.window.set_title(self.filename + ' - ' + PROGRAM_NAME)
+            self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
         """Save project to file selected by the user"""
@@ -221,9 +220,9 @@ class MainWindow:
             # Call save project
             self.onSaveProjectClicked(button)
             # Setup paths for folder chooser objects
-            self.builder.get_object("filechooserbutton_meas").set_current_folder(posix_path(
+            self.builder.get_object("filechooserbutton_meas").set_current_folder(misc.posix_path(
                 os.path.split(self.filename)[0]))
-            self.builder.get_object("filechooserbutton_bill").set_current_folder(posix_path(
+            self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                 os.path.split(self.filename)[0]))
         # If response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:

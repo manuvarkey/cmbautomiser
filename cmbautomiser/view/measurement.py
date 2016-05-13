@@ -128,12 +128,12 @@ class MeasurementsView:
 
         if oldval is not None: # if edit mode add data
             # Obtain ScheduleDialog model from MeasurementItemCustom model
-            schmod = data.get_schmod_from_custmod(oldval)
+            schmod = self.data.get_schmod_from_custmod(oldval)
             dialog.set_model(schmod)
             data = dialog.run()
             if data is not None: # if edited
                 # Obtain MeasurementItemCustom model from ScheduleDialog model
-                custmod = data.get_custmod_from_schmod(data, oldval, itemtype)
+                custmod = self.data.get_custmod_from_schmod(data, oldval, itemtype)
                 return custmod
             else: # if cancel pressed
                 return None
@@ -150,6 +150,7 @@ class MeasurementsView:
                     self.data.add_measurement_item_at_node(custmod, path)
                 else: # if no selection append at end
                     self.data.add_measurement_item_at_node(custmod, None)
+                self.update_store()
 
     def add_abstract(self,oldval=None):
         """Add an Abstract item to measurement view"""
@@ -172,6 +173,7 @@ class MeasurementsView:
                     self.data.add_measurement_item_at_node(model, path)
                 else: # if no selection append at end
                     self.data.add_measurement_item_at_node(model, None)
+                self.update_store()
         
     def delete_selected_row(self):
         """Delete selected rows"""
@@ -179,6 +181,7 @@ class MeasurementsView:
         if selection.count_selected_rows() != 0: # if selection exists
             [model, paths] = selection.get_selected_rows()
             self.data.delete_row(paths[0].get_indices())
+            self.update_store()
 
     def copy_selection(self):
         """Copy selected row to clipboard"""
@@ -224,6 +227,7 @@ class MeasurementsView:
                             self.data.add_measurement_at_node(item,None)
                         elif isinstance(item, data.measurement.MeasurementItem):
                             self.data.add_measurement_item_at_node(item,None)
+                    self.update_store()
             except:
                 log.warning('MeasurementsView - paste_at_selection - No valid data in clipboard')
         else:
@@ -302,31 +306,31 @@ class MeasurementsView:
                 item = self.cmbs[path[0]]
                 oldval = item.get_name()
                 newval = misc.get_user_input_text(self.parent, "Please input CMB Name", "Edit CMB",oldval)
-                data.edit_measurement_item(path,item,newval,oldval)
+                self.data.edit_measurement_item(path,item,newval,oldval)
             elif len(path) == 2:
                 item = self.cmbs[path[0]][path[1]]
                 if isinstance(item, data.measurement.Measurement):
                     oldval = item.get_date()
                     newval = misc.get_user_input_text(self.parent, "Please input Measurement Date", "Edit Measurement",oldval)
-                    self.edit_measurement_item(path,item,newval,oldval)
+                    self.data.edit_measurement_item(path,item,newval,oldval)
                 elif isinstance(item, data.measurement.Completion):
                     oldval = item.get_date()
                     newval = misc.get_user_input_text(self.parent, "Please input Completion Date", "Edit Measurement",oldval)
-                    self.edit_measurement_item(path,item,newval,oldval)
+                    self.data.edit_measurement_item(path,item,newval,oldval)
             elif len(path) == 3:
                 item = self.cmbs[path[0]][path[1]][path[2]]
                 if isinstance(item, data.measurement.MeasurementItemHeading):
                     oldval = item.get_remark()
                     newval = misc.get_user_input_text(self.parent, "Please input Heading", "Edit Heading",oldval)
-                    self.edit_measurement_item(path,item,newval,oldval)
+                    self.data.edit_measurement_item(path,item,newval,oldval)
                 elif isinstance(item, data.measurement.MeasurementItemCustom):
                     oldval = item.get_model()
                     newval = self.add_custom(oldval,item.itemtype)
-                    self.edit_measurement_item(path,item,newval,oldval)
+                    self.data.edit_measurement_item(path,item,newval,oldval)
                 elif isinstance(item, data.measurement.MeasurementItemAbstract):
                     oldval = item.get_model()
                     newval = self.add_abstract(oldval)
-                    self.edit_measurement_item(path,item,newval,oldval)
+                    self.data.edit_measurement_item(path,item,newval,oldval)
             # Update GUI
             self.update_store()
 

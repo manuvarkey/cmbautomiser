@@ -331,7 +331,7 @@ class Command(object):
 
 ## GLOBAL METHODS
 
-def get_user_input_text(parent, message, title=''):
+def get_user_input_text(parent, message, title='', oldval=None):
     '''Gets a single user input by diplaying a dialog box
     
     Arguments:
@@ -356,6 +356,10 @@ def get_user_input_text(parent, message, title=''):
     userEntry.set_activates_default(True)
     userEntry.set_size_request(50, 0)
     dialogBox.pack_end(userEntry, False, False, 0)
+    
+    # Set old value
+    if oldval != None:
+        userEntry.set_text(oldval)
 
     dialogWindow.show_all()
     response = dialogWindow.run()
