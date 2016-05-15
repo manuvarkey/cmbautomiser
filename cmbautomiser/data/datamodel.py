@@ -52,9 +52,9 @@ class DataModel:
                 cmb.set_model(cmb_model)
                 self.cmbs.append(cmb)
             for bill_model in data[2]:
-                bill = bill.Bill()
-                bill.set_model(bill_model)
-                self.bills.append(bill)
+                bill_item = bill.Bill()
+                bill_item.set_model(bill_model)
+                self.bills.append(bill_item)
         # Update values
         self.update()
     
@@ -70,7 +70,19 @@ class DataModel:
     
     def set_model(self, model):
         if model[0] == 'DataModel':
-            self.__init__(model[1])
+            self.schedule.set_model(model[1][0])
+            self.cmbs.clear()
+            self.bills.clear()
+            for cmb_model in model[1][1]:
+                cmb = measurement.Cmb()
+                cmb.set_model(cmb_model)
+                self.cmbs.append(cmb)
+            for bill_model in model[1][2]:
+                bill_item = bill.Bill()
+                bill_item.set_model(bill_model)
+                self.bills.append(bill_item)
+            # Update values
+            self.update()
     
     def update(self):
         """Update derived data values"""
@@ -86,7 +98,7 @@ class DataModel:
             for meas in cmb:
                 if isinstance(meas, measurement.Measurement):
                     for measitem in meas:
-                        if isinstance(meas, measurement.MeasurementItemAbstract):
+                        if isinstance(measitem, measurement.MeasurementItemAbstract):
                             self.lock_state += LockState(measitem.get_abstracted_items())
         
         # Update dependency tree of cmbs
@@ -131,13 +143,15 @@ class DataModel:
         # Obtain CMB item
         if cmb_model[0] == 'CMB':
             cmb = measurement.Cmb(cmb_model[1])
-        if row != None:
-            self.cmbs.insert(row,cmb)
-            row_delete = row
+            if row != None:
+                self.cmbs.insert(row,cmb)
+                row_delete = row
+            else:
+                self.cmbs.append(cmb)
+                row_delete = len(self.cmbs) - 1
+            self.update()
         else:
-            self.cmbs.append(cmb)
-            row_delete = len(self.cmbs) - 1
-        self.update()
+            log.warning('add_cmb_at_node - Wrong model loaded')
 
         yield "Add CMB at '{}'".format([row])
         # Undo action
@@ -150,6 +164,9 @@ class DataModel:
             meas = measurement.Measurement(meas_model[1])
         elif meas_model[0] == 'Completion':
             meas = measurement.Completion(meas_model[1])
+        else:
+            log.warning('add_measurement_at_node - Wrong model loaded')
+            return
         
         delete_path = None
         if path != None:
@@ -172,12 +189,16 @@ class DataModel:
     @undoable
     def add_measurement_item_at_node(self,item_model,path):
         delete_path = None
+        item = None
         if item_model[0] == 'MeasurementItemHeading':
             item = measurement.MeasurementItemHeading(item_model[1])
         elif item_model[0] == 'MeasurementItemCustom':
             item = measurement.MeasurementItemCustom(item_model[1], item_model[1][5])
         elif item_model[0] == 'MeasurementItemAbstract':
             item = measurement.MeasurementItemAbstract(item_model[1])
+        else:
+            log.warning('add_measurement_item_at_node - Wrong model loaded')
+            return
             
         if path != None:
             if len(path) > 2: # if a measurement item selected
@@ -246,13 +267,13 @@ class DataModel:
         item = None
         # get selection
         if len(path) == 1:
-            item = self.cmbs[path[0]]
+            item = self.cmbs[path[0]].get_model()
             del self.cmbs[path[0]]
         elif len(path) == 2:
-            item = self.cmbs[path[0]][path[1]]
+            item = self.cmbs[path[0]][path[1]].get_model()
             self.cmbs[path[0]].remove_item(path[1])
         elif len(path) == 3:
-            item = self.cmbs[path[0]][path[1]][path[2]]
+            item = self.cmbs[path[0]][path[1]][path[2]].get_model()
             self.cmbs[path[0]][path[1]].remove_item(path[2])
         self.update()
         
@@ -340,15 +361,15 @@ class DataModel:
     # Bill methods
     
     @undoable
-    def insert_bill_at_row(self, data, row):  # note needs rows to be sorted
-        item = bill.Bill(data)
+    def insert_bill_at_row(self, data_model, row):  # note needs rows to be sorted
+        item = bill.Bill(data_model)
         if row is not None:
             new_row = row
             self.bills.insert(row, item)
         else:
             self.bills.append(item)
             new_row = len(self.bills) - 1
-        self.update_store()
+        self.update()
 
         yield "Insert data items to bill at row '{}'".format(new_row)
         # Undo action
@@ -356,27 +377,27 @@ class DataModel:
         self.update()
         
     @undoable
-    def edit_bill_at_row(self, data, row):
+    def edit_bill_at_row(self, data_model, row):
         if row is not None:
-            old_data = copy.deepcopy(self.bills[row].get_modal())
-            self.bills[row].set_modal(data)
-        self.update_store()
+            old_data = copy.deepcopy(self.bills[row].get_model())
+            self.bills[row].set_model(data_model)
+        self.update()
 
         yield "Edit bill item at row '{}'".format(row)
         # Undo action
         if row is not None:
-            self.bills[row].set_modal(old_data)
+            self.bills[row].set_model(old_data)
         self.update()
     
     @undoable
     def delete_bill(self, row):
-        data = self.bills[row].get_model()
+        data_model = self.bills[row].get_model()
         del self.bills[row]
         self.update()
 
         yield "Delete data items from bill at row '{}'".format(row)
         # Undo action
-        self.insert_bill_at_row(data, row)
+        self.insert_bill_at_row(data_model, row)
         self.update()
         
     def render_bill(self, folder, replacement_dict, path, recursive=True):

@@ -31,6 +31,7 @@ from openpyxl.cell import get_column_letter
 
 # local files import
 from __main__ import misc
+from . import measurement
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -141,67 +142,73 @@ class Bill:
         """Update bill data structures from other objects"""
         
         # Get required datas
-        itemnos = schedule.itemnos
-        
+        itemnos = schedule.get_itemnos()
         # Clear all derived structures
         self.clear()
         
         # If bill is a normal bill
-        if self.data.bill_type == BILL_NORMAL:
-            
+        if self.data.bill_type == misc.BILL_NORMAL:
             # Set previous bill object
             if self.data.prev_bill is not None:
                 self.prev_bill = bills[self.data.prev_bill]  # Get prev_bill object
             else:
                 self.prev_bill = None
+            # Initialise bill dictionaries
+            for itemno in itemnos:
+                self.item_cmb_ref[itemno] = []
+                self.item_paths[itemno] = []
+                self.item_qty[itemno] = []
+                if itemno not in self.data.item_part_percentage:
+                    self.data.item_part_percentage[itemno] = 100
+                    self.data.item_excess_part_percentage[itemno] = 100
+                    self.data.item_excess_rates[itemno] = 0
 
             # Fill in values from Prev Bill
             if self.prev_bill is not None:
                 for itemno in itemnos:
-                    if itemno in self.prev_bill.item_qty:
-                        if sum(self.prev_bill.item_qty[itemno]) != 0:
-                            self.item_cmb_ref[item_index] = -1  # use -1 as marker for prev abstract
-                            self.item_paths[item_index] = [self.data.prev_bill, item_index]
-                            self.item_qty[item_index] = sum(item_qty)  # add total qty from previous bill
-
+                    item_qty = sum(self.prev_bill.item_qty[itemno])
+                    if item_qty != 0:
+                        self.item_cmb_ref[itemno].append(-1)  # use -1 as marker for prev abstract
+                        self.item_paths[itemno].append([self.data.prev_bill, itemno])
+                        self.item_qty[itemno].append(item_qty)  # add total qty from previous bill
             # Fill in values from measurement items
             for mitem in self.data.mitems:
-                item = self.cmbs[mitem[0]][mitem[1]][mitem[2]]
-                if not isinstance(item, MeasurementItemHeading):
-                    for count, itemno, item_qty in zip(enumerate(item.itemnos), item.get_total()):
+                item = cmbs[mitem[0]][mitem[1]][mitem[2]]
+                if not isinstance(item, measurement.MeasurementItemHeading):
+                    for count, (itemno, item_qty) in enumerate(zip(item.itemnos, item.get_total())):
+                        # Only add if itemno is valid
                         if itemno in itemnos:
-                            self.item_cmb_ref[itemno] = mitem[0]
-                            self.item_paths[itemno] = mitem + [count]
-                            self.item_qty[itemno] = item_qty
+                            self.item_cmb_ref[itemno].append(mitem[0])
+                            self.item_paths[itemno].append(mitem + [count])
+                            self.item_qty[itemno].append(item_qty)
                         else:
                             log.warning('Bill - Item No ' + str([itemno, mitem]) + ' not updated in bill')
 
             # Evaluate remaining variables from above data
             for itemno in itemnos:
                 # If item measured, calculate values
-                if itemno in self.item_qty:
-                    item = schedule[itemno]
-                    # Determine total qty
-                    total_qty = sum(self.item_qty[itemno])
-                    # Determine items above and at normal rates
-                    if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
-                        if item.unit.lower() in misc.INT_ITEMS:
-                            self.item_normal_qty[itemno] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
-                        else:
-                            self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
-                        self.item_excess_qty[itemno] = total_qty - self.item_normal_qty[itemno]
+                item = schedule[itemno]
+                # Determine total qty
+                total_qty = sum(self.item_qty[itemno])
+                # Determine items above and at normal rates
+                if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
+                    if item.unit.lower() in misc.INT_ITEMS:
+                        self.item_normal_qty[itemno] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
                     else:
-                        self.item_normal_qty[itemno] = total_qty
-                        self.item_excess_qty[itemno] = 0
-                    # Determine amounts
-                    self.item_normal_amount[itemno] = round(
-                        self.item_normal_qty[itemno] * self.data.item_part_percentage[itemno] * 0.01 *
-                        schedule[itemno].rate, 2)
-                    self.item_excess_amount[itemno] = round(
-                        self.item_excess_qty[itemno] * self.data.item_excess_part_percentage[itemno] * 0.01 *
-                        self.data.item_excess_rates[itemno], 2)
-                    # Update cmbs refered to by the bill
-                    self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
+                        self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
+                    self.item_excess_qty[itemno] = total_qty - self.item_normal_qty[itemno]
+                else:
+                    self.item_normal_qty[itemno] = total_qty
+                    self.item_excess_qty[itemno] = 0
+                # Determine amounts
+                self.item_normal_amount[itemno] = round(
+                    self.item_normal_qty[itemno] * self.data.item_part_percentage[itemno] * 0.01 *
+                    schedule[itemno].rate, 2)
+                self.item_excess_amount[itemno] = round(
+                    self.item_excess_qty[itemno] * self.data.item_excess_part_percentage[itemno] * 0.01 *
+                    self.data.item_excess_rates[itemno], 2)
+                # Update cmbs refered to by the bill
+                self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
             # Evaluate total
             self.bill_total_amount = round(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()), 2)
@@ -211,7 +218,7 @@ class Bill:
                 self.bill_since_prev_amount = self.bill_total_amount
         
         # If bill is a Custom bill
-        elif self.data.bill_type == BILL_CUSTOM:
+        elif self.data.bill_type == misc.BILL_CUSTOM:
             self.item_qty = self.data.item_qty
             self.item_normal_amount = self.data.item_normal_amount
             self.item_excess_amount = self.data.item_excess_amount
@@ -558,13 +565,13 @@ class Bill:
 
     def get_text(self):
         total = [self.bill_total_amount, self.bill_since_prev_amount]
-        if self.data.bill_type == BILL_NORMAL:
-            return '<b>' + clean_markup(self.data.title) + '</b> | CMB.No.<b>' + clean_markup(
-                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
+        if self.data.bill_type == misc.BILL_NORMAL:
+            return '<b>' + misc.clean_markup(self.data.title) + '</b> | CMB.No.<b>' + misc.clean_markup(
+                self.data.cmb_name) + ' dated ' + misc.clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
                 total) + '</b>'
-        if self.data.bill_type == BILL_CUSTOM:
-            return '<span foreground="red"><b>' + clean_markup(self.data.title) + '</b> | CMB.No.<b>' + clean_markup(
-                self.data.cmb_name) + ' dated ' + clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
+        if self.data.bill_type == misc.BILL_CUSTOM:
+            return '<span foreground="red"><b>' + misc.clean_markup(self.data.title) + '</b> | CMB.No.<b>' + misc.clean_markup(
+                self.data.cmb_name) + ' dated ' + misc.clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
                 total) + '</b></span>'
 
     def print_item(self):

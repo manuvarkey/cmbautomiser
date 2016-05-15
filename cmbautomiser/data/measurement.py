@@ -289,20 +289,6 @@ class RecordCustom:
         self.columntypes = columntypes
         self.total = self.find_total()
 
-    def get(self):
-        #TODO
-        iter_d = 0
-        skip = 0
-        data = []
-        for columntype in self.columntypes:
-            if columntype == MEAS_CUST:
-                data.append('')
-                skip += 1
-            else:
-                data.append(self.data_string[iter_d-skip])
-            iter_d += 1
-        return data
-
     def get_model(self):
         return self.data_string
         
@@ -412,7 +398,7 @@ class MeasurementItemCustom(MeasurementItem):
             for i,columntype in enumerate(self.columntypes): # evaluate string of data entries, suppress zero.
                 if columntype == MEAS_CUST:
                     try:
-                        value =  str(record.cust_funcs[cust_iter](record.get(),slno))
+                        value =  str(record.cust_funcs[cust_iter](record.get_model(),slno))
                         data_string[i] = value if value not in ['0','0.0'] else ''
                     except:
                         data_string[i] = ''
@@ -504,8 +490,8 @@ class MeasurementItemAbstract(MeasurementItem):
 
         if data is not None:
             self.m_items = data[0]
-            self.int_m_item = MeasurementItemCustom(data[1],data[1][5])
-        MeasurementItem.__init__(self,itemnos=[],items=[],records=[],remark='',item_remarks = [])
+            self.int_m_item = MeasurementItemCustom(data[1][1],data[1][1][5])
+        MeasurementItem.__init__(self, itemnos=[], records=[], remark='', item_remarks = [])
 
     def get_model(self):
         model = None

@@ -166,7 +166,6 @@ class ScheduleViewGeneric:
         yield "Append data items to schedule at row '{}'".format(newrows)
         # Undo action
         self.delete_row(newrows)
-        self.update_store()
     
     @undoable
     def insert_item_at_row(self, itemlist, rows):
@@ -184,7 +183,6 @@ class ScheduleViewGeneric:
         yield "Insert data items to schedule at rows '{}'".format(rows)
         # Undo action
         self.delete_row(newrows)
-        self.update_store()
 
     @undoable
     def delete_row(self, rows):
@@ -202,7 +200,6 @@ class ScheduleViewGeneric:
         yield "Delete data items from schedule at rows '{}'".format(rows)
         # Undo action
         self.insert_item_at_row(items, newrows)
-        self.update_store()
 
     @undoable
     def cell_renderer_text(self, row, column, newvalue):
@@ -260,28 +257,15 @@ class ScheduleViewGeneric:
 
     def get_model(self):
         """Return data model"""
-        return self.schedule
+        return self.schedule.get_model()
 
     def set_model(self, schedule):
         """Set data model"""
-        self.schedule = schedule
+        self.schedule.set_model(schedule)
         self.update_store()
-
-    def undo(self):
-        """Undo action from local stack"""
-        undo.setstack(self.stack)  # select schedule undo stack
-        log.info('ScheduleViewGeneric - ' + str(self.stack.undotext()))
-        self.stack.undo()
-
-    def redo(self):
-        """Redo action from local stack"""
-        undo.setstack(self.stack)  # select schedule undo stack
-        log.info('ScheduleViewGeneric - ' + str(self.stack.redotext()))
-        self.stack.redo()
 
     def clear(self):
         """Clear all schedule items and undo/redo stack"""
-        self.stack.clear()
         self.schedule.clear()
         self.update_store()
 
@@ -320,7 +304,6 @@ class ScheduleViewGeneric:
                     display_item.append("")
                     log.warning('ScheduleViewGeneric - Wrong value loaded in store')
             self.store[row] = display_item
-        undo.setstack(self.stack)  # select undo stack
 
     def __init__(self, parent, tree, captions, columntypes, render_funcs):
         """Initialise ScheduleViewGeneric class
@@ -405,10 +388,6 @@ class ScheduleViewGeneric:
                 else:
                     cell.connect("edited", render_func, i)
 
-        # Intialise undo redo stack
-        self.stack = undo.Stack()  # initialise undo/redo stack
-        undo.setstack(self.stack)  # select schedule undo stack
-
         # Intialise clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)  # initialise clipboard
 
@@ -419,7 +398,7 @@ class ScheduleViewGeneric:
 class ScheduleView(ScheduleViewGeneric):
     """Implements a schedule view for schedule of rates"""
     
-    def __init__(self, parent, tree, schedule, stack):
+    def __init__(self, parent, tree, schedule):
         captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %']
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
@@ -430,6 +409,4 @@ class ScheduleView(ScheduleViewGeneric):
         # Initialise base class
         super(ScheduleView, self).__init__(parent, tree, captions, columntypes, render_funcs)
         self.setup_column_props(widths, expandables)
-        self.schedule = schedule  # Override default schedule
-        self.stack = stack  # Override default stack
-        
+        self.schedule = schedule  # Override default schedule        

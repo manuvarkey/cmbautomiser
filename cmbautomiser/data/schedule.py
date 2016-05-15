@@ -59,10 +59,10 @@ class ScheduleItem(ScheduleItemGeneric):
         self.itemno = itemno
         self.description = description
         self.unit = unit
-        self.rate = rate
-        self.qty = qty
+        self.rate = round(eval(rate), 2)
+        self.qty = eval(qty)
         self.reference = reference
-        self.excess_rate_percent = excess_rate_percent
+        self.excess_rate_percent = eval(excess_rate_percent)
         # extended descritption of item
         self.extended_description = ''
         self.extended_description_limited = ''
@@ -174,14 +174,15 @@ class Schedule(ScheduleGeneric):
             return None
     
     def set_model(self,items):
+        self.items.clear()
         for item in items:
-            self.items.append(ScheduleItem(item))
+            self.items.append(ScheduleItem(*item))
             
     def get_itemnos(self):
         """Returns a list of itemnos with order as in schedule"""
         itemnos = []
         for item in self.items:
-            if item.itemno != '' and item.unit != '' and item.qty != 0:
+            if item.itemno != '' and item.qty != 0:
                 itemnos.append(item.itemno)
         return itemnos
 

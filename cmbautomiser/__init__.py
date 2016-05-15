@@ -61,6 +61,13 @@ class MainWindow:
             infobar_main.set_message_type(Gtk.MessageType.INFO)
             label_infobar_main.set_text(message)
             infobar_main.show()
+    
+    def update(self):
+        """Refreshes all displays"""
+        self.data.update()
+        self.schedule_view.update_store()
+        self.measurements_view.update_store()
+        self.bill_view.update_store()
             
     # About Dialog
 
@@ -158,6 +165,8 @@ class MainWindow:
                         self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
                         # Clear undo/redo stack
                         self.stack.clear()
+                        # Refresh all displays
+                        self.update()
                     else:
                         self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
                 except:
@@ -251,11 +260,13 @@ class MainWindow:
         """Redo action from stack"""
         log.info('Redo:' + str(self.stack.redotext()))
         self.stack.redo()
+        self.update()
 
     def onUndoClicked(self, button):
         """Undo action from stack"""
         log.info('Undo:' + str(self.stack.undotext()))
         self.stack.undo()
+        self.update()
 
     # Schedule signal handler methods
 
@@ -418,10 +429,8 @@ class MainWindow:
     # Tab methods
 
     def onSwitchTab(self, widget, page, pagenum):
-        """Refreshe display on switching between views"""
-        self.schedule_view.update_store()
-        self.measurements_view.update_store()
-        self.bill_view.update_store()
+        """Refresh display on switching between views"""
+        self.update()
 
     def __init__(self):
         # Variable used to store handles for child window processes
@@ -432,6 +441,10 @@ class MainWindow:
         
         # Setup main data model
         self.data = data.datamodel.DataModel()
+        
+        # Initialise undo/redo stack
+        self.stack = undo.Stack()
+        undo.setstack(self.stack)
 
         # Other variables
         self.filename = None
@@ -454,14 +467,10 @@ class MainWindow:
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")
-        
-        # Initialise undo/redo stack
-        self.stack = undo.Stack()
-        undo.setstack(self.stack)
 
         # Setup schedule View
         self.treeview_schedule = self.builder.get_object("treeview_schedule")
-        self.schedule_view = view.schedule.ScheduleView(self.window, self.treeview_schedule, self.data.schedule, self.stack)
+        self.schedule_view = view.schedule.ScheduleView(self.window, self.treeview_schedule, self.data.schedule)
         
         # Setup bill View
         self.treeview_bill = self.builder.get_object("treeview_bill")

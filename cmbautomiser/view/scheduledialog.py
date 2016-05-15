@@ -23,8 +23,9 @@
 #  
 
 import copy, logging
-
 from gi.repository import Gtk, Gdk, GLib
+
+import undo
 
 # local files import
 from . import schedule
@@ -135,15 +136,19 @@ class ScheduleDialog:
 
     def onButtonScheduleDeletePressed(self, button):
         """Delete item from schedule"""
-        self.schedule_view.delete_selection()
+        self.schedule_view.delete_selected_rows()
 
     def onUndoSchedule(self, button):
         """Undo changes in schedule"""
-        self.schedule_view.undo()
+        undo.setstack(self.stack)  # select schedule undo stack
+        log.info('ScheduleViewGeneric - ' + str(self.stack.undotext()))
+        self.stack.undo()
 
     def onRedoSchedule(self, button):
         """Redo changes in schedule"""
-        self.schedule_view.redo()
+        undo.setstack(self.stack)  # select schedule undo stack
+        log.info('ScheduleViewGeneric - ' + str(self.stack.redotext()))
+        self.stack.redo()
 
     def onCopySchedule(self, button):
         """Copy rows from schedule"""
@@ -157,8 +162,8 @@ class ScheduleDialog:
         """Import xlsx file into schedule"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
         spreadsheet = misc.Spreadsheet(filename, 'r')
-        items = spreadsheet.readrows(columntypes = self.columntypes)
-        self.insert_item_at_selection(items)
+        items = spreadsheet.read_rows(columntypes = self.columntypes)
+        self.schedule_view.insert_item_at_selection(items)
 
     def onClearButtonPressed(self, button, combo):
         """Clear combobox selecting schedule item"""
@@ -188,12 +193,19 @@ class ScheduleDialog:
         self.columntypes = columntypes
         self.render_funcs = render_funcs
         self.item_schedule = item_schedule
+        
+        # Save undo stack of parent
+        self.stack_old = undo.stack()
+        # Initialise undo/redo stack
+        self.stack = undo.Stack()
+        undo.setstack(self.stack)
 
         # Setup dialog window
         self.builder = Gtk.Builder()
         self.builder.add_from_file(misc.abs_path("interface","scheduledialog.glade"))
         self.window = self.builder.get_object("dialog")
         self.window.set_transient_for(self.parent)
+        self.window.set_size_request(int(self.parent.get_size_request()[0]*0.8),int(self.parent.get_size_request()[1]*0.8))
         self.builder.connect_signals(self)
 
         # Get required objects
@@ -266,6 +278,8 @@ class ScheduleDialog:
         """
         self.window.show_all()
         response = self.window.run()
+        # Reset undo stack of parent
+        undo.setstack(self.stack_old)
 
         if response == 1:
             data = self.get_model()
