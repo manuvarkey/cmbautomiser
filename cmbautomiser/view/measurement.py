@@ -367,25 +367,25 @@ class MeasurementsView:
                         if code:
                             newval = copy.deepcopy(oldval)
                             newval[1][4] = newdata
-                            self.data.edit_item(path, item, newval, oldval)
+                            self.data.edit_measurement_item(path, item, newval, oldval)
                         return None
                 elif isinstance(item, data.measurement.MeasurementItemAbstract):
                     if item.int_m_item.captions_udata:
                         oldval = item.get_model()
-                        olddata = oldval[1][1][4]
+                        olddata = oldval[1][1][1][4]
                         # Setup user data dialog
                         newdata = olddata[:]
                         project_settings_dialog = misc.UserEntryDialog(self.parent, 
                                                     'Edit User Data',
                                                     newdata,
-                                                    item.captions_udata)
+                                                    item.int_m_item.captions_udata)
                         # Show user data dialog
                         code = project_settings_dialog.run()
                         # Edit data on success
                         if code:
                             newval = copy.deepcopy(oldval)
-                            newval[1][1][4] = newdata
-                            self.data.edit_item(path, item, newval, oldval)
+                            newval[1][1][1][4] = newdata
+                            self.data.edit_measurement_item(path, item, newval, oldval)
                         return None
         return (misc.CMB_WARNING,'User data not supported')
                     
@@ -607,7 +607,7 @@ class AbstractDialog:
         self.builder.add_from_file(misc.abs_path("interface","abstractdialog.glade"))
         self.window = self.builder.get_object("dialog")
         self.window.set_transient_for(self.parent)
-        self.window.set_size_request(int(self.parent.get_size_request()[0]*0.8),int(self.parent.get_size_request()[1]*0.8))
+        self.window.set_default_size(1000,500)
         self.builder.connect_signals(self)
         # Get required objects
         self.treeview_abstract = self.builder.get_object("treeview_abstract")

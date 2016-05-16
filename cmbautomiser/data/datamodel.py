@@ -127,7 +127,7 @@ class DataModel:
     def get_custom_item_template(self, module):
         '''Get custom item template for ScheduleDialog and others'''
         item = measurement.MeasurementItemCustom(None,module)
-        return [item.itemnos_mask, item.captions, item.columntypes, item.cust_funcs]
+        return [item.itemnos_mask, item.captions, item.columntypes, item.cust_funcs, item.dimensions]
         
     def get_schmod_from_custmod(self, model):
         '''Get custom item template for ScheduleDialog and others'''

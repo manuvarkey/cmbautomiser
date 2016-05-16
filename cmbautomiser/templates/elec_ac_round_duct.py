@@ -102,6 +102,7 @@ class CustomItem:
         self.total_func = total_func
         self.total_func_item = total_func_item
         self.export_abstract = None
+        self.dimensions = [[300,80,80,80,80,100], [True,False,False,False,False,False]]
         
         self.latex_postproc_func = latex_postproc_func
         

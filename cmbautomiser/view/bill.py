@@ -320,11 +320,11 @@ class BillDialog:
                 unit = item.unit
                 rate = item.rate
                 if bill.item_excess_qty[itemno] > 0:
-                    flag = 'YES'
+                    flag = 'EXCEEDED'
                 else:
                     flag = ''
                 populated_items.append([itemno, description, unit, rate, flag])
-            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Ex.Rate', 'PR(%)', 'Ex.P.R(%)','Ex ?']
+            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Ex.Rate', 'PR(%)', 'Ex.PR(%)','Remarks']
             columntypes = [misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_L, misc.MEAS_L, misc.MEAS_L, misc.MEAS_CUST]
             cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
                             [None] * 3 + [callback_flag]
@@ -345,7 +345,7 @@ class BillDialog:
                 unit = item.unit
                 rate = item.rate
                 populated_items.append([itemno, description, unit, rate])
-            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Qty', 'Amnt', 'Ex.Amnt']
+            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Qty', 'Amount', 'Ex.Amnt']
             columntypes = [misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_L, misc.MEAS_L, misc.MEAS_L]
             cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
             dimensions = [[80,300,80,80,80,80,80],[False,True,False,False,False,False]]
@@ -499,7 +499,7 @@ class BillDialog:
         self.builder = Gtk.Builder()
         self.builder.add_from_file(misc.abs_path("interface","billdialog.glade"))
         self.window = self.builder.get_object("dialog")
-        self.window.set_size_request(800,400)
+        self.window.set_default_size(1000,500)
         self.window.set_transient_for(self.parent)
         self.builder.connect_signals(self)
         # Get required objects

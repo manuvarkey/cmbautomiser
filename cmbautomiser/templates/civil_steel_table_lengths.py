@@ -234,4 +234,4 @@ class CustomItem:
         self.total_func_item = total_func_item
         self.latex_postproc_func = latex_postproc_func
         self.export_abstract = export_abstract
-        
+        self.dimensions = [[300,50,50,50,50,50,50,50,50,100,50,50,50,50,50,50], [True,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]]

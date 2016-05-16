@@ -324,6 +324,7 @@ class MeasurementItemCustom(MeasurementItem):
         self.user_data = None
         self.latex_postproc_func = None
         self.export_abstract = None
+        self.dimensions = None
 
         # Read description from file
         if plugin is not None:
@@ -347,6 +348,7 @@ class MeasurementItemCustom(MeasurementItem):
                 self.latex_postproc_func = self.custom_object.latex_postproc_func
                 self.user_data = self.custom_object.user_data_default
                 self.export_abstract = self.custom_object.export_abstract
+                self.dimensions = self.custom_object.dimensions
             except ImportError:
                 log.error('Error Loading plugin - MeasurementItemCustom - ' + str(plugin))
 

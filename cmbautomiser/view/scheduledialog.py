@@ -170,7 +170,7 @@ class ScheduleDialog:
         combo.set_active(-1)
         self.onComboChanged(combo, -1)
 
-    def __init__(self, parent, item_schedule, itemnos, captions, columntypes, render_funcs, dimensions):
+    def __init__(self, parent, item_schedule, itemnos, captions, columntypes, render_funcs, dimensions=None):
         """Initialise ScheduleDialog class
         
             Arguments:
@@ -205,7 +205,7 @@ class ScheduleDialog:
         self.builder.add_from_file(misc.abs_path("interface","scheduledialog.glade"))
         self.window = self.builder.get_object("dialog")
         self.window.set_transient_for(self.parent)
-        self.window.set_size_request(800,400)
+        self.window.set_default_size(1000,500)
         self.builder.connect_signals(self)
 
         # Get required objects
@@ -215,7 +215,8 @@ class ScheduleDialog:
         # Setup schdule view for items
         self.schedule_view = schedule.ScheduleViewGeneric(self.parent,
             self.tree, self.captions, self.columntypes, self.render_funcs)
-        self.schedule_view.setup_column_props(*dimensions)
+        if dimensions is not None:
+            self.schedule_view.setup_column_props(*dimensions)
 
         # Setup liststore model for combobox from item schedule
         self.item_schedule_store = Gtk.ListStore(str, str, str, float, str)
