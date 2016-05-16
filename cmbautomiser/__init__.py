@@ -151,7 +151,6 @@ class MainWindow:
                     if data[0] == misc.PROJECT_FILE_VER:
                         self.data.set_model(data[1])
                         self.project_settings_dict = data[2]
-                        
                         # Set project as active
                         self.PROJECT_ACTIVE = 1
 

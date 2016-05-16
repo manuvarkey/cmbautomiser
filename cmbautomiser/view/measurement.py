@@ -238,6 +238,9 @@ class MeasurementsView:
             Arguments:
                 lock_state: (Optional) Display custom lock state
         """
+        if lock_state is None:
+            lock_state = self.data.get_lock_states()
+                                
         # Get selection
         selection = self.tree.get_selection()
         old_path = []
@@ -253,10 +256,7 @@ class MeasurementsView:
                 iter_meas = self.store.append(iter_cmb,[meas.get_text(),False,meas.get_tooltip(),misc.MEAS_COLOR_NORMAL])
                 if isinstance(meas, data.measurement.Measurement):
                     for p3, mitem in enumerate(meas.items):
-                        if lock_state is None:
-                            m_flag = self.data.get_lock_states()[[p1, p2, p3]]
-                        else:
-                            m_flag = lock_state[[p1, p2, p3]]
+                        m_flag = lock_state[[p1, p2, p3]]
                         self.store.append(iter_meas,[mitem.get_text(), m_flag, mitem.get_tooltip(),misc.MEAS_COLOR_NORMAL])
                 elif isinstance(meas, data.measurement.Completion):
                     pass

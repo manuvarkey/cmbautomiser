@@ -86,6 +86,10 @@ class DataModel:
     
     def update(self):
         """Update derived data values"""
+
+        # Calculate extended descriptions
+        self.schedule.update_values()
+        
         # Update all bills
         for bill in self.bills:
             bill.update(self.schedule, self.cmbs, self.bills)

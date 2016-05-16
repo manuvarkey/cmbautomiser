@@ -24,6 +24,9 @@
 
 import logging
 
+# Local module import
+from __main__ import misc
+
 # Setup logger object
 log = logging.getLogger(__name__)
 
@@ -124,6 +127,7 @@ class Schedule(ScheduleGeneric):
     def __init__(self, items=[]):
         #Initialise base class
         super(Schedule,self).__init__(items)
+        self.update_values()
         
     def update_values(self):
         # Populate ScheduleItem.extended_description (Used for final billing)
@@ -132,23 +136,29 @@ class Schedule(ScheduleGeneric):
         itemno = ''
         while iter < len(self.items):
             item = self.items[iter]
-            # if main item
+            # Item without quantity
             if item.qty == 0 and item.unit == '' and item.rate == 0:
-                if item.itemno != '':  # for main item start reset values
-                    extended_description = ''
+                # If main item, reset values
+                if item.itemno != '':
                     itemno = item.itemno
-                    extended_description = extended_description + item.description
+                    extended_description = item.description
+                # If continuing item append description
                 else:
                     extended_description = extended_description + '\n' + item.description
+                # Keep description of non quantity item
                 item.extended_description = item.description
-            # if normal item
-            elif item.itemno.startswith(itemno) and extended_description != '':  # if subitem
+            # If sub item of main item i.e. with quantity and starts with itemno
+            elif item.itemno.startswith(itemno):
                 item.extended_description = extended_description + '\n' + item.description
+            # If one line item
             else:
                 item.extended_description = item.description
-            if len(item.extended_description) > CMB_DESCRIPTION_MAX_LENGTH:
-                item.extended_description_limited = item.extended_description[0:int(CMB_DESCRIPTION_MAX_LENGTH/2)] + \
-                    ' ... ' + item.extended_description[-int(CMB_DESCRIPTION_MAX_LENGTH/2):]
+                # Reset values to nil
+                extended_description = ''
+                itemno = ''
+            if len(item.extended_description) > misc.CMB_DESCRIPTION_MAX_LENGTH:
+                item.extended_description_limited = item.extended_description[0:int(misc.CMB_DESCRIPTION_MAX_LENGTH/2)] + \
+                    ' ... ' + item.extended_description[-int(misc.CMB_DESCRIPTION_MAX_LENGTH/2):]
             else:
                 item.extended_description_limited = item.extended_description
             iter += 1
@@ -177,6 +187,7 @@ class Schedule(ScheduleGeneric):
         self.items.clear()
         for item in items:
             self.items.append(ScheduleItem(*item))
+        self.update_values()
             
     def get_itemnos(self):
         """Returns a list of itemnos with order as in schedule"""

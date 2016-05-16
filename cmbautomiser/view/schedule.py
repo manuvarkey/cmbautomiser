@@ -275,6 +275,7 @@ class ScheduleViewGeneric:
         rownum = 0
         for row in self.store:
             rownum += 1
+        rownum = len(self.store)
         if rownum > self.schedule.length():
             for i in range(rownum - self.schedule.length()):
                 del self.store[-1]
@@ -404,7 +405,7 @@ class ScheduleView(ScheduleViewGeneric):
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
         render_funcs = [None,None,None,None,None,None,None]
         widths = [80,500,100,100,100,100,100]
-        expandables = [False,True,False,False,False,False,False,]
+        expandables = [False,True,False,False,False,False,False]
         
         # Initialise base class
         super(ScheduleView, self).__init__(parent, tree, captions, columntypes, render_funcs)

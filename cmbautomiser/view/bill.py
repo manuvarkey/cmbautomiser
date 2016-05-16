@@ -271,12 +271,12 @@ class BillDialog:
         # Variables
         
         toplevel = self.window
-        itemnos = []
         item_schedule = self.schedule
         captions = []
         columntypes = []
         populated_items = []
         cellrenderers = []
+        dimensions = [[],[]]
         
         # Call backs
         
@@ -296,7 +296,7 @@ class BillDialog:
                 return ''
 
         def callback_flag(value, row):
-            return str(populated_items[row][5])
+            return str(populated_items[row][4])
         
         # Obtain values to be passed
         
@@ -304,8 +304,15 @@ class BillDialog:
         # Items specific to normal bill
         if self.billdata.bill_type == misc.BILL_NORMAL:
             # Evaluate a bill with current selected items for determining EXCEEDED flag
-            bill = data.bill.Bill(self.billdata)
+            bill = data.bill.Bill(self.billdata.get_model())
             bill.update(self.schedule, self.cmbs, self.bills)
+            
+            # Update model variables to include itemnos
+            for itemno in itemnos:
+                if itemno not in self.billdata.item_excess_rates:
+                    self.billdata.item_excess_rates[itemno] = 0
+                    self.billdata.item_part_percentage[itemno] = 100
+                    self.billdata.item_excess_part_percentage[itemno] = 100
                 
             for itemno in itemnos:
                 item = self.schedule[itemno]
@@ -313,29 +320,38 @@ class BillDialog:
                 unit = item.unit
                 rate = item.rate
                 if bill.item_excess_qty[itemno] > 0:
-                    flag = 'EXCEEDED'
+                    flag = 'YES'
                 else:
                     flag = ''
                 populated_items.append([itemno, description, unit, rate, flag])
-                captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Excess Rate', 'P.R.(%)', 'Excess P.R(%)','Excess ?']
-                columntypes = [MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_CUST, MEAS_L, MEAS_L, MEAS_L, MEAS_CUST]
-                cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
-                                [None] * 3 + [callback_flag]
+            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Ex.Rate', 'PR(%)', 'Ex.P.R(%)','Ex ?']
+            columntypes = [misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_L, misc.MEAS_L, misc.MEAS_L, misc.MEAS_CUST]
+            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + \
+                            [None] * 3 + [callback_flag]
+            dimensions = [[80,300,50,80,80,80,80,80],[False,True,False,False,False,False,False]]
         
         # Items specific to custom bill
         elif self.billdata.bill_type == misc.BILL_CUSTOM:
+            # Update model variables to include itemnos
+            for itemno in itemnos:
+                if itemno not in self.billdata.item_qty:
+                    self.billdata.item_qty[itemno] = [0]
+                    self.billdata.item_normal_amount[itemno] = 0
+                    self.billdata.item_excess_amount[itemno] = 0
+                
             for itemno in itemnos:
                 item = self.schedule[itemno]
                 description = item.extended_description_limited
                 unit = item.unit
                 rate = item.rate
                 populated_items.append([itemno, description, unit, rate])
-                captions = ['Agmnt.No.', 'Description', 'Unit', 'Rate', 'Total Qty', 'Amount', 'Excess Amount']
-                columntypes = [misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_L, misc.MEAS_L, misc.MEAS_L]
-                cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
+            captions = ['AgmtNo', 'Description', 'Unit', 'Rate', 'Qty', 'Amnt', 'Ex.Amnt']
+            columntypes = [misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_CUST, misc.MEAS_L, misc.MEAS_L, misc.MEAS_L]
+            cellrenderers = [callback_agmntno] + [callback_description] + [callback_unit] + [callback_rate] + [None] * 3
+            dimensions = [[80,300,80,80,80,80,80],[False,True,False,False,False,False]]
             
         # Raise Dialog for entry of per item values
-        dialog = scheduledialog.ScheduleDialog(toplevel, item_schedule, itemnos, captions, columntypes, cellrenderers)
+        dialog = scheduledialog.ScheduleDialog(toplevel, item_schedule, [], captions, columntypes, cellrenderers, dimensions)
 
         # Deactivate add and delete buttons, remarks column in dialog
         dialog.builder.get_object("toolbutton_schedule_add").set_sensitive(False)
@@ -483,6 +499,7 @@ class BillDialog:
         self.builder = Gtk.Builder()
         self.builder.add_from_file(misc.abs_path("interface","billdialog.glade"))
         self.window = self.builder.get_object("dialog")
+        self.window.set_size_request(800,400)
         self.window.set_transient_for(self.parent)
         self.builder.connect_signals(self)
         # Get required objects
