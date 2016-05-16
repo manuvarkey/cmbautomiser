@@ -22,7 +22,7 @@
 #
 #
 
-import pickle, copy, logging
+import codecs, pickle, copy, logging
 from gi.repository import Gtk, Gdk, GLib
 
 # local files import
@@ -120,7 +120,7 @@ class BillView:
             path = paths[0]
             row = int(path.get_indices()[0])  # get item row
             item = self.bills[row]
-            data = item.get_modal()
+            data = item.get_model()
             text = codecs.encode(pickle.dumps([test_string, data]), "base64").decode() # dump item as text
             self.clipboard.set_text(text, -1)  # push to clipboard
         else:  # if no selection
@@ -133,46 +133,47 @@ class BillView:
                 test_string = "BillView"
                 itemlist = pickle.loads(codecs.decode(text.encode(), "base64"))  # recover item from string
                 if itemlist[0] == test_string:
-                    data = itemlist[1]
-                if isinstance(data, data.bill.BillData):
+                    model = data.bill.BillData()
+                    model.set_model(itemlist[1])
                     selection = self.tree.get_selection()
                     if selection.count_selected_rows() != 0:  # if selection exists copy at selection
-                        [model, paths] = selection.get_selected_rows()
+                        [model_, paths] = selection.get_selected_rows()
                         path = paths[0].get_indices()
                         row = path[0]
                         # Handle different bill types
                         if self.bills[row].data.bill_type == misc.BILL_CUSTOM:
-                            if data.bill_type == misc.BILL_NORMAL:
+                            if model.bill_type == misc.BILL_NORMAL:
                                 # create duplicate bill
-                                bill = data.bill.Bill(self)
-                                bill.set_modal(data)
-                                bill.update_values()
+                                bill = data.bill.Bill()
+                                bill.set_model(model.get_model())
+                                bill.update(self.schedule, self.cmbs, self.bills)
                                 # Fill in values for custom bill from duplicate bill
-                                data.item_normal_amount = bill.item_normal_amount
-                                data.item_excess_amount = bill.item_excess_amount
-                                data.item_qty = []
-                                for qtys in bill.item_qty:
-                                    data.item_qty.append([sum(qtys)])
+                                model.item_normal_amount = bill.item_normal_amount
+                                model.item_excess_amount = bill.item_excess_amount
+                                model.item_qty = dict()
+                                for itemno in bill.item_qty:
+                                    model.item_qty[itemno] = [sum(bill.item_qty[itemno])]
                                 # clear items for normal bill
-                                data.mitems = []
-                                data.item_part_percentage = []  # part rate for exess rate items
-                                data.item_excess_part_percentage = []  # part rate for exess rate items
-                                data.item_excess_rates = []  # list of excess rates above excess_percentage
+                                model.mitems = dict()
+                                model.item_part_percentage = dict()  # part rate for exess rate items
+                                model.item_excess_part_percentage = dict()  # part rate for exess rate items
+                                model.item_excess_rates = dict()  # list of excess rates above excess_percentage
                                 # set bill type
-                                data.bill_type = BILL_CUSTOM
+                                model.bill_type = misc.BILL_CUSTOM
                         else:
-                            data.mitems = []  # clear measured items
+                            model.mitems = dict()  # clear measured items
                             # clear additional elements for custom bill
-                            data.item_qty = []  # qtys of items b/f
-                            data.item_normal_amount = []  # total item amount for qty at normal rate
-                            data.item_excess_amount = []  # amounts for qty at excess rate
+                            model.item_qty = dict()  # qtys of items b/f
+                            model.item_normal_amount = dict()  # total item amount for qty at normal rate
+                            model.item_excess_amount = dict()  # amounts for qty at excess rate
                             # set bill type
-                            data.bill_type = BILL_NORMAL
+                            model.bill_type = misc.BILL_NORMAL
                             
-                        self.data.edit_bill_at_row(data, row)
+                        self.data.edit_bill_at_row(model.get_model(), row)
                     else:  # if selection do not exist paste at end
-                        data.mitems = []  # clear measured items
-                        self.data.insert_bill_at_row(data, None)
+                        model.mitems = []  # clear measured items
+                        self.data.insert_bill_at_row(model.get_model(), None)
+                    self.update_store()
             except:
                 log.warning('BillView - paste_at_selection - No valid data in clipboard')
         else:
