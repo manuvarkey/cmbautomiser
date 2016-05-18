@@ -291,7 +291,7 @@ class LatexFile:
     def add_preffix_from_file(self,filename):
         """Add a latex file as preffix"""
         latex_file = open(filename,'r')
-        self.latex_buffer = latex_file.read() + self.latex_buffer + '\n'
+        self.latex_buffer = latex_file.read() + '\n' + self.latex_buffer
         latex_file.close()
         
     def add_suffix_from_file(self,filename):

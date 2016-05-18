@@ -235,7 +235,7 @@ class Bill:
                 
         # Read preamble and abstract opening into main buffer
         latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'preamble.tex'))
-        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'abstractopening.tex'))
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'abstractopening.tex'))
 
         # Setup substitution dictionary
         bill_local_vars = dict()  # bill substitution dictionary
@@ -254,7 +254,8 @@ class Bill:
         # Loop over each item in schedule
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty:
+            if itemno in self.item_qty and self.item_qty[itemno] != []:
+                print(self.item_qty[itemno])
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -292,7 +293,7 @@ class Bill:
 
                         # Read in latex records to buffer
                         latex_record = misc.LatexFile()
-                        latex_record.add_preffix_from_file(misc.abs_path('latex', 'abstractitemelement.tex'))
+                        latex_record.add_suffix_from_file(misc.abs_path('latex', 'abstractitemelement.tex'))
                         # Make item substitutions in buffer
                         latex_record.replace_and_clean(item_record_vars)
                         # Add to master buffer
@@ -340,7 +341,7 @@ class Bill:
         itemnos = schedule.get_itemnos()
         
         # Read prefix
-        latex_buffer.add_preffix_from_file(misc.abs_path('latex','billopening.tex'))
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex','billopening.tex'))
         
         # Setup substitution dictionary
         bill_local_vars = {}
@@ -356,7 +357,7 @@ class Bill:
         # Write each item to bill
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty:
+            if itemno in self.item_qty and self.item_qty[itemno] != []:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 item_paths = self.item_paths[itemno]
@@ -401,7 +402,7 @@ class Bill:
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
                 
                 # Write entries
-                latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'billitem.tex')) # read item template
+                latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'billitem.tex')) # read item template
                 # Make item substitutions
                 latex_buffer.replace_and_clean(item_local_vars)
                 latex_buffer.replace(item_local_vars_vanilla)
