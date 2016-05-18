@@ -386,15 +386,23 @@ class BillDialog:
 
         if model is not None:
             records = model[1]
+            # Prepare duplicate model
+            billdata = copy.deepcopy(self.billdata)
             for count, item in enumerate(populated_items):
-                if self.billdata.bill_type == misc.BILL_NORMAL:
-                    self.billdata.item_excess_rates[item[0]] = float(eval(records[count][4]))
-                    self.billdata.item_part_percentage[item[0]] = float(eval(records[count][5]))
-                    self.billdata.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
+                if billdata.bill_type == misc.BILL_NORMAL:
+                    billdata.item_excess_rates[item[0]] = float(eval(records[count][4]))
+                    billdata.item_part_percentage[item[0]] = float(eval(records[count][5]))
+                    billdata.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
                 elif self.billdata.bill_type == misc.BILL_CUSTOM:
-                    self.billdata.item_qty[item[0]][0] = float(eval(records[count][4]))
-                    self.billdata.item_normal_amount[item[0]] = float(eval(records[count][5]))
-                    self.billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
+                    billdata.item_qty[item[0]][0] = float(eval(records[count][4]))
+                    billdata.item_normal_amount[item[0]] = float(eval(records[count][5]))
+                    billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
+            # Edit current bill item
+            if self.this_bill:
+                self.data.edit_bill_at_row(billdata, self.this_bill)
+            else:
+                self.billdata = billdata
+            
 
     def onToggleCellRendererToggle(self, toggle, path_str):
         """On toggle clicked"""

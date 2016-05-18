@@ -227,31 +227,39 @@ class Spreadsheet:
             count_actual = end
         
         items = []
-        for row in range(1, count_actual):
+        for row in range(start, count_actual):
             cells = []
             skip = 0  # No of columns to be skiped ex. breakup, total etc...
             for columntype, i in zip(columntypes, list(range(len(columntypes)))):
                 cell = sheet.cell(row = row + 1, column = i - skip + 1).value
-                if cell is None:
-                    cell_formated = ""
-                else:
-                    try:  # try evaluating string
-                        if columntype == MEAS_DESC:
-                            cell_formated = str(cell)
-                        elif columntype == MEAS_L:
+                if columntype == MEAS_DESC:
+                    if cell is None:
+                        cell_formated = ""
+                    else:
+                        cell_formated = str(cell)
+                elif columntype == MEAS_L:
+                    if cell is None:
+                        cell_formated = "0"
+                    else:
+                        try:  # try evaluating float
                             cell_formated = str(float(cell))
-                        elif columntype == MEAS_NO:
+                        except:
+                            cell_formated = '0'
+                elif columntype == MEAS_NO:
+                    if cell is None:
+                        cell_formated = "0"
+                    else:
+                        try:  # try evaluating int
                             cell_formated = str(int(cell))
-                        else:
-                            cell_formated = ''
-                    except:
-                        cell_formated = ''
-                        log.warning("Spreadsheet - Value skipped on import - " + str((row, i)))
+                        except:
+                            cell_formated = '0'
+                else:
+                    cell_formated = ''
+                    log.warning("Spreadsheet - Value skipped on import - " + str((row, i)))
                 if columntype == MEAS_CUST:
                     skip = skip + 1
                 cells.append(cell_formated)
-            item = data.schedule.ScheduleItemGeneric(cells)
-            items.append(item)
+            items.append(cells)
         return items
 
 

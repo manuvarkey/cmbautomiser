@@ -44,6 +44,57 @@ class MeasurementsView:
         """Handle keypress event"""
         if event.keyval == Gdk.KEY_Escape:  # unselect all
             self.tree.get_selection().unselect_all()
+    
+    def can_have_sub_item(self, level):
+        """Return True if sub items can be added with current selection"""
+        
+        # CMB item can always be added
+        if level == 1:
+            return True
+        
+        # Get selection path if selection exists
+        selection = self.tree.get_selection()
+        if selection.count_selected_rows() != 0:  # If selection exists
+            [model, paths] = selection.get_selected_rows()
+            path = paths[0].get_indices()
+        # Else get tree node path
+        else:
+            if len(self.cmbs) > 0: # CMB exists
+                p1 = len(self.cmbs)-1
+                if len(self.cmbs[p1].items) > 0: # Measurement exists
+                    p2 = len(self.cmbs[p1].items)-1
+                    if isinstance(self.cmbs[p1][p2], data.measurement.Measurement) and len(self.cmbs[p1][p2].items) > 0: # Measurement item exists
+                        p3 = len(self.cmbs[p1][p2].items)-1
+                         # Path to measurement item
+                        path = [p1,p2,p3]
+                    else:
+                         # Path to measurement
+                        path = [p1,p2]
+                else:
+                    # Path to CMB
+                    path = [p1]
+            else:
+                # No CMBs exist
+                path = []
+
+        # Measurement/Completion
+        if level == 2:
+            return True if len(path) > 0 else False
+        # MEasurementItem
+        elif level == 3:
+            # If a measurement or measurement item selected
+            if len(path) > 1:
+                # Return True if measurement is a 'Measurement'
+                return True if isinstance(self.cmbs[path[0]][path[1]], data.measurement.Measurement) else False
+            elif len(path) == 1:
+                # CMB Selected. Return True if last item of CMB is a 'Measurement'
+                if len(self.cmbs[path[0]].items) > 0:
+                    return True if isinstance(self.cmbs[path[0]].items[-1], data.measurement.Measurement) else False
+                else:
+                    return False
+            else:
+                # No CMB exists
+                return False
             
     # Public Methods
     
@@ -76,103 +127,121 @@ class MeasurementsView:
         
     def add_measurement(self):
         """Add a Measurement to measurement view"""
-        meas_name = misc.get_user_input_text(self.parent, "Please input Measurement Date", "Add new Measurement")
-        if meas_name != None:
-            meas = ['Measurement', [meas_name, []]]
-            # Get selection
-            selection = self.tree.get_selection()
-            if selection.count_selected_rows() != 0:  # If selection exists
-                [model, paths] = selection.get_selected_rows()
-                path = paths[0].get_indices()
-                self.data.add_measurement_at_node(meas,path)
-            else: # If no selection append at end
-                self.data.add_measurement_at_node(meas,None)
-            self.update_store()
+        if self.can_have_sub_item(2):
+            meas_name = misc.get_user_input_text(self.parent,  "Please input Measurement Date", "Add Measurement Group")
+            if meas_name != None:
+                meas = ['Measurement', [meas_name, []]]
+                # Get selection
+                selection = self.tree.get_selection()
+                if selection.count_selected_rows() != 0:  # If selection exists
+                    [model, paths] = selection.get_selected_rows()
+                    path = paths[0].get_indices()
+                    self.data.add_measurement_at_node(meas,path)
+                else: # If no selection append at end
+                    self.data.add_measurement_at_node(meas,None)
+                self.update_store()
+        else:
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,"Item not added - 'Measurement Group' can only be added under a 'CMB'")
 
     def add_completion(self):
         """Add a Completion to measurement view"""
-        compl_name = misc.get_user_input_text(self.parent, "Please input Completion Date", "Add Completion")
-        if compl_name != None:
-            compl = ['Completion', [compl_name]]
-            # Get selection
-            selection = self.tree.get_selection()
-            if selection.count_selected_rows() != 0: # If selection exists
-                [model, paths] = selection.get_selected_rows()
-                path = paths[0].get_indices()
-                self.data.add_measurement_at_node(compl,path)
-            else: # If no selection append at end
-                self.data.add_measurement_at_node(compl,None)
-            self.update_store()
+        if self.can_have_sub_item(2):
+            compl_name = misc.get_user_input_text(self.parent, "Please input Completion Date", "Add Completion Certificate")
+            if compl_name != None:
+                compl = ['Completion', [compl_name]]
+                # Get selection
+                selection = self.tree.get_selection()
+                if selection.count_selected_rows() != 0: # If selection exists
+                    [model, paths] = selection.get_selected_rows()
+                    path = paths[0].get_indices()
+                    self.data.add_measurement_at_node(compl,path)
+                else: # If no selection append at end
+                    self.data.add_measurement_at_node(compl,None)
+                self.update_store()
+        else:
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,"Item not added - 'Completion Certificate' can only be added under a 'CMB'")
         
     def add_heading(self):
         """Add a Heading to measurement view"""
-        heading_name = misc.get_user_input_text(self.parent, "Please input Heading", "Add new Item: Heading")
-        
-        if heading_name != None:
-            # get selection
-            selection = self.tree.get_selection()
-            heading = ['MeasurementItemHeading', [heading_name]]
-            if selection.count_selected_rows() != 0: # if selection exists
-                [model, paths] = selection.get_selected_rows()
-                path = paths[0].get_indices()
-                self.data.add_measurement_item_at_node(heading,path)
-            else: # if no selection append at end
-                self.data.add_measurement_item_at_node(heading,None)
-            self.update_store()
+        if self.can_have_sub_item(3):
+            heading_name = misc.get_user_input_text(self.parent, "Please input Heading", "Add new Item: Heading")
+            if heading_name != None:
+                # get selection
+                selection = self.tree.get_selection()
+                heading = ['MeasurementItemHeading', [heading_name]]
+                if selection.count_selected_rows() != 0: # if selection exists
+                    [model, paths] = selection.get_selected_rows()
+                    path = paths[0].get_indices()
+                    self.data.add_measurement_item_at_node(heading,path)
+                else: # if no selection append at end
+                    self.data.add_measurement_item_at_node(heading,None)
+                self.update_store()
+        else:
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,"Item not added - 'Heading' can only be added under a 'Measurement Group'")
                     
     def add_custom(self, oldval=None, itemtype=None):
         """Add a Custom item to measurement view"""
-        template = self.data.get_custom_item_template(itemtype)
-        dialog = ScheduleDialog(self.parent, self.schedule, *template)
-
-        if oldval is not None: # if edit mode add data
-            # Obtain ScheduleDialog model from MeasurementItemCustom model
-            schmod = self.data.get_schmod_from_custmod(oldval)
-            dialog.set_model(schmod)
-            data = dialog.run()
-            if data is not None: # if edited
-                # Obtain MeasurementItemCustom model from ScheduleDialog model
-                custmod = self.data.get_custmod_from_schmod(data, oldval, itemtype)
-                return custmod
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            data = dialog.run()
-            if data is not None:
-                # Obtain custom item model from returned data
-                custmod = self.data.get_custmod_from_schmod(data, None, itemtype)
-                # get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.data.add_measurement_item_at_node(custmod, path)
-                else: # if no selection append at end
-                    self.data.add_measurement_item_at_node(custmod, None)
-                self.update_store()
+        if self.can_have_sub_item(3):
+            template = self.data.get_custom_item_template(itemtype)
+            dialog = ScheduleDialog(self.parent, self.schedule, *template)
+            if oldval is not None: # if edit mode add data
+                # Obtain ScheduleDialog model from MeasurementItemCustom model
+                schmod = self.data.get_schmod_from_custmod(oldval)
+                dialog.set_model(schmod)
+                data = dialog.run()
+                if data is not None: # if edited
+                    # Obtain MeasurementItemCustom model from ScheduleDialog model
+                    custmod = self.data.get_custmod_from_schmod(data, oldval, itemtype)
+                    return custmod
+                else: # if cancel pressed
+                    return None
+            else: # if normal mode
+                data = dialog.run()
+                if data is not None:
+                    # Obtain custom item model from returned data
+                    custmod = self.data.get_custmod_from_schmod(data, None, itemtype)
+                    # get selection
+                    selection = self.tree.get_selection()
+                    if selection.count_selected_rows() != 0: # if selection exists
+                        [model, paths] = selection.get_selected_rows()
+                        path = paths[0].get_indices()
+                        self.data.add_measurement_item_at_node(custmod, path)
+                    else: # if no selection append at end
+                        self.data.add_measurement_item_at_node(custmod, None)
+                    self.update_store()
+        else:
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,"Item not added - Item can only be added under a 'Measurement Group'")
 
     def add_abstract(self,oldval=None):
         """Add an Abstract item to measurement view"""
-        if oldval is not None: # if edit mode add data
-            dialog = AbstractDialog(self.parent, self.data, oldval)
-            model = dialog.run()
-            if model is not None: # if edited
-                return model
-            else: # if cancel pressed
-                return None
-        else: # if normal mode
-            dialog = AbstractDialog(self.parent, self.data, None)
-            model = dialog.run()
-            if model is not None:
-                # Get selection
-                selection = self.tree.get_selection()
-                if selection.count_selected_rows() != 0: # if selection exists
-                    [model, paths] = selection.get_selected_rows()
-                    path = paths[0].get_indices()
-                    self.data.add_measurement_item_at_node(model, path)
-                else: # if no selection append at end
-                    self.data.add_measurement_item_at_node(model, None)
-                self.update_store()
+        if self.can_have_sub_item(3):
+            if oldval is not None: # if edit mode add data
+                dialog = AbstractDialog(self.parent, self.data, oldval)
+                model = dialog.run()
+                if model is not None: # if edited
+                    return model
+                else: # if cancel pressed
+                    return None
+            else: # if normal mode
+                dialog = AbstractDialog(self.parent, self.data, None)
+                model = dialog.run()
+                if model is not None:
+                    # Get selection
+                    selection = self.tree.get_selection()
+                    if selection.count_selected_rows() != 0: # if selection exists
+                        [model, paths] = selection.get_selected_rows()
+                        path = paths[0].get_indices()
+                        self.data.add_measurement_item_at_node(model, path)
+                    else: # if no selection append at end
+                        self.data.add_measurement_item_at_node(model, None)
+                    self.update_store()
+        else:
+            # Return status code for main application interface
+            return (misc.CMB_WARNING,"Item not added - 'Abstract of Item' can only be added under a 'Measurement Group'")
         
     def delete_selected_row(self):
         """Delete selected rows"""

@@ -162,7 +162,11 @@ class ScheduleDialog:
         """Import xlsx file into schedule"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
         spreadsheet = misc.Spreadsheet(filename, 'r')
-        items = spreadsheet.read_rows(columntypes = self.columntypes)
+        models = spreadsheet.read_rows(columntypes = self.columntypes)
+        items = []
+        for model in models:
+            item = data.schedule.ScheduleItemGeneric(*model)
+            items.append(item)
         self.schedule_view.insert_item_at_selection(items)
 
     def onClearButtonPressed(self, button, combo):

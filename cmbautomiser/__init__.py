@@ -126,7 +126,7 @@ class MainWindow:
                                             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                              Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
         # Remote files can be selected in the file selector
-        open_dialog.set_local_only(False)
+        open_dialog.set_local_only(True)
         # Dialog always on top of the textview window
         open_dialog.set_modal(True)
         # Set filters
@@ -307,9 +307,12 @@ class MainWindow:
         spreadsheet = misc.Spreadsheet(filename, 'r')
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
-        items = spreadsheet.read_rows(columntypes = columntypes)
+        models = spreadsheet.read_rows(columntypes = columntypes)
+        items = []
+        for model in models:
+            item = data.schedule.ScheduleItem(*model)
+            items.append(item)
         self.schedule_view.insert_item_at_selection(items)
-        
 
     # Measuremets signal handlers
 
@@ -319,19 +322,33 @@ class MainWindow:
 
     def onAddMeasClicked(self, button):
         """Add a Measurement object to measurement view"""
-        self.measurements_view.add_measurement()
+        code = self.measurements_view.add_measurement()
+        if code is not None:
+            self.display_status(*code)
 
     def onAddComplClicked(self, button):
         """Add a Completion object to measurement view"""
-        self.measurements_view.add_completion()
+        code = self.measurements_view.add_completion()
+        if code is not None:
+            self.display_status(*code)
 
     def onAddHeadingClicked(self, button):
         """Add a Heading object to measurement view"""
-        self.measurements_view.add_heading()
+        code = self.measurements_view.add_heading()
+        if code is not None:
+            self.display_status(*code)
+            
+    def onMeasCustomMenuClicked(self,button,module):
+        """Callback function for click event of custom measurement item"""
+        code = self.measurements_view.add_custom(None,module)
+        if code is not None:
+            self.display_status(*code)
 
     def onAddAbstractClicked(self, button):
         """Add a measurement abstract object to measurement view"""
-        self.measurements_view.add_abstract(None)
+        code = self.measurements_view.add_abstract(None)
+        if code is not None:
+            self.display_status(*code)
 
     def OnMeasDeleteClicked(self, button):
         """Delete selected item from measurement view"""
@@ -374,10 +391,6 @@ class MainWindow:
     def OnMeasPasteClicked(self, button):
         """Paste item from clipboard to measurement view"""
         self.measurements_view.paste_at_selection()
-        
-    def onMeasCustomMenuClicked(self,button,module):
-        """Callback function for click event of custom measurement item"""
-        self.measurements_view.add_custom(None,module)
 
     # Bills signal handlers
 

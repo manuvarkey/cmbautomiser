@@ -57,18 +57,35 @@ class ScheduleItemGeneric:
 class ScheduleItem(ScheduleItemGeneric):
     """Class stores a row in the schedule of rates"""
     
-    def __init__(self, itemno="", description="", unit="", rate="0", qty="0", reference="", excess_rate_percent="30"):
-        super(ScheduleItem, self).__init__([itemno, description, unit, rate, qty, reference, excess_rate_percent])
+    def __init__(self, itemno='', description='', unit='', rate='0', qty='0', reference='', excess_rate_percent='30'):
         self.itemno = itemno
         self.description = description
         self.unit = unit
-        self.rate = round(eval(rate), 2)
-        self.qty = eval(qty)
+        try:
+            self.rate = round(eval(rate), 2)
+        except:
+            log.warning('ScheduleItem - Wrong value loaded in model - rate - ' + rate)
+            rate = '0'
+            self.rate = 0
+        try:
+            self.qty = eval(qty)
+        except:
+            log.warning('ScheduleItem - Wrong value loaded in model - qty - ' + qty)
+            qty = '0'
+            self.qty = 0
         self.reference = reference
-        self.excess_rate_percent = eval(excess_rate_percent)
+        try:
+            self.excess_rate_percent = eval(excess_rate_percent)
+        except:
+            log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + excess_rate_percent)
+            excess_rate_percent = '30'
+            self.excess_rate_percent = 30
         # extended descritption of item
         self.extended_description = ''
         self.extended_description_limited = ''
+        
+        # Initialise base class
+        super(ScheduleItem, self).__init__([itemno, description, unit, rate, qty, reference, excess_rate_percent])
 
 
 class ScheduleGeneric:
