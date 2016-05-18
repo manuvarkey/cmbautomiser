@@ -319,7 +319,7 @@ class DataModel:
 
         # Write output
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.tex')
-        file_latex.write(filename)
+        latex_buffer.write(filename)
 
         # Run latex on files and dependencies
         
@@ -339,21 +339,21 @@ class DataModel:
                         return code
                         
         # Run latex on file
-        code = misc.run_latex(posix_path(folder), filename)
+        code = misc.run_latex(misc.posix_path(folder), filename)
         if code == misc.CMB_ERROR:
             return (misc.CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed')
 
         # Run on all cmbs and bills refering cmb again to rebuild indexes on recursive run
         # Run on all cmbs refered by cmb
         if recursive: # if recursive call
-            for cmb_count, cmb in enumerate(bills):
+            for cmb_count, cmb in enumerate(self.cmbs):
                 if path[0] in self.cmb_ref[cmb_count]:
                     code = self.render_cmb(folder, replacement_dict, [cmb_count],False)
                     if code[0] == misc.CMB_ERROR:
                         return code
         # Run on all bills refering cmb
         if recursive: # if recursive call
-            for bill_count,bill in enumerate(bills):
+            for bill_count,bill in enumerate(self.bills):
                 if path[0] in bill.cmb_ref:
                     code = self.render_bill(folder, replacement_dict, [bill_count], False)
                     if code[0] == misc.CMB_ERROR:
@@ -415,14 +415,14 @@ class DataModel:
             bill = self.bills[path[0]]
             
             # Fill in latex buffer
-            latex_buffer = bill.get_latex_buffer([path[0]])
-            latex_buffer_bill = bill.get_latex_buffer_bill()
+            latex_buffer = bill.get_latex_buffer([path[0]], self.schedule)
+            latex_buffer_bill = bill.get_latex_buffer_bill(self.schedule)
             # Make global variables replacements
             latex_buffer.replace_and_clean(replacement_dict)
-            latex_buffer_bill = replace_and_clean(replacement_dict)
+            latex_buffer_bill.replace_and_clean(replacement_dict)
             
             # Include linked cmbs
-            cmb_refs = bill.cmb_ref[:]
+            cmb_refs = bill.cmb_ref.copy()
             replacement_dict_cmbs = {}
             external_docs = ''
             # Add all cmbs depending on cmbs billed to include abstracted items
@@ -437,9 +437,9 @@ class DataModel:
             latex_buffer.replace(replacement_dict_cmbs)
 
             # Write output
-            filename = posix_path(folder, 'abs_' + str(path[0] + 1) + '.tex')
+            filename = misc.posix_path(folder, 'abs_' + str(path[0] + 1) + '.tex')
             latex_buffer.write(filename)
-            filename_bill = posix_path(folder, 'bill_' + str(path[0] + 1) + '.tex')
+            filename_bill = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.tex')
             latex_buffer_bill.write(filename_bill)
 
             # run latex on file and dependencies
@@ -447,7 +447,7 @@ class DataModel:
                 # Render all cmbs depending on the bill
                 for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
-                        code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
+                        code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Render prev bill
@@ -457,10 +457,10 @@ class DataModel:
                         return code
 
             # Render this bill
-            code = run_latex(posix_path(folder), filename)
+            code = misc.run_latex(misc.posix_path(folder), filename)
             if code == misc.CMB_ERROR:
                 return (misc.CMB_ERROR, 'Rendering of Bill: ' + self.bill.data.title + ' failed')
-            code_bill = run_latex(posix_path(folder), filename_bill)
+            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill)
             if code_bill == misc.CMB_ERROR:
                 return (misc.CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed')
 
@@ -468,12 +468,12 @@ class DataModel:
             if recursive:  # if recursive call
                 for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
-                        code = self.render_cmb(folder, replacement_dict, self.bills, [cmb_ref], False)
+                        code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Write spreadsheet output
-                filename_bill_ods = posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
-                bill.export_ods_bill(filename_bill_ods, replacement_dict)
+                filename_bill_ods = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
+                bill.export_ods_bill(filename_bill_ods, replacement_dict, self.schedule)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
         else:

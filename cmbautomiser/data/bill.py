@@ -231,11 +231,11 @@ class Bill:
         latex_buffer = misc.LatexFile()
         
         # Get required datas
-        itemnos = schedule.itemnos
+        itemnos = schedule.get_itemnos()
                 
         # Read preamble and abstract opening into main buffer
-        latex_buffer.add_preffix_from_file('../latex/preamble.tex')
-        latex_buffer.add_preffix_from_file('../latex/abstractopening.tex')
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'preamble.tex'))
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'abstractopening.tex'))
 
         # Setup substitution dictionary
         bill_local_vars = dict()  # bill substitution dictionary
@@ -292,7 +292,7 @@ class Bill:
 
                         # Read in latex records to buffer
                         latex_record = misc.LatexFile()
-                        latex_record.add_preffix_from_file('../latex/abstractitemelement.tex')
+                        latex_record.add_preffix_from_file(misc.abs_path('latex', 'abstractitemelement.tex'))
                         # Make item substitutions in buffer
                         latex_record.replace_and_clean(item_record_vars)
                         # Add to master buffer
@@ -320,13 +320,13 @@ class Bill:
                 item_local_vars_vanilla['$cmbrecords$'] = latex_records.latex_buffer
 
                 # Write entries
-                latex_buffer.add_suffix_from_file('../latex/abstractitem.tex') # Read item template
+                latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'abstractitem.tex')) # Read item template
                 # Make item substitutions
                 latex_buffer.replace_and_clean(item_local_vars)
                 latex_buffer.replace(item_local_vars_vanilla)
 
         # Add abstract end latex block
-        latex_buffer.add_suffix_from_file('../latex/endabstract.tex')
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endabstract.tex'))
         latex_buffer.replace_and_clean(bill_local_vars)
         
         return latex_buffer
@@ -334,13 +334,13 @@ class Bill:
     def get_latex_buffer_bill(self, schedule):
         """Return bill latex buffer"""
         # Main latex buffer
-        latex_buffer = LatexFile()
+        latex_buffer = misc.LatexFile()
         
         # Get required datas
-        itemnos = schedule.itemnos
+        itemnos = schedule.get_itemnos()
         
         # Read prefix
-        latex_buffer.add_preffix_from_file('../latex/billopening.tex')
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex','billopening.tex'))
         
         # Setup substitution dictionary
         bill_local_vars = {}
@@ -374,7 +374,7 @@ class Bill:
                 item_local_vars = {}
                 item_local_vars_vanilla = {}
 
-                if self.item_excess_qty[count] > 0:
+                if self.item_excess_qty[itemno] > 0:
                     excess_flag = '\iftrue'
                 else:
                     excess_flag = '\iffalse'
@@ -401,13 +401,13 @@ class Bill:
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
                 
                 # Write entries
-                latex_buffer.add_preffix_from_file('../latex/billitem.tex') # read item template
+                latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'billitem.tex')) # read item template
                 # Make item substitutions
                 latex_buffer.replace_and_clean(item_local_vars)
                 latex_buffer.replace(item_local_vars_vanilla)
 
         # Read suffix
-        latex_buffer.add_suffix_from_file('../latex/endbill.tex')
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endbill.tex'))
         # Make replacements
         latex_buffer.replace_and_clean(bill_local_vars)
         
@@ -472,7 +472,7 @@ class Bill:
         # Sheet 2 Deviation statement
         sheet2 = spreadsheet.create_sheet()
         sheet2.title = 'Deviation'
-        template = load_workbook(filename = abs_path('ods_templates','dev.xlsx'))
+        template = load_workbook(filename = misc.abs_path('ods_templates','dev.xlsx'))
         rowend = 12
         colend = 18
         rowend_end = 3
@@ -499,7 +499,7 @@ class Bill:
                     percent_dev = round((sum(self.item_qty[itemno]) - item.qty)/item.qty*100,2) if item.qty != 0 else 0
                     sheet2.cell(row=count+rowend+1, column=6).value = sum(self.item_qty[itemno])
                     sheet2.cell(row=count+rowend+1, column=7).value = sum(self.item_qty[itemno]) - item.qty
-                    if self.item_normal_qty[count]-item.qty > 0:
+                    if self.item_normal_qty[itemno]-item.qty > 0:
                         sheet2.cell(row=count+rowend+1, column=9).value = self.item_normal_qty[itemno] - item.qty
                     if self.item_excess_qty[itemno] > 0:
                         sheet2.cell(row=count+rowend+1, column=10).value = self.item_excess_qty[itemno]

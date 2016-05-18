@@ -22,27 +22,6 @@
 #
 #
 
-# Standard conviniance functions * DONT CHANGE *
-
-def replace_all(text, dic):
-    for i, j in dic.items():
-        j = clean_latex(j)
-        text = text.replace(i, j)
-    return text
-
-
-def replace_all_vanilla(text, dic):
-    for i, j in dic.items():
-        text = text.replace(i, j)
-    return text
-
-def clean_latex(text):
-    for splchar, replspelchar in zip(['\\', '#', '$', '%', '^', '&', '_', '{', '}', '~', '\n'],
-                                     ['\\textbackslash ', '\# ', '\$ ', '\% ', '\\textasciicircum ', '\& ', '\_ ',
-                                      '\{ ', '\} ', '\\textasciitilde ', '\\newline ']):
-        text = text.replace(splchar, replspelchar)
-    return text
-
 # Item codes for schedule dialog * DONT CHANGE *
 MEAS_NO = 1
 MEAS_L = 2
@@ -195,7 +174,7 @@ class CustomItem:
             total_str = [str(t) for t in total]
             return ['','1','1'] + total_str
                 
-        def latex_postproc_func(item_list,userdata,latex_buffer, isabstract = False):
+        def latex_postproc_func(item_list, userdata, latex_buffer, isabstract = False):
             repl_dict = dict()
             for count,data in enumerate(userdata):
                 repl_dict['$data' + str(count+1) + '$'] = data
@@ -207,7 +186,8 @@ class CustomItem:
                     repl_dict['$it_total' + str(count+1) + '$'] = str(round(float(sub_total[count+3])*float(userdata[count+6]),2))
                 except:
                     repl_dict['$it_total' + str(count+1) + '$'] = ''
-            return replace_all(latex_buffer,repl_dict)
+            latex_buffer.replace_and_clean(repl_dict)
+            return latex_buffer
 
         # Define your variables here
         self.name = 'Civil: Table of Steel Bars (Lengths)'

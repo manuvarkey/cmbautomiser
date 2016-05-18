@@ -270,7 +270,7 @@ class LatexFile:
     
     # Inbuilt methods
 
-    def clean_latex(text):
+    def clean_latex(self, text):
         """Replace special charchters with latex commands"""
         for splchar, replspelchar in zip(['\\', '#', '$', '%', '^', '&', '_', '{', '}', '~', '\n'],
                                          ['\\textbackslash ', '\# ', '\$ ', '\% ', '\\textasciicircum ', '\& ', '\_ ',
@@ -284,26 +284,29 @@ class LatexFile:
         return LatexFile(self.latex_buffer + '\n' + other.latex_buffer)
         
     # Public members
+    
+    def get_buffer(self):
+        return self.latex_buffer
             
     def add_preffix_from_file(self,filename):
         """Add a latex file as preffix"""
         latex_file = open(filename,'r')
-        self.latex_buffer = latex_file.read + self.latex_buffer + '\n'
+        self.latex_buffer = latex_file.read() + self.latex_buffer + '\n'
         latex_file.close()
         
     def add_suffix_from_file(self,filename):
         """Add a latex file as suffix"""
         latex_file = open(filename,'r')
-        self.latex_buffer = self.latex_buffer + '\n' + latex_file.read
+        self.latex_buffer = self.latex_buffer + '\n' + latex_file.read()
         latex_file.close()
         
-    def replace_and_clean(dic):
+    def replace_and_clean(self, dic):
         """Replace items as per dictionary after cleaning special charachters"""
         for i, j in dic.items():
-            j = clean_latex(j)
+            j = self.clean_latex(j)
             self.latex_buffer = self.latex_buffer.replace(i, j)
 
-    def replace(dic):
+    def replace(self, dic):
         """Replace items as per dictionary"""
         for i, j in dic.items():
             self.latex_buffer = self.latex_buffer.replace(i, j)

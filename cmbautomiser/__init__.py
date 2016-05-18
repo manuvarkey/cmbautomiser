@@ -86,9 +86,9 @@ class MainWindow:
     def onHelpClick(self, button):
         """Launch help file"""
         if platform.system() == 'Linux':
-            subprocess.call(('xdg-open', misc.abs_path('documentation/cmbautomisermanual.pdf')))
+            subprocess.call(('xdg-open', misc.abs_path('documentation', 'cmbautomisermanual.pdf')))
         elif platform.system() == 'Windows':
-            os.startfile(abs_path('documentation\\cmbautomisermanual.pdf'))
+            os.startfile(abs_path('documentation','cmbautomisermanual.pdf'))
 
     # Main Window
 
@@ -362,10 +362,10 @@ class MainWindow:
             code = self.measurements_view.render_selection(folder, self.project_settings_dict)
             self.display_status(*code)
             # remove temporary files
-            onlytempfiles = [f for f in os.listdir(posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
+            onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
-                os.remove(posix_path(folder,f))
+                os.remove(misc.posix_path(folder,f))
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
@@ -414,10 +414,10 @@ class MainWindow:
             code = self.bill_view.render_selected(folder, self.project_settings_dict)
             self.display_status(*code)
             # remove temporary files
-            onlytempfiles = [f for f in os.listdir(posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
+            onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
                                 or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
             for f in onlytempfiles:
-                os.remove(posix_path(folder,f))
+                os.remove(misc.posix_path(folder,f))
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
@@ -463,7 +463,7 @@ class MainWindow:
 
         # Setup main window
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(misc.abs_path("interface/mainwindow.glade"))
+        self.builder.add_from_file(misc.abs_path("interface", "mainwindow.glade"))
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
         # Setup infobar

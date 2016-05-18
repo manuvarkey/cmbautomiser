@@ -92,12 +92,12 @@ class Cmb:
         cmb_local_vars['$cmbtitle$'] = 'DETAILS OF MEASUREMENTS'
         cmb_local_vars['$cmbstartingpage$'] = str(1)
         
-        latex_buffer.add_preffix_from_file('../latex/preamble.tex')
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex','preamble.tex'))
         latex_buffer.replace_and_clean(cmb_local_vars)
         for count,item in enumerate(self.items):
             newpath = list(path) + [count]
             latex_buffer += item.get_latex_buffer(newpath, schedule)
-        latex_buffer.add_suffix_from_file('../latex/end.tex')
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex','end.tex'))
         return latex_buffer
         
     def get_text(self):
@@ -166,8 +166,8 @@ class Measurement:
         
     def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
-        latex_buffer.add_preffix_from_file('../latex/measgroup.tex')
-        # replace local variables
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'measgroup.tex'))
+        # Replace local variables
         measgroup_local_vars = {}
         measgroup_local_vars['$cmbmeasurementdate$'] = self.date
         latex_buffer.replace_and_clean(measgroup_local_vars)
@@ -253,7 +253,7 @@ class MeasurementItemHeading(MeasurementItem):
         
     def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
-        latex_buffer.add_preffix_from_file('..latex/measheading.tex')        
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'measheading.tex'))
         # replace local variables
         measheading_local_vars = {}
         measheading_local_vars['$cmbmeasurementheading$'] = self.remark
@@ -396,27 +396,25 @@ class MeasurementItemCustom(MeasurementItem):
             meascustom_rec_vars = {}
             meascustom_rec_vars_van = {}
             # Evaluate string to make replacement
-            cust_iter = 0
             for i,columntype in enumerate(self.columntypes): # evaluate string of data entries, suppress zero.
-                if columntype == MEAS_CUST:
+                if columntype == misc.MEAS_CUST:
                     try:
-                        value =  str(record.cust_funcs[cust_iter](record.get_model(),slno))
+                        value =  str(record.cust_funcs[i](record.get_model(),slno))
                         data_string[i] = value if value not in ['0','0.0'] else ''
                     except:
                         data_string[i] = ''
-                    cust_iter += 1
-                elif columntype == MEAS_DESC:
+                elif columntype == misc.MEAS_DESC:
                     try:
-                        data_string[i] = str(record.data_string[i-cust_iter])
+                        data_string[i] = str(record.data_string[i])
                     except:
                         data_string[i] = ''
                 else:
                     try:
-                        data_string[i] = str(record.data[i-cust_iter]) if record.data[i-cust_iter] != 0 else ''
+                        data_string[i] = str(record.data[i]) if record.data[i] != 0 else ''
                     except:
                         data_string[i] = ''
                 # Check for carry over item possibly contains code
-                if columntype == MEAS_DESC and data_string[i].find('Qty B/F') != -1:
+                if columntype == misc.MEAS_DESC and data_string[i].find('Qty B/F') != -1:
                     meascustom_rec_vars_van['$data' + str(i+1) + '$'] = data_string[i]
                 else:
                     meascustom_rec_vars['$data' + str(i+1) + '$'] = data_string[i]
@@ -432,7 +430,7 @@ class MeasurementItemCustom(MeasurementItem):
         meascustom_local_vars_vannilla = {}
         for i in range(0,self.item_width()):
             try:
-                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(schedule[itemnos[i]].extended_description)
+                meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(schedule[self.itemnos[i]].extended_description)
                 meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
                 meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
                 meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
@@ -451,13 +449,13 @@ class MeasurementItemCustom(MeasurementItem):
         else:
             meascustom_local_vars_vannilla['$cmbasbstractitem$'] = '\\iffalse'
         # fill in records - vanilla used since latex_records contains latex code
-        meascustom_local_vars_vannilla['$cmbrecords$'] = latex_records
+        meascustom_local_vars_vannilla['$cmbrecords$'] = latex_records.get_buffer()
             
         latex_buffer = misc.LatexFile(self.latex_item)
         latex_buffer.replace_and_clean(meascustom_local_vars)
         latex_buffer.replace(meascustom_local_vars_vannilla)
         
-        latex_post = self.latex_postproc_func(self.records,self.user_data,latex_buffer,isabstract)
+        latex_post = self.latex_postproc_func(self.records, self.user_data, latex_buffer, isabstract)
         return latex_post
 
     def print_item(self):
@@ -493,7 +491,12 @@ class MeasurementItemAbstract(MeasurementItem):
         if data is not None:
             self.m_items = data[0]
             self.int_m_item = MeasurementItemCustom(data[1][1],data[1][1][5])
-        MeasurementItem.__init__(self, itemnos=[], records=[], remark='', item_remarks = [])
+            MeasurementItem.__init__(self, itemnos=self.int_m_item.itemnos, 
+                records=self.int_m_item.records, remark=self.int_m_item.remark, 
+                item_remarks = self.int_m_item.item_remarks)
+        else:
+            MeasurementItem.__init__(self, itemnos=[], records=[], 
+                remark='', item_remarks = [])
 
     def get_model(self):
         model = None
@@ -559,7 +562,7 @@ class Completion:
     
     def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
-        latex_buffer.add_preffix_from_file('../latex/meascompletion.tex')
+        latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'meascompletion.tex'))
         # replace local variables
         measgroup_local_vars = {}
         measgroup_local_vars['$cmbcompletiondate$'] = self.date
@@ -573,4 +576,5 @@ class Completion:
         return None
 
     def print_item(self):
-        print("  " + "Completion recorded on " + self.date)
+        print("  " + "Completion recorded on " + self.date)\
+        

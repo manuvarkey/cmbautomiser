@@ -205,7 +205,8 @@ class CustomItem:
                     repl_dict['$it_total' + str(count+1) + '$'] = str(round(float(sub_total[count+3])*float(userdata[count+6]),2))
                 except:
                     repl_dict['$it_total' + str(count+1) + '$'] = ''
-            return replace_all(latex_buffer,repl_dict)
+            latex_buffer.replace_and_clean(repl_dict)
+            return latex_buffer
 
         # Define your variables here
         self.name = 'Civil: Table of Steel Bars'

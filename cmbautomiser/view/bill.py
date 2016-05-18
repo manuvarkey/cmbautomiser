@@ -197,7 +197,7 @@ class BillView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            code = self.render(folder, replacement_dict, path)
+            code = self.data.render_bill(folder, replacement_dict, path)
             return code
         else:
             return (misc.CMB_WARNING, 'Please select a Bill for rendering')
@@ -453,13 +453,7 @@ class BillDialog:
         self.data = None
 
     def update_store(self):
-        
-        # Update mitems
-        self.billdata.mitems = self.selected.get_paths()
-        
-        # Update locked states
-        self.locked = self.data.get_lock_states() - self.selected
-        
+         
         # Update store from lock states
         self.measurements_view.update_store(self.selected)
         for count_cmb, cmb in enumerate(self.data.cmbs):
@@ -489,6 +483,8 @@ class BillDialog:
         self.billdata.cmb_name = self.entry_bill_cmbname.get_text()
         self.billdata.bill_date = self.entry_bill_bill_date.get_text()
         self.billdata.starting_page = int(self.entry_bill_starting_page.get_text())
+        # Update mitems
+        self.billdata.mitems = self.selected.get_paths()
 
     def __init__(self, parent, data_object, bill_data, this_bill=None):
         # Setup variables
@@ -502,7 +498,7 @@ class BillDialog:
         self.bills = self.data.bills
         self.cmbs = self.data.cmbs
         self.selected = data.datamodel.LockState(self.billdata.mitems)
-        self.locked = self.data.get_lock_states()
+        self.locked = self.data.get_lock_states() - self.selected
                 
         # Setup dialog window
         self.builder = Gtk.Builder()

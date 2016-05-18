@@ -355,7 +355,7 @@ class MeasurementsView:
                 path = Gtk.TreePath.new_from_indices(old_path)
                 self.tree.set_cursor(path)
 
-    def render_selection(self, folder, replacement_dict, bills):
+    def render_selection(self, folder, replacement_dict):
         """Render selected CMB"""
         # get selection
         selection = self.tree.get_selection()
@@ -363,7 +363,7 @@ class MeasurementsView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            code = data.render_cmb(folder, replacement_dict, path)
+            code = self.data.render_cmb(folder, replacement_dict, path)
             # Return status code for main application interface
             return code
         else:
@@ -603,7 +603,7 @@ class AbstractDialog:
             self.int_m_item = None
             
         # Lock all custom items apart from the current selected int_m_item
-        self.locked = self.data.get_lock_states() - self.selected
+        self.locked = self.data.get_lock_states() - self.initial_selected
         for count_cmb, cmb in enumerate(self.cmbs):
             for count_meas, meas in enumerate(cmb):
                 if isinstance(meas, data.measurement.Measurement):
@@ -667,6 +667,7 @@ class AbstractDialog:
         self.schedule = self.data.schedule
         self.cmbs = self.data.cmbs
         self.locked = self.data.get_lock_states()
+        self.initial_selected = self.data.get_lock_states()
         # Private variables
         self.mitems = []
         self.int_m_item = None
@@ -694,6 +695,7 @@ class AbstractDialog:
                 self.int_m_item = data.measurement.MeasurementItemCustom(model[1][1][1], model[1][1][1][5])
                 self.entry_abstract_remark.set_text(self.int_m_item.get_remark())
                 self.selected = data.datamodel.LockState(self.mitems)
+                self.initial_selected = data.datamodel.LockState(self.mitems)
                 self.locked = self.data.get_lock_states() - self.selected
         
         # Update GUI

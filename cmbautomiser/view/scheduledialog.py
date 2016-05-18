@@ -95,7 +95,7 @@ class ScheduleDialog:
             combo.set_active_id(itemno)
         # Set schedule
         self.schedule_view.clear()
-        self.schedule_view.set_model(data[1])
+        self.schedule_view.set_model(copy.deepcopy(data[1]))
         self.schedule_view.update_store()
         # Set remark cells
         self.remark_cell.set_text(data[2])
