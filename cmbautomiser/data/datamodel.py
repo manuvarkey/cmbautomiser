@@ -113,9 +113,9 @@ class DataModel:
                 if isinstance(meas, measurement.Measurement):
                     for meas_item in meas.items:
                         if isinstance(meas_item, measurement.MeasurementItemAbstract):
-                            for m_item in meas_item.m_items:
-                                if m_item[0] != cmb_no:
-                                    ref |= set(m_item[0])
+                            for mitem in meas_item.mitems:
+                                if mitem[0] != cmb_no:
+                                    ref |= set([mitem[0]])
             self.cmb_ref.append(ref)
             
     def get_lock_states(self):
@@ -142,12 +142,132 @@ class DataModel:
             nullmodel = item.get_model()
             return ['MeasurementItemCustom', schmod + nullmodel[1][4:6]]
     
+    def update_static_paths(self, path, add_flag = True):
+        """Updates static paths in bills and AbstractMeasurement on change in measurements model
+        
+            Arguments:
+                path: Path to item being added/deleted
+                add_flag: True for additions, Flase for deletions
+        """
+        # Initialise replacement dictionary
+        mod_dict = dict()
+        # Paths to be deleted
+        del_path = []
+        # Saved values for reversal
+        bill_mitems_old = []
+        bill_paths_old = []
+        abs_mitems_old = []
+        abs_paths_old = []
+        # Increment path by 1 for add and decrement by 1 for remove
+        increment = 1 if add_flag else -1
+        
+        # CMB added/removed
+        if len(path) == 1:
+            for p1, cmb in enumerate(self.cmbs[path[0]:], path[0]):
+                for p2, meas in enumerate(self.cmbs[p1].items):
+                    if isinstance(self.cmbs[p1][p2], measurement.Measurement):
+                        for p3, meas_item in enumerate(self.cmbs[p1][p2].items):
+                            # Update items to be deleted
+                            if [p1] == path and not add_flag:
+                                del_path.append([p1,p2,p3])
+                            # Update items to be changed
+                            else:
+                                mod_dict[(p1,p2,p3)] = (p1+increment,p2,p3)
+                    mod_dict[(p1,p2)] = (p1+increment,p2)
+                mod_dict[tuple([p1])] = tuple([p1+increment])
+        # Measurement added/removed
+        elif len(path) == 2:
+            p1 = path[0]
+            for p2, meas in enumerate(self.cmbs[p1].items[path[1]:], path[1]):
+                if isinstance(self.cmbs[p1][p2], measurement.Measurement):
+                    for p3, meas_item in enumerate(self.cmbs[p1][p2].items):
+                        # Update items to be deleted
+                        if [p1,p2] == path and not add_flag:
+                            del_path.append([p1,p2,p3])
+                        # Update items to be changed
+                        else:
+                            mod_dict[(p1,p2,p3)] = (p1,p2+increment,p3)
+                mod_dict[(p1,p2)] = (p1,p2+increment)
+        # Measurement item added/removed
+        elif len(path) == 3:
+            p1 = path[0]
+            p2 = path[1]
+            for p3, meas_item in enumerate(self.cmbs[p1][p2].items[path[2]:], path[2]):
+                # Update items to be deleted
+                if [p1,p2,p3] == path  and not add_flag:
+                    del_path.append([p1,p2,p3])
+                # Update items to be changed
+                else:
+                    mod_dict[(p1,p2,p3)] = (p1,p2,p3+increment)
+        
+        # Make replacements in bill
+        for row, bill in enumerate(self.bills):
+            changed = False
+            mitem_copy = copy.deepcopy(bill.data.mitems)
+            # If remove flag, remove path from bill 
+            if not add_flag:
+                for mitem in mitem_copy:
+                    if mitem in del_path:
+                        bill.data.mitems.remove(mitem)
+                        changed = True
+            for index, item in enumerate(bill.data.mitems):
+                if tuple(item) in mod_dict:
+                    bill.data.mitems[index] = list(mod_dict[tuple(item)])
+                    changed = True
+
+            # If bill changed
+            if changed:
+                bill_mitems_old.append(mitem_copy)
+                bill_paths_old.append(row)
+                
+        # Make replacements in abstract measurements
+        for p1, cmb in enumerate(self.cmbs):
+            for p2, meas in enumerate(self.cmbs[p1].items):
+                if isinstance(self.cmbs[p1][p2], measurement.Measurement):
+                    for p3, meas_item in enumerate(self.cmbs[p1][p2].items):
+                        if isinstance(meas_item, measurement.MeasurementItemAbstract):
+                            changed = False
+                            mitem_copy = copy.deepcopy(meas_item.mitems)
+                            # If remove flag, remove path from bill 
+                            if not add_flag: 
+                                for mitem in mitem_copy:
+                                    if mitem in del_path:
+                                        meas_item.mitems.remove(mitem)
+                                        changed = True
+                            for index, item in enumerate(meas_item.mitems):
+                                if tuple(item) in mod_dict:
+                                    meas_item.mitems[index] = list(mod_dict[tuple(item)])
+                                    changed = True
+                            # If abstract changed
+                            if changed:
+                                abs_mitems_old.append(mitem_copy)
+                                abs_paths_old.append([p1,p2,p3])
+        return [bill_paths_old, bill_mitems_old, abs_paths_old, abs_mitems_old]
+        
+    def replace_static_paths(self, data=None):
+        """Function reverses effect of update_static_paths"""
+        if data is not None:
+            bill_paths_old = data[0]
+            bill_mitems_old = data[1]
+            abs_paths_old = data[2]
+            abs_mitems_old = data[3]
+            
+            # Make replacements in bill
+            for billno in bill_paths_old:
+                self.bills[billno].data.mitems = bill_mitems_old[billno]
+            # Make replacements in abstract
+            for no, abspath in enumerate(abs_paths_old):
+                self.cmbs[abspath[0]][abspath[1]][abspath[2]].mitems = abs_mitems_old[no]
+    
     @undoable
     def add_cmb_at_node(self, cmb_model, row):
         # Obtain CMB item
         if cmb_model[0] == 'CMB':
             cmb = measurement.Cmb(cmb_model[1])
             if row != None:
+                # Update static paths
+                self.update_static_paths([row])
+                
                 self.cmbs.insert(row,cmb)
                 row_delete = row
             else:
@@ -175,6 +295,9 @@ class DataModel:
         delete_path = None
         if path != None:
             if len(path) > 1: # If a measurement selected
+                # Update static paths
+                self.update_static_paths(path)
+                
                 self.cmbs[path[0]].insert_item(path[1],meas)
                 delete_path = [path[0],path[1]]
             else: # Append to selected Cmb
@@ -206,6 +329,9 @@ class DataModel:
             
         if path != None:
             if len(path) > 2: # if a measurement item selected
+                # Update static paths
+                self.update_static_paths(path)
+                
                 self.cmbs[path[0]][path[1]].insert_item(path[2],item)
                 delete_path = [path[0],path[1],path[2]]
             elif len(path) > 1: # if measurement group selected
@@ -269,7 +395,9 @@ class DataModel:
     @undoable
     def delete_row_meas(self,path):
         item = None
-        # get selection
+        # Update static paths
+        static_paths_old = self.update_static_paths(path, False)
+
         if len(path) == 1:
             item = self.cmbs[path[0]].get_model()
             del self.cmbs[path[0]]
@@ -289,6 +417,9 @@ class DataModel:
             self.add_measurement_at_node(item,path)
         elif len(path) == 3:
             self.add_measurement_item_at_node(item,path)
+        # Replace static paths lost on delete
+        self.replace_static_paths(static_paths_old)
+        
         self.update()
         
     def render_cmb(self, folder, replacement_dict, path, recursive = True):
@@ -510,6 +641,7 @@ class LockState:
         for index, flag_part in enumerate(flags):
             if isinstance(flag_part, list):
                 self.get_paths(paths, flag_part, level + [index])
+            # If at terminal node, append path
             elif flag_part == True:
                 paths.append(level + [index])
         return paths

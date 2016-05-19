@@ -120,7 +120,7 @@ class MeasurementsView:
             selection = self.tree.get_selection()
             if selection.count_selected_rows() != 0:  # If selection exists
                 [model, paths] = selection.get_selected_rows()
-                self.add_cmb_at_node(cmb, paths[0].get_indices()[0])
+                self.data.add_cmb_at_node(cmb, paths[0].get_indices()[0])
             else:  # If no selection append at end
                 self.data.add_cmb_at_node(cmb, None)
             self.update_store()
@@ -439,7 +439,7 @@ class MeasurementsView:
                             self.data.edit_measurement_item(path, item, newval, oldval)
                         return None
                 elif isinstance(item, data.measurement.MeasurementItemAbstract):
-                    if item.int_m_item.captions_udata:
+                    if item.int_mitem.captions_udata:
                         oldval = item.get_model()
                         olddata = oldval[1][1][1][4]
                         # Setup user data dialog
@@ -447,7 +447,7 @@ class MeasurementsView:
                         project_settings_dialog = misc.UserEntryDialog(self.parent, 
                                                     'Edit User Data',
                                                     newdata,
-                                                    item.int_m_item.captions_udata)
+                                                    item.int_mitem.captions_udata)
                         # Show user data dialog
                         code = project_settings_dialog.run()
                         # Edit data on success
@@ -565,8 +565,8 @@ class AbstractDialog:
 
     def get_model(self):
         self.update_store()
-        if self.int_m_item != None:
-            model = [self.mitems, self.int_m_item.get_model()] 
+        if self.int_mitem != None:
+            model = [self.mitems, self.int_mitem.get_model()] 
             return ['MeasurementItemAbstract', model]
         else:
             return None
@@ -579,15 +579,15 @@ class AbstractDialog:
         # Update mitems
         self.mitems = self.selected.get_paths()
 
-        # Update self.int_m_item
+        # Update self.int_mitem
         if self.mitems:
             p = self.mitems[0]
             item = self.data.cmbs[p[0]][p[1]][p[2]]
             type_ = item.itemtype
-            if self.int_m_item is None:
-                self.int_m_item = data.measurement.MeasurementItemCustom(item.get_model()[1], type_)
+            if self.int_mitem is None:
+                self.int_mitem = data.measurement.MeasurementItemCustom(item.get_model()[1], type_)
             # Populate values
-            self.int_m_item.records = []
+            self.int_mitem.records = []
             for path in self.mitems:
                 item = self.data.cmbs[path[0]][path[1]][path[2]]
                 values = item.export_abstract(item.records, item.user_data)
@@ -596,13 +596,13 @@ class AbstractDialog:
                 label = 'ref:abs:'+ str(path) + ':1'
                 values[0] = r'Qty B/F MB.No.\emph{\nameref{' + cmbbf + r'} Pg.No. \pageref{' + cmbbf \
                             + r'}}\phantomsection\label{' + label + '}'
-                self.int_m_item.append_record(data.measurement.RecordCustom(values,
-                    self.int_m_item.cust_funcs,self.int_m_item.total_func_item,
-                    self.int_m_item.columntypes))
+                self.int_mitem.append_record(data.measurement.RecordCustom(values,
+                    self.int_mitem.cust_funcs,self.int_mitem.total_func_item,
+                    self.int_mitem.columntypes))
         else:
-            self.int_m_item = None
+            self.int_mitem = None
             
-        # Lock all custom items apart from the current selected int_m_item
+        # Lock all custom items apart from the current selected int_mitem
         self.locked = self.data.get_lock_states() - self.initial_selected
         for count_cmb, cmb in enumerate(self.cmbs):
             for count_meas, meas in enumerate(cmb):
@@ -614,14 +614,14 @@ class AbstractDialog:
                             if meas_item.export_abstract == None:
                                 self.locked[path] = True
                             # If one item selected, lock all other itemtypes
-                            elif self.int_m_item is not None:
-                                type_ = self.int_m_item.itemtype                               
+                            elif self.int_mitem is not None:
+                                type_ = self.int_mitem.itemtype                               
                                 if meas_item.itemtype != type_:
                                     self.locked[path] = True
                                             
-        if self.int_m_item is not None:
+        if self.int_mitem is not None:
             # Update remarks column
-            self.int_m_item.set_remark(self.entry_abstract_remark.get_text())
+            self.int_mitem.set_remark(self.entry_abstract_remark.get_text())
         
         # Update store from lock states
         self.measurements_view.update_store(self.selected)
@@ -670,7 +670,7 @@ class AbstractDialog:
         self.initial_selected = self.data.get_lock_states()
         # Private variables
         self.mitems = []
-        self.int_m_item = None
+        self.int_mitem = None
 
         # Setup dialog window
         self.builder = Gtk.Builder()
@@ -692,8 +692,8 @@ class AbstractDialog:
         if model is not None:
             if model[0] == 'MeasurementItemAbstract':
                 self.mitems = model[1][0]
-                self.int_m_item = data.measurement.MeasurementItemCustom(model[1][1][1], model[1][1][1][5])
-                self.entry_abstract_remark.set_text(self.int_m_item.get_remark())
+                self.int_mitem = data.measurement.MeasurementItemCustom(model[1][1][1], model[1][1][1][5])
+                self.entry_abstract_remark.set_text(self.int_mitem.get_remark())
                 self.selected = data.datamodel.LockState(self.mitems)
                 self.initial_selected = data.datamodel.LockState(self.mitems)
                 self.locked = self.data.get_lock_states() - self.selected

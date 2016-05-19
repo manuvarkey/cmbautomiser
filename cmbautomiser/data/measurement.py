@@ -485,24 +485,24 @@ class MeasurementItemCustom(MeasurementItem):
 class MeasurementItemAbstract(MeasurementItem):
     """Stores an abstract of measurements"""
     def __init__(self, data = None):
-        self.int_m_item = None  # MeasurementItemCustom for storing abstract
-        self.m_items = []  # Paths to items to be abstracted
+        self.int_mitem = None  # MeasurementItemCustom for storing abstract
+        self.mitems = []  # Paths to items to be abstracted
 
         if data is not None:
-            self.m_items = data[0]
-            self.int_m_item = MeasurementItemCustom(data[1][1],data[1][1][5])
-            MeasurementItem.__init__(self, itemnos=self.int_m_item.itemnos, 
-                records=self.int_m_item.records, remark=self.int_m_item.remark, 
-                item_remarks = self.int_m_item.item_remarks)
+            self.mitems = data[0]
+            self.int_mitem = MeasurementItemCustom(data[1][1],data[1][1][5])
+            MeasurementItem.__init__(self, itemnos=self.int_mitem.itemnos, 
+                records=self.int_mitem.records, remark=self.int_mitem.remark, 
+                item_remarks = self.int_mitem.item_remarks)
         else:
             MeasurementItem.__init__(self, itemnos=[], records=[], 
                 remark='', item_remarks = [])
 
     def get_model(self):
         model = None
-        if self.int_m_item is not None:
-            model = self.int_m_item.get_model()
-        data = [self.m_items, model]
+        if self.int_mitem is not None:
+            model = self.int_mitem.get_model()
+        data = [self.mitems, model]
         return ['MeasurementItemAbstract', data]
 
     def set_model(self, model):
@@ -511,32 +511,32 @@ class MeasurementItemAbstract(MeasurementItem):
             self.__init__(model[1])
             
     def get_abstracted_items(self):
-        return self.m_items
+        return self.mitems
 
     def get_latex_buffer(self, path, schedule):
-        if self.m_items is not None:
-            return self.int_m_item.get_latex_buffer(path, schedule, True)
+        if self.mitems is not None:
+            return self.int_mitem.get_latex_buffer(path, schedule, True)
 
     def print_item(self):
         print('    Abstract Item')
-        self.int_m_item.print_item()
+        self.int_mitem.print_item()
 
     def get_total(self):
-        if self.int_m_item is not None:
-            return self.int_m_item.get_total()
+        if self.int_mitem is not None:
+            return self.int_mitem.get_total()
         else:
             return []
 
     def get_text(self):
-        if self.int_m_item is not None:
-            return 'Abs: ' + self.int_m_item.get_text()
+        if self.int_mitem is not None:
+            return 'Abs: ' + self.int_mitem.get_text()
         else:
             return 'Abs: NOT DEFINED'
 
     def get_tooltip(self):
-        if self.int_m_item is not None:
-            if self.int_m_item.get_tooltip() is not None:
-                return 'Abs: ' + self.int_m_item.get_tooltip()
+        if self.int_mitem is not None:
+            if self.int_mitem.get_tooltip() is not None:
+                return 'Abs: ' + self.int_mitem.get_tooltip()
 
 class Completion:
     """Class storing Completion date"""

@@ -255,7 +255,6 @@ class Bill:
         for itemno in itemnos:
             # If item measured, include in bill
             if itemno in self.item_qty and self.item_qty[itemno] != []:
-                print(self.item_qty[itemno])
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -282,11 +281,11 @@ class Bill:
                             item_record_vars['$cmblabel$'] = 'ref:abs:' + path_str
                             item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                         else:  # if prev abstract
-                            if self.prev_bill.data.bill_type == BILL_NORMAL:
+                            if self.prev_bill.data.bill_type == misc.BILL_NORMAL:
                                 item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, itemno])
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
-                            elif self.prev_bill.data.bill_type == BILL_CUSTOM:
+                            elif self.prev_bill.data.bill_type == misc.BILL_CUSTOM:
                                 item_record_vars['$cmbbf$'] = self.prev_bill.data.cmb_name
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iffalse'

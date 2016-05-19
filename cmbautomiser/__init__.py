@@ -524,10 +524,16 @@ def main():
     # Setup Logging to temporary file
     log_file = tempfile.NamedTemporaryFile(mode='w', prefix='cmbautomiser_', 
                                                suffix='.log', delete=False)
-    #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    #                    stream=log_file,level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        stream=log_file,level=logging.INFO)
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         stream=sys.stdout,level=logging.INFO)
+    # Logging to stdout
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
     # Log all uncaught exceptions
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):
