@@ -99,6 +99,13 @@ class Cmb:
             latex_buffer += item.get_latex_buffer(newpath, schedule)
         latex_buffer.add_suffix_from_file(misc.abs_path('latex','end.tex'))
         return latex_buffer
+    
+    def get_spreadsheet_buffer(self, schedule):
+        spreadsheet = misc.Spreadsheet()
+        spreadsheet.add_merged_cell(value='DETAILS OF MEASUREMENT', bold=True, width=6, horizontal='center')
+        for item in self.items:
+            spreadsheet.append(item.get_spreadsheet_buffer(schedule))
+        return spreadsheet
         
     def get_text(self):
         return "<b>CMB No." + misc.clean_markup(self.name) + "</b>"
@@ -176,6 +183,14 @@ class Measurement:
             newpath = list(path) + [count]
             latex_buffer += item.get_latex_buffer(newpath, schedule)
         return latex_buffer
+    
+    def get_spreadsheet_buffer(self, schedule):
+        spreadsheet = misc.Spreadsheet()
+        rows = [[None], [None, 'Date of measurement:', self.date], [None]]
+        spreadsheet.append_data(rows)
+        for item in self.items:
+            spreadsheet.append(item.get_spreadsheet_buffer(schedule))
+        return spreadsheet
         
     def clear(self):
         self.items = []
@@ -260,6 +275,13 @@ class MeasurementItemHeading(MeasurementItem):
         latex_buffer.replace_and_clean(measheading_local_vars)
         return latex_buffer
     
+    def get_spreadsheet_buffer(self, schedule):
+        spreadsheet = misc.Spreadsheet()
+        spreadsheet.append_data([[None]])
+        spreadsheet.add_merged_cell(value=self.remark, bold=True, width=6, horizontal='left')
+        spreadsheet.append_data([[None]])
+        return spreadsheet
+        
     def get_text(self):
         return "<b><i>" + misc.clean_markup(self.remark) + "</i></b>"
     

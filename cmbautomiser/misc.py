@@ -242,6 +242,15 @@ class Spreadsheet:
             self.sheet = self.spreadsheet[sheetname]
         elif sheetno is not None and sheetno < len(self.sheets()):
             self.sheet = self.spreadsheet[self.sheets()[sheetno]]
+    
+    def set_style(self, row, col, bold=False, wrap_text=True, horizontal='general'):
+        """Set style of individual cell"""
+        font = openpyxl.styles.Font(bold=bold)
+        alignment = openpyxl.styles.Alignment(wrap_text=wrap_text, horizontal=horizontal)
+        self.sheet.cell(row=row, column=col).font = font
+        self.sheet.cell(row=row, column=col).alignment = alignment
+        
+    # Data addition functions
             
     def append(self, ss_obj):
         """Append an sheet to current sheet"""
@@ -250,6 +259,7 @@ class Spreadsheet:
         for row_no, row in enumerate(sheet.rows, 1):
             for col_no, cell in enumerate(row, 1):
                 self.sheet.cell(row=row_no+rowcount, column=col_no).value = cell.value
+                self.sheet.cell(row=row_no+rowcount, column=col_no).style = cell.style
                 
     def append_data(self, data, bold=False, wrap_text=True, horizontal='general'):
         """Append data to current sheet"""
@@ -267,12 +277,16 @@ class Spreadsheet:
                 self.sheet.cell(row=row_no, column=col_no).value = value
                 self.sheet.cell(row=row_no, column=col_no).font = font
                 self.sheet.cell(row=row_no, column=col_no).alignment = alignment
-    
-    def set_style(self, row, col, bold=False, wrap_text=True, horizontal='general'):
-        """Set style of individual cell"""
-        font = openpyxl.styles.Font(bold=bold)
-        alignment = openpyxl.styles.Alignment(wrap_text=wrap_text, horizontal=horizontal)
-        self.sheet.cell(row=row, column=col).value = value
+                
+    def add_merged_cell(self, value, row=None, width=2, bold=False, wrap_text=True, horizontal='general'):
+        """Add a merged cell of prescrbed width"""
+        if row is None:
+            rowstart = self.length() + 1
+        else:
+            rowstart = row
+        self.sheet.merge_cells(start_row=rowstart,start_column=1,end_row=rowstart,end_column=width)
+        self.__setitem__([rowstart,1], value)
+        self.set_style(rowstart, 1, bold, wrap_text, horizontal)
     
     def __setitem__(self, index, value):
         """Set an individual cell"""

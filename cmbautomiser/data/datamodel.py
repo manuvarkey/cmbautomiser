@@ -490,6 +490,11 @@ class DataModel:
                     if code[0] == misc.CMB_ERROR:
                         return code
         
+        # Get spreadsheet buffer
+        spreadsheet = self.cmbs[path[0]].get_spreadsheet_buffer(schedule)
+        filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.xlsx')
+        spreadsheet.save(filename)
+        
         # Return status code for main application interface
         return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
     
