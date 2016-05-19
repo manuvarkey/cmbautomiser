@@ -161,11 +161,11 @@ class ScheduleDialog:
     def onImportScheduleClicked(self, button):
         """Import xlsx file into schedule"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = misc.Spreadsheet(filename, 'r')
+        spreadsheet = misc.Spreadsheet(filename)
         models = spreadsheet.read_rows(columntypes = self.columntypes)
         items = []
         for model in models:
-            item = data.schedule.ScheduleItemGeneric(*model)
+            item = data.schedule.ScheduleItemGeneric(model)
             items.append(item)
         self.schedule_view.insert_item_at_selection(items)
 

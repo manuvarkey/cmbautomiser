@@ -61,7 +61,7 @@ class CustomItem:
             data = []
             for x in data_str:
                 try:
-                    num = eval(x)
+                    num = int(eval(x))
                     data.append(num)
                 except:
                     data.append(0)
@@ -87,7 +87,7 @@ class CustomItem:
             # Evaluate total
             total = 0
             for x in data:
-                total += x
+                total += int(x)
             if len(data) == 0:
                 return [0]
             else:

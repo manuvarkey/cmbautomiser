@@ -202,25 +202,92 @@ class UserEntryDialog():
 class Spreadsheet:
     """Manage input and output of spreadsheets"""
     
-    def __init__(self, filename, mode='r'):
-        self.filename = filename
-        self.mode = mode
-        self.spreadsheet = None
-        self.file_ = None
-        
-        if self.mode == 'r':
+    def __init__(self, filename=None):
+        if filename is not None:
             self.spreadsheet = openpyxl.load_workbook(filename)
-        elif self.mode == 'w':
-            self.file_ = open(filename,'w')
-        elif self.mode == 'a':
-            self.file_ = open(filename,'a')
         else:
-            self.file_ = None
+            self.spreadsheet = openpyxl.Workbook()
+        self.sheet = self.spreadsheet.active
+    
+    def save(self, filename):
+        """Save worksheet to file"""
+        self.spreadsheet.save(filename)
+        
+    # Sheet management
+    
+    def new_sheet(self):
+        """Create a new sheet to spreadsheet and set as active"""
+        self.sheet = self.spreadsheet.create_sheet()  
             
-    def read_rows(self,columntypes = [], start=0, end=-1, sheet_no = 0):  
-        sheet = self.spreadsheet.active #TODO
+    def sheets(self):
+        """Returns a list of sheetnames"""
+        return self.spreadsheet.get_sheet_names()
+        
+    def length(self):
+        return len(self.sheet.rows)
+        
+    def set_title(self, title):
+        self.sheet.title = title
+        
+    def set_active_sheet(self, sheetref):
+        """Set active sheet of spreadsheet"""
+        sheetname = ''
+        sheetno = None
+        if type(sheetref) is int:
+            sheetno = sheetref
+        elif type(sheetref) is str:
+            sheetname = sheetref
+        
+        if sheetname in self.sheets():
+            self.sheet = self.spreadsheet[sheetname]
+        elif sheetno is not None and sheetno < len(self.sheets()):
+            self.sheet = self.spreadsheet[self.sheets()[sheetno]]
+            
+    def append(self, ss_obj):
+        """Append an sheet to current sheet"""
+        sheet = ss_obj.spreadsheet.active
+        rowcount = self.length()
+        for row_no, row in enumerate(sheet.rows, 1):
+            for col_no, cell in enumerate(row, 1):
+                self.sheet.cell(row=row_no+rowcount, column=col_no).value = cell.value
+                
+    def append_data(self, data, bold=False, wrap_text=True, horizontal='general'):
+        """Append data to current sheet"""
+        rowcount = self.length()
+        self.insert_data(data, rowcount+1, 1, bold, wrap_text, horizontal)
+    
+    def insert_data(self, data, start_row=1, start_col=1, bold=False, wrap_text=True, horizontal='general'):
+        """Insert data to current sheet"""
+        # Setup styles
+        font = openpyxl.styles.Font(bold=bold)
+        alignment = openpyxl.styles.Alignment(wrap_text=wrap_text, horizontal=horizontal)
+        # Apply data and styles
+        for row_no, row in enumerate(data, start_row):
+            for col_no, value in enumerate(row, start_col):
+                self.sheet.cell(row=row_no, column=col_no).value = value
+                self.sheet.cell(row=row_no, column=col_no).font = font
+                self.sheet.cell(row=row_no, column=col_no).alignment = alignment
+    
+    def set_style(self, row, col, bold=False, wrap_text=True, horizontal='general'):
+        """Set style of individual cell"""
+        font = openpyxl.styles.Font(bold=bold)
+        alignment = openpyxl.styles.Alignment(wrap_text=wrap_text, horizontal=horizontal)
+        self.sheet.cell(row=row, column=col).value = value
+    
+    def __setitem__(self, index, value):
+        """Set an individual cell"""
+        self.sheet.cell(row=index[0], column=index[1]).value = value
+        
+    def __getitem__(self, index):
+        """Set an individual cell"""
+        return self.sheet.cell(row=index[0], column=index[1]).value
+            
+    # Bulk read functions
+    
+    def read_rows(self, columntypes = [], start=0, end=-1):
+        """Read and validate selected rows from current sheet"""
         # Get count of rows
-        rowcount = len(sheet.rows)
+        rowcount = self.length()
         if end < 0 or end >= rowcount:
             count_actual = rowcount
         else:
@@ -231,7 +298,7 @@ class Spreadsheet:
             cells = []
             skip = 0  # No of columns to be skiped ex. breakup, total etc...
             for columntype, i in zip(columntypes, list(range(len(columntypes)))):
-                cell = sheet.cell(row = row + 1, column = i - skip + 1).value
+                cell = self.sheet.cell(row = row + 1, column = i - skip + 1).value
                 if columntype == MEAS_DESC:
                     if cell is None:
                         cell_formated = ""

@@ -304,7 +304,7 @@ class MainWindow:
     def onImportScheduleClicked(self, button):
         """Imports rows from spreadsheet selected by 'filechooserbutton_schedule' into schedule view"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = misc.Spreadsheet(filename, 'r')
+        spreadsheet = misc.Spreadsheet(filename)
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
         models = spreadsheet.read_rows(columntypes = columntypes)
