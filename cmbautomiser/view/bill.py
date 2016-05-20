@@ -399,7 +399,7 @@ class BillDialog:
                     billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
             # Edit current bill item
             if self.this_bill:
-                self.data.edit_bill_at_row(billdata, self.this_bill)
+                self.data.edit_bill_at_row(billdata.get_model(), self.this_bill)
             else:
                 self.billdata = billdata
             
