@@ -100,11 +100,18 @@ class Cmb:
         latex_buffer.add_suffix_from_file(misc.abs_path('latex','end.tex'))
         return latex_buffer
     
-    def get_spreadsheet_buffer(self, schedule):
+    def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
-        spreadsheet.add_merged_cell(value='DETAILS OF MEASUREMENT', bold=True, width=6, horizontal='center')
-        for item in self.items:
-            spreadsheet.append(item.get_spreadsheet_buffer(schedule))
+        # Set datas
+        spreadsheet.add_merged_cell(value='DETAILS OF MEASUREMENT FOR ' + self.name + '  (ref:' + str(path) + ')', bold=True, width=6, horizontal='center')
+        spreadsheet.append_data([[None]])
+        # Set datas of children
+        for slno, item in enumerate(self.items):
+            spreadsheet.append(item.get_spreadsheet_buffer(path + [slno], schedule))
+        # Set sheet properties
+        spreadsheet.set_title('CMB')
+        spreadsheet.set_column_widths([10, 50] + [10]*15)
+        
         return spreadsheet
         
     def get_text(self):
@@ -184,12 +191,15 @@ class Measurement:
             latex_buffer += item.get_latex_buffer(newpath, schedule)
         return latex_buffer
     
-    def get_spreadsheet_buffer(self, schedule):
+    def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
-        rows = [[None], [None, 'Date of measurement:', self.date], [None]]
-        spreadsheet.append_data(rows)
-        for item in self.items:
-            spreadsheet.append(item.get_spreadsheet_buffer(schedule))
+        # Set datas
+        rows = [[str(path), 'Date of measurement:', self.date], [None]]
+        spreadsheet.append_data(rows, bold=True, wrap_text=False)
+        # Set datas of children
+        for slno, item in enumerate(self.items):
+            spreadsheet.append(item.get_spreadsheet_buffer(path + [slno], schedule))
+            
         return spreadsheet
         
     def clear(self):
@@ -275,11 +285,9 @@ class MeasurementItemHeading(MeasurementItem):
         latex_buffer.replace_and_clean(measheading_local_vars)
         return latex_buffer
     
-    def get_spreadsheet_buffer(self, schedule):
+    def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
-        spreadsheet.append_data([[None]])
-        spreadsheet.add_merged_cell(value=self.remark, bold=True, width=6, horizontal='left')
-        spreadsheet.append_data([[None]])
+        spreadsheet.append_data([[str(path), self.remark], [None]], bold=True, wrap_text=False)
         return spreadsheet
         
     def get_text(self):
@@ -313,6 +321,35 @@ class RecordCustom:
 
     def get_model(self):
         return self.data_string
+        
+    def get_model_rendered(self, row=None):
+        item = self.get_model()
+        rendered_item = []
+        for item_elem, columntype, render_func in zip(item, self.columntypes, self.cust_funcs):
+            try:
+                if item_elem != "" or columntype == misc.MEAS_CUST:
+                    if columntype == misc.MEAS_CUST:
+                        try:
+                            # Try for numerical values
+                            value = float(render_func(item, row))
+                        except:
+                            # If evaluation fails gracefully fallback to string
+                            value = render_func(item, row)
+                        rendered_item.append(value)
+                    if columntype == misc.MEAS_DESC:
+                        rendered_item.append(item_elem)
+                    elif columntype == misc.MEAS_NO:
+                        value = int(eval(item_elem)) if item_elem not in ['0','0.0'] else 0
+                        rendered_item.append(value)
+                    elif columntype == misc.MEAS_L:
+                        value = eval(item_elem) if item_elem not in ['0','0.0'] else 0
+                        rendered_item.append(value)
+                else:
+                    rendered_item.append(None)
+            except TypeError:
+                rendered_item.append(None)
+                log.warning('RecordCustom - Wrong value loaded in item - ' + str(item_elem))
+        return rendered_item
         
     def set_model(self, items, cust_funcs, total_func, columntypes):
         self.__init__(items, cust_funcs, total_func, columntypes)
@@ -442,7 +479,12 @@ class MeasurementItemCustom(MeasurementItem):
                         data_string[i] = ''
                 # Check for carry over item possibly contains code
                 if columntype == misc.MEAS_DESC and data_string[i].find('Qty B/F') != -1:
-                    meascustom_rec_vars_van['$data' + str(i+1) + '$'] = data_string[i]
+                    saved_path = data_string[i][9:]
+                    cmbbf = 'ref:meas:'+ saved_path + ':1'
+                    label = 'ref:abs:'+ saved_path + ':1'
+                    record_code = r'Qty B/F MB.No.\emph{\nameref{' + cmbbf + r'} Pg.No. \pageref{' + cmbbf \
+                            + r'}}\phantomsection\label{' + label + '}'
+                    meascustom_rec_vars_van['$data' + str(i+1) + '$'] = record_code
                 else:
                     meascustom_rec_vars['$data' + str(i+1) + '$'] = data_string[i]
             meascustom_rec_vars['$slno$'] = str(slno+1)
@@ -484,6 +526,25 @@ class MeasurementItemCustom(MeasurementItem):
         
         latex_post = self.latex_postproc_func(self.records, self.user_data, latex_buffer, isabstract)
         return latex_post
+        
+    def get_spreadsheet_buffer(self, path, schedule):
+        spreadsheet = misc.Spreadsheet()
+        # Item no and description
+        for itemno in self.itemnos:
+            spreadsheet.append_data([[str(path), 'Item No:' + itemno]], bold=True)
+            spreadsheet.append_data([[None, schedule[itemno].extended_description]])
+        # Data rows
+        spreadsheet.append_data([[None], [None] + self.captions], bold=True)
+        for slno, record in enumerate(self.records,1):
+            values = record.get_model_rendered(slno)
+            spreadsheet.append_data([[slno] + values])
+        # User data
+        if self.captions_udata:
+            spreadsheet.append_data([[None], [None, 'User Data Captions'] + self.captions_udata], bold=True)
+            spreadsheet.append_data([[None, 'User Datas'] + self.user_data])
+        # Total values
+        spreadsheet.append_data([[None], [None, 'TOTAL'] + self.get_total(), [None]], bold=True)
+        return spreadsheet
 
     def print_item(self):
         print("    Item No." + str(self.itemnos))
@@ -543,6 +604,10 @@ class MeasurementItemAbstract(MeasurementItem):
     def get_latex_buffer(self, path, schedule):
         if self.mitems is not None:
             return self.int_mitem.get_latex_buffer(path, schedule, True)
+            
+    def get_spreadsheet_buffer(self, path, schedule):
+        if self.mitems is not None:
+            return self.int_mitem.get_spreadsheet_buffer(path, schedule)
 
     def print_item(self):
         print('    Abstract Item')
@@ -595,6 +660,11 @@ class Completion:
         measgroup_local_vars['$cmbcompletiondate$'] = self.date
         latex_buffer.replace_and_clean(measgroup_local_vars)
         return latex_buffer
+        
+    def get_spreadsheet_buffer(self, path, schedule):
+        spreadsheet = misc.Spreadsheet()
+        spreadsheet.append_data([[None], [str(path), 'DATE OF COMPLETION', self.date], [None]], bold=True, wrap_text=False)
+        return spreadsheet
 
     def get_text(self):
         return "<b>Completion recorded on " + misc.clean_markup(self.date) + "</b>"

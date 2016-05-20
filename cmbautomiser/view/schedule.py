@@ -304,7 +304,7 @@ class ScheduleViewGeneric:
                         display_item.append("")
                 except TypeError:
                     display_item.append("")
-                    log.warning('ScheduleViewGeneric - Wrong value loaded in store')
+                    log.warning('ScheduleViewGeneric - Wrong value loaded in store - '  + str(item_elem))
             self.store[row] = display_item
 
     def __init__(self, parent, tree, captions, columntypes, render_funcs):

@@ -591,11 +591,8 @@ class AbstractDialog:
             for path in self.mitems:
                 item = self.data.cmbs[path[0]][path[1]][path[2]]
                 values = item.export_abstract(item.records, item.user_data)
-                # Make dicionary magic
-                cmbbf = 'ref:meas:'+ str(path) + ':1'
-                label = 'ref:abs:'+ str(path) + ':1'
-                values[0] = r'Qty B/F MB.No.\emph{\nameref{' + cmbbf + r'} Pg.No. \pageref{' + cmbbf \
-                            + r'}}\phantomsection\label{' + label + '}'
+                # Save abstracted item path to record for reference
+                values[0] = 'Qty B/F ' + str(path)
                 self.int_mitem.append_record(data.measurement.RecordCustom(values,
                     self.int_mitem.cust_funcs,self.int_mitem.total_func_item,
                     self.int_mitem.columntypes))

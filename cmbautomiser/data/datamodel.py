@@ -491,7 +491,7 @@ class DataModel:
                         return code
         
         # Get spreadsheet buffer
-        spreadsheet = self.cmbs[path[0]].get_spreadsheet_buffer(schedule)
+        spreadsheet = self.cmbs[path[0]].get_spreadsheet_buffer([path[0]], self.schedule)
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.xlsx')
         spreadsheet.save(filename)
         
@@ -608,8 +608,8 @@ class DataModel:
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Write spreadsheet output
-                filename_bill_ods = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
-                bill.export_ods_bill(filename_bill_ods, replacement_dict, self.schedule)
+                filename_bill_spreadsheet = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
+                bill.export_spreadsheet_bill(filename_bill_spreadsheet, replacement_dict, self.schedule)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
         else:

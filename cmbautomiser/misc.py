@@ -224,10 +224,18 @@ class Spreadsheet:
         return self.spreadsheet.get_sheet_names()
         
     def length(self):
+        """Get number of rows in sheet"""
         return len(self.sheet.rows)
         
     def set_title(self, title):
+        """Set title of sheet"""
         self.sheet.title = title
+        
+    def set_column_widths(self, widths):
+        """Set column widths of sheet"""
+        for column, width in enumerate(widths, 1):
+            col_letter = openpyxl.cell.get_column_letter(column)
+            self.sheet.column_dimensions[col_letter].width = width
         
     def set_active_sheet(self, sheetref):
         """Set active sheet of spreadsheet"""
