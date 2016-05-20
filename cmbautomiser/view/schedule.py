@@ -298,7 +298,7 @@ class ScheduleViewGeneric:
                             value = str(int(eval(item_elem))) if item_elem not in ['0','0.0'] else ''
                             display_item.append(value)
                         elif columntype == misc.MEAS_L:
-                            value = str(round(eval(item_elem), 2)) if item_elem not in ['0','0.0'] else ''
+                            value = str(round(float(eval(item_elem)), 3)) if item_elem not in ['0','0.0'] else ''
                             display_item.append(value)
                     else:
                         display_item.append("")

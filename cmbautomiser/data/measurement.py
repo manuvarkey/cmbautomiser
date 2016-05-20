@@ -110,7 +110,7 @@ class Cmb:
             spreadsheet.append(item.get_spreadsheet_buffer(path + [slno], schedule))
         # Set sheet properties
         spreadsheet.set_title('CMB')
-        spreadsheet.set_column_widths([10, 50] + [10]*15)
+        spreadsheet.set_column_widths([10, 50, 15] + [10]*15)
         
         return spreadsheet
         
@@ -501,7 +501,7 @@ class MeasurementItemCustom(MeasurementItem):
             try:
                 meascustom_local_vars['$cmbitemdesc' + str(i+1) + '$'] = str(schedule[self.itemnos[i]].extended_description)
                 meascustom_local_vars['$cmbitemno' + str(i+1) + '$'] = str(self.itemnos[i])
-                meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(self.get_total()[i])
+                meascustom_local_vars['$cmbtotal' + str(i+1) + '$'] = str(round(self.get_total()[i],3))
                 meascustom_local_vars['$cmbitemremark' + str(i+1) + '$'] = str(self.item_remarks[i])
                 meascustom_local_vars['$cmbcarriedover' + str(i+1) + '$'] = 'ref:abs:'+str(path)+':'+str(i+1)
                 meascustom_local_vars['$cmblabel' + str(i+1) + '$'] = 'ref:meas:'+str(path)+':'+str(i+1)
@@ -530,9 +530,13 @@ class MeasurementItemCustom(MeasurementItem):
     def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
         # Item no and description
-        for itemno in self.itemnos:
-            spreadsheet.append_data([[str(path), 'Item No:' + itemno]], bold=True)
-            spreadsheet.append_data([[None, schedule[itemno].extended_description]])
+        for slno, itemno in enumerate(self.itemnos):
+            if itemno is not None and schedule[itemno] is not None:
+                spreadsheet.append_data([[str(path), 'Item No:' + itemno, self.item_remarks[slno]]], bold=True, wrap_text=False)
+                spreadsheet.append_data([[None, schedule[itemno].extended_description]])
+        # Remarks columns
+        if self.remark != '':
+            spreadsheet.append_data([[None, 'Remarks: ' + self.remark]], bold=True)
         # Data rows
         spreadsheet.append_data([[None], [None] + self.captions], bold=True)
         for slno, record in enumerate(self.records,1):
@@ -559,9 +563,9 @@ class MeasurementItemCustom(MeasurementItem):
             return []
 
     def get_text(self):
-        total = ['{:.1f}'.format(x) for x in self.get_total()]
-        return "Item No.<b>" + str(self.itemnos) + "    |Custom: " + self.name + "|</b>    # of records: <b>" + \
-            str(self.length()) + "</b>, Total: <b>" + str(total) + "</b>"
+        total = self.get_total()
+        return "<b>" + str(self.itemnos) + "</b>, "+ self.name + ", #<b>" + \
+            str(self.length()) + "</b>, Σ <b>" + str(total) + "</b>"
 
     def get_tooltip(self):
         if self.remark != "":

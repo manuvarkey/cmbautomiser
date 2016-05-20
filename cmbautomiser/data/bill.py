@@ -181,8 +181,8 @@ class Bill:
                             self.item_cmb_ref[itemno].append(mitem[0])
                             self.item_paths[itemno].append(mitem + [count])
                             self.item_qty[itemno].append(item_qty)
-                        else:
-                            log.warning('Bill - Item No ' + str([itemno, mitem]) + ' not updated in bill')
+                        elif itemno is not None:
+                            log.warning('Bill - Item No ' + str([itemno, mitem]) + ' not found, not updating in bill')
 
             # Evaluate remaining variables from above data
             for itemno in itemnos:
