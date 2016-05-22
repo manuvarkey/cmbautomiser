@@ -223,10 +223,11 @@ class ScheduleDialog:
             self.schedule_view.setup_column_props(*dimensions)
 
         # Setup liststore model for combobox from item schedule
+        itemnos = self.item_schedule.get_itemnos()
         self.item_schedule_store = Gtk.ListStore(str, str, str, float, str)
-        for row in range(self.item_schedule.length()):
-            item = self.item_schedule.get_item_by_index(row)
-            self.item_schedule_store.append([item.itemno, item.description, item.unit, float(item.rate), item.reference])
+        for itemno in itemnos:
+            item = self.item_schedule[itemno]
+            self.item_schedule_store.append([item.itemno, item.extended_description_limited, item.unit, float(item.rate), item.reference])
 
         # Setup remarks row
         row = Gtk.ListBoxRow()

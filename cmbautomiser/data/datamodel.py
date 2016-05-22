@@ -246,6 +246,7 @@ class DataModel:
         
     def replace_static_paths(self, data=None):
         """Function reverses effect of update_static_paths"""
+        
         if data is not None:
             bill_paths_old = data[0]
             bill_mitems_old = data[1]
@@ -253,11 +254,11 @@ class DataModel:
             abs_mitems_old = data[3]
             
             # Make replacements in bill
-            for billno in bill_paths_old:
-                self.bills[billno].data.mitems = bill_mitems_old[billno]
+            for billno, mitems in zip(bill_paths_old, bill_mitems_old):
+                self.bills[billno].data.mitems = mitems
             # Make replacements in abstract
-            for no, abspath in enumerate(abs_paths_old):
-                self.cmbs[abspath[0]][abspath[1]][abspath[2]].mitems = abs_mitems_old[no]
+            for abspath, mitems in zip(abs_paths_old, abs_mitems_old):
+                self.cmbs[abspath[0]][abspath[1]][abspath[2]].mitems = mitems
     
     @undoable
     def add_cmb_at_node(self, cmb_model, row):

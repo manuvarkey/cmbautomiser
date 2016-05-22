@@ -386,23 +386,15 @@ class BillDialog:
 
         if model is not None:
             records = model[1]
-            # Prepare duplicate model
-            billdata = copy.deepcopy(self.billdata)
             for count, item in enumerate(populated_items):
-                if billdata.bill_type == misc.BILL_NORMAL:
-                    billdata.item_excess_rates[item[0]] = float(eval(records[count][4]))
-                    billdata.item_part_percentage[item[0]] = float(eval(records[count][5]))
-                    billdata.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
+                if self.billdata.bill_type == misc.BILL_NORMAL:
+                    self.billdata.item_excess_rates[item[0]] = float(eval(records[count][4]))
+                    self.billdata.item_part_percentage[item[0]] = float(eval(records[count][5]))
+                    self.billdata.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
                 elif self.billdata.bill_type == misc.BILL_CUSTOM:
-                    billdata.item_qty[item[0]][0] = float(eval(records[count][4]))
-                    billdata.item_normal_amount[item[0]] = float(eval(records[count][5]))
-                    billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
-            # Edit current bill item
-            if self.this_bill:
-                self.data.edit_bill_at_row(billdata.get_model(), self.this_bill)
-            else:
-                self.billdata = billdata
-            
+                    self.billdata.item_qty[item[0]][0] = float(eval(records[count][4]))
+                    self.billdata.item_normal_amount[item[0]] = float(eval(records[count][5]))
+                    self.billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
 
     def onToggleCellRendererToggle(self, toggle, path_str):
         """On toggle clicked"""
@@ -415,7 +407,8 @@ class BillDialog:
                 Arguments:
                     item: Item selected
                     path: Path to item selected
-                    state: Final state of item. Toggles on None"""
+                    state: Final state of item. Toggles on None
+            """
             if not isinstance(item, data.measurement.MeasurementItemHeading) and self.locked[path] != True:
                 if state != None:
                     self.selected[path] = state
@@ -491,7 +484,7 @@ class BillDialog:
         self.parent = parent
         self.data = data_object
         self.billdata = data.bill.BillData()
-        self.billdata.set_model(bill_data)
+        self.billdata.set_model(copy.deepcopy(bill_data))
         self.this_bill = this_bill  # if in edit mode, use this to filter out this bill entries
         # Derived data
         self.schedule = self.data.schedule

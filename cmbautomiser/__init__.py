@@ -100,7 +100,27 @@ class MainWindow:
             for window in child_windows:
                 window.wait()
             Gtk.main_quit()
-                
+            
+        # Ask confirmation from user
+        if self.stack.canundo():
+            message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to exit ?'
+            title = 'Confirm Exit'
+            dialogWindow = Gtk.MessageDialog(self.window,
+                                     Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                     Gtk.MessageType.QUESTION,
+                                     Gtk.ButtonsType.YES_NO,
+                                     message)
+            dialogWindow.set_transient_for(self.window)
+            dialogWindow.set_title(title)
+            dialogWindow.set_default_response(Gtk.ResponseType.NO)
+            dialogWindow.show_all()
+            response = dialogWindow.run()
+            dialogWindow.destroy()
+            if response == Gtk.ResponseType.NO:
+                # Do not propogate signal
+                return True
+        
+        # Check for status of child windows
         if self.child_windows:
             self.window.hide()
             # Wait for all child windows to exist after returning from method

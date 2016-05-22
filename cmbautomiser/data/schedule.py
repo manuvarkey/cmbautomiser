@@ -165,14 +165,15 @@ class Schedule(ScheduleGeneric):
                 # Keep description of non quantity item
                 item.extended_description = item.description
             # If sub item of main item i.e. with quantity and starts with itemno
-            elif item.itemno.startswith(itemno):
+            elif itemno !='' and item.itemno.startswith(itemno):
                 item.extended_description = extended_description + '\n' + item.description
             # If one line item
             else:
                 item.extended_description = item.description
                 # Reset values to nil
-                extended_description = ''
-                itemno = ''
+                itemno = item.itemno
+                extended_description = item.description
+                
             if len(item.extended_description) > misc.CMB_DESCRIPTION_MAX_LENGTH:
                 item.extended_description_limited = item.extended_description[0:int(misc.CMB_DESCRIPTION_MAX_LENGTH/2)] + \
                     ' ... ' + item.extended_description[-int(misc.CMB_DESCRIPTION_MAX_LENGTH/2):]
