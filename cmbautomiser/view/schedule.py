@@ -334,6 +334,21 @@ class ScheduleViewGeneric:
         self.tree.set_model(self.store)
         self.celldict = dict()
         self.columns = []
+        
+        # Interactive search function
+        def equal_func(model, column, key, iter, cols):
+            """Equal function for interactive search"""
+            search_string = ''
+            for col in cols:
+                search_string += ' ' + model[iter][col].lower()
+            for word in key.split():
+                if word.lower() not in search_string:
+                    return True
+            return False
+            
+        # Set interactive search function
+        cols = [i for i,x in enumerate(self.columntypes) if x == misc.MEAS_DESC]
+        self.tree.set_search_equal_func(equal_func, [0,1,5])
 
         for columntype, caption, render_func, i in zip(self.columntypes, self.captions, self.render_funcs,
                                                        range(len(self.columntypes))):
@@ -407,8 +422,9 @@ class ScheduleView(ScheduleViewGeneric):
         render_funcs = [None,None,None,None,None,None,None]
         widths = [80,500,100,100,100,100,100]
         expandables = [False,True,False,False,False,False,False]
-        
+               
         # Initialise base class
         super(ScheduleView, self).__init__(parent, tree, captions, columntypes, render_funcs)
         self.setup_column_props(widths, expandables)
-        self.schedule = schedule  # Override default schedule        
+        self.schedule = schedule  # Override default schedule
+        
