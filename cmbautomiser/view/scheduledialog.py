@@ -42,37 +42,47 @@ class ScheduleDialog:
     def get_item_schedule_combobox(self):
         """Return packed combo box"""
 
-        # combo box
-        combo = Gtk.ComboBox.new_with_model(self.item_schedule_store)
+        # Combo box
+        combo = Gtk.ComboBox.new_with_model_and_entry(self.item_schedule_store)
+        combo.set_entry_text_column(0)
+        
+        # Entry completion
+        completer = Gtk.EntryCompletion()
+        completer.set_model(self.item_schedule_store)
+        completer.set_match_func(self.MatchFunc)
+        combo.get_child().set_completion(completer)
+        completer.connect("match-selected", self.onMatchSelected, combo)
 
-        # text entries to be packed
-        combo_text_agmntno = Gtk.CellRendererText()
-        combo_divider1 = Gtk.CellRendererText()
+        # Text entries to be packed
         combo_text_desc = Gtk.CellRendererText()
-        combo_divider2 = Gtk.CellRendererText()
         combo_text_unit = Gtk.CellRendererText()
+        completer_text_agno = Gtk.CellRendererText()
+        completer_text_desc = Gtk.CellRendererText()
+        completer_text_unit = Gtk.CellRendererText()
 
-        # start packing
-        combo.pack_start(combo_text_agmntno, False)
-        combo.pack_start(combo_divider1, False)
+        # Start packing
         combo.pack_start(combo_text_desc, True)
-        combo.pack_start(combo_divider2, False)
         combo.pack_start(combo_text_unit, False)
+        completer.pack_start(completer_text_agno, False)
+        completer.pack_start(completer_text_desc, True)
+        completer.pack_start(completer_text_unit, False)
 
-        # set attributes
-        combo.add_attribute(combo_text_agmntno, 'text', 0)
+        # Set attributes
         combo.add_attribute(combo_text_desc, 'text', 1)
-        combo.add_attribute(combo_text_unit, 'text', 2)
+        combo.add_attribute(combo_text_unit, 'markup', 2)
+        completer.add_attribute(completer_text_agno, 'text', 0)
+        completer.add_attribute(completer_text_desc, 'text', 1)
+        completer.add_attribute(completer_text_unit, 'text', 2)
 
         combo.props.id_column = 0
-
-        combo_divider1.props.text = '|'
-        combo_divider2.props.text = '|'
-        combo_text_desc.props.max_width_chars = misc.CMB_DESCRIPTION_WIDTH
-        combo_text_desc.props.wrap_width = misc.CMB_DESCRIPTION_WIDTH
-        combo_text_desc.props.ellipsize = 2
-        combo_text_desc.set_fixed_size(-1, 5)
-        combo_text_desc.set_fixed_height_from_font(1)
+        combo_text_desc.props.max_width_chars = 80
+        combo_text_desc.props.wrap_width = 80
+        combo_text_desc.props.wrap_mode = 2
+        
+        completer_text_desc.props.max_width_chars = 80
+        completer_text_desc.props.ellipsize = 2
+        # completer_text_desc.props.wrap_width = 80
+        # completer_text_desc.props.wrap_mode = 2
 
         return combo
     
@@ -89,7 +99,7 @@ class ScheduleDialog:
 
     def set_model(self, data):
         """Set data model"""
-        self.itemnos = data[0]
+        self.itemnos = copy.copy(data[0])
         # Set combo boxes
         for itemno, combo in zip(self.itemnos, self.item_combos):
             combo.set_active_id(itemno)
@@ -103,6 +113,17 @@ class ScheduleDialog:
             cell.set_text(text)
 
     # Callbacks for GUI elements
+    
+    def MatchFunc(self, completion, key, iter):
+        desc = self.item_schedule_store[iter][3]
+        for word in key.split():
+            if word.lower() not in desc.lower():
+                return False
+        return True
+    
+    def onMatchSelected(self, completion, model, iter, combo):
+        combo.set_active_iter(iter)
+        return True
 
     def onComboChanged(self, combo, index):
         """Select item from schedule on selection using combo box"""
@@ -172,6 +193,7 @@ class ScheduleDialog:
     def onClearButtonPressed(self, button, combo):
         """Clear combobox selecting schedule item"""
         combo.set_active(-1)
+        combo.get_child().set_text('')
         self.onComboChanged(combo, -1)
 
     def __init__(self, parent, item_schedule, itemnos, captions, columntypes, render_funcs, dimensions=None):
@@ -224,10 +246,11 @@ class ScheduleDialog:
 
         # Setup liststore model for combobox from item schedule
         itemnos = self.item_schedule.get_itemnos()
-        self.item_schedule_store = Gtk.ListStore(str, str, str, float, str)
+        self.item_schedule_store = Gtk.ListStore(str, str, str, str)
         for itemno in itemnos:
             item = self.item_schedule[itemno]
-            self.item_schedule_store.append([item.itemno, item.extended_description_limited, item.unit, float(item.rate), item.reference])
+            search_string = item.itemno + ' ' + item.extended_description + ' ' + item.unit + ' ' + item.reference
+            self.item_schedule_store.append([item.itemno, item.extended_description_limited, item.unit, search_string])
 
         # Setup remarks row
         row = Gtk.ListBoxRow()
