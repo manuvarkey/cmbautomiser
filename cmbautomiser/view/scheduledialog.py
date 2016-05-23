@@ -39,103 +39,6 @@ class ScheduleDialog:
 
     # General Methods
     
-    def select_schedule(self, selected=None):
-        '''Shows a dialog to select a schedule item 
-        
-            Arguments:
-                selected: Current selected item
-            Returns:
-                Returns selected item or 'None' if user does not select any item.
-        '''
-        title = 'Select an item to be measured'
-        dialog_window = Gtk.Dialog(title, self.window, Gtk.DialogFlags.MODAL,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OK, Gtk.ResponseType.OK))
-        dialog_window.set_transient_for(self.window)
-        dialog_window.set_default_response(Gtk.ResponseType.OK)
-        dialog_window.set_default_size(900,500)
-        dialog_window.set_resizable(True)
-
-        dialogBox = dialog_window.get_content_area()
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_border_width(6)
-        tree = Gtk.TreeView(self.item_schedule_store)
-        dialogBox.pack_end(scrolled, True, True, 0)
-        scrolled.add(tree)
-        
-        # Setup tree view
-        tree.set_grid_lines(3)
-        tree.set_enable_search(True)
-        column1 = Gtk.TreeViewColumn("Agmt.No")
-        column2 = Gtk.TreeViewColumn("Item Description")
-        column3 = Gtk.TreeViewColumn("Unit")
-        column4 = Gtk.TreeViewColumn("Reference")
-        tree.append_column(column1)
-        tree.append_column(column2)
-        tree.append_column(column3)
-        tree.append_column(column4)
-        
-        cell1 = Gtk.CellRendererText()
-        cell2 = Gtk.CellRendererText()
-        cell3 = Gtk.CellRendererText()
-        cell4 = Gtk.CellRendererText()
-        
-        column1.pack_start(cell1, False)
-        column2.pack_start(cell2, True)
-        column3.pack_start(cell3, False)
-        column4.pack_start(cell4, False)
-
-        column1.add_attribute(cell1, "text", 0)
-        column2.add_attribute(cell2, "text", 1)
-        column3.add_attribute(cell3, "text", 2)
-        column4.add_attribute(cell4, "text", 3)
-        column1.set_fixed_width(80)
-        column2.set_fixed_width(500)
-        column3.set_fixed_width(100)
-        column4.set_fixed_width(100)
-        column2.props.expand = True
-        
-        cell2.props.wrap_width = 500
-        cell2.props.wrap_mode = 2
-        
-        # Interactive search function
-        def equal_func(model, column, key, iter, cols):
-            """Equal function for interactive search"""
-            search_string = ''
-            for col in cols:
-                search_string += ' ' + model[iter][col].lower()
-            for word in key.split():
-                if word.lower() not in search_string:
-                    return True
-            return False
-        tree.set_search_equal_func(equal_func, [0,1,2,3])
-        
-        # Set old value
-        if selected != None:
-            itemnos = self.item_schedule.get_itemnos()
-            if selected in itemnos:
-                index = itemnos.index(selected)
-                path = Gtk.TreePath.new_from_indices([index])
-                tree.set_cursor(path)
-                tree.scroll_to_cell(path, None)
-        
-        # Show Dialog window
-        dialog_window.show_all()
-        response = dialog_window.run()
-        
-        # Evaluate response
-        if response == Gtk.ResponseType.OK:
-            selection = tree.get_selection()
-            if selection.count_selected_rows() != 0: # if selection exists
-                [model, paths] = selection.get_selected_rows()
-                path = paths[0].get_indices()
-                itemno = self.item_schedule_store[path][0]
-                dialog_window.destroy()
-            return [True, itemno]
-        else:
-            dialog_window.destroy()
-            return [False]
-    
     def model_width(self):
         """Width of schedule model loaded"""
         return self.schedule_view.model_width()
@@ -166,7 +69,9 @@ class ScheduleDialog:
 
     def OnItemSelectClicked(self, button, index):
         """Select item from schedule on selection using combo box"""
-        response = self.select_schedule(self.itemnos[index])
+        itemnos = self.item_schedule.get_itemnos()
+        select_schedule = SelectScheduleDialog(self.window, itemnos, self.item_schedule_store, self.itemnos[index])
+        response = select_schedule.run()
         if response[0]:
             self.itemnos[index] = response[1]
             button.set_label(str(response[1]))
@@ -353,3 +258,127 @@ class ScheduleDialog:
         else:
             self.window.destroy()
             return None
+
+    
+class SelectScheduleDialog:
+    """Shows a dialog to select a schedule item """
+        
+    def __init__(self, parent, keys, schedule_store, selected=None):
+        """Setup dialog window and connect signals
+        
+            Arguments:
+                parent: Parent window
+                keys: List of keys of items to be displayed
+                schedule_store: ListStore of items to be displayed
+                selected: Current selected item
+            Returns:
+                Returns [True, Key] or [False] if user does not select any item.
+        """
+        self.keys = keys
+        self.schedule_store = schedule_store
+        self.selected = selected
+        
+        title = 'Select an item to be measured'
+        self.dialog_window = Gtk.Dialog(title, parent, Gtk.DialogFlags.MODAL,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        self.dialog_window.set_transient_for(parent)
+        self.dialog_window.set_default_response(Gtk.ResponseType.OK)
+        self.dialog_window.set_default_size(900,500)
+        self.dialog_window.set_resizable(True)
+
+        dialogBox = self.dialog_window.get_content_area()
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_border_width(6)
+        self.tree = Gtk.TreeView(schedule_store)
+        dialogBox.pack_end(scrolled, True, True, 0)
+        scrolled.add(self.tree)
+        
+        # Setup tree view
+        self.tree.set_grid_lines(3)
+        self.tree.set_enable_search(True)
+        self.tree.set_search_equal_func(self.equal_func, [0,1,2,3])
+        self.tree.connect("key-press-event", self.onKeyPressTreeview)
+        self.tree.connect("button-press-event", self.OnClickEvent)
+        
+        column1 = Gtk.TreeViewColumn("Agmt.No")
+        column2 = Gtk.TreeViewColumn("Item Description")
+        column3 = Gtk.TreeViewColumn("Unit")
+        column4 = Gtk.TreeViewColumn("Reference")
+        self.tree.append_column(column1)
+        self.tree.append_column(column2)
+        self.tree.append_column(column3)
+        self.tree.append_column(column4)
+        
+        cell1 = Gtk.CellRendererText()
+        cell2 = Gtk.CellRendererText()
+        cell3 = Gtk.CellRendererText()
+        cell4 = Gtk.CellRendererText()
+        
+        column1.pack_start(cell1, False)
+        column2.pack_start(cell2, True)
+        column3.pack_start(cell3, False)
+        column4.pack_start(cell4, False)
+
+        column1.add_attribute(cell1, "text", 0)
+        column2.add_attribute(cell2, "text", 1)
+        column3.add_attribute(cell3, "text", 2)
+        column4.add_attribute(cell4, "text", 3)
+        column1.set_fixed_width(80)
+        column2.set_fixed_width(500)
+        column3.set_fixed_width(100)
+        column4.set_fixed_width(100)
+        column2.props.expand = True
+        
+        cell2.props.wrap_width = 500
+        cell2.props.wrap_mode = 2
+        
+        # Set old value
+        if selected != None:
+            itemnos = keys
+            if selected in self.keys:
+                index = itemnos.index(selected)
+                path = Gtk.TreePath.new_from_indices([index])
+                self.tree.set_cursor(path)
+                self.tree.scroll_to_cell(path, None)
+    
+    def run(self):
+        # Show Dialog window
+        self.dialog_window.show_all()
+        response = self.dialog_window.run()
+        
+        # Evaluate response
+        if response == Gtk.ResponseType.OK:
+            selection = self.tree.get_selection()
+            itemno = None
+            if selection.count_selected_rows() != 0: # if selection exists
+                [model, paths] = selection.get_selected_rows()
+                path = paths[0].get_indices()
+                itemno = self.schedule_store[path][0]
+                self.dialog_window.destroy()
+            return [True, itemno]
+        else:
+            self.dialog_window.destroy()
+            return [False]
+    
+    def equal_func(self, model, column, key, iter, cols):
+        """Equal function for interactive search"""
+        search_string = ''
+        for col in cols:
+            search_string += ' ' + model[iter][col].lower()
+        for word in key.split():
+            if word.lower() not in search_string:
+                return True
+        return False
+    
+    # Callbacks
+    
+    def OnClickEvent(self, button, event):
+        """Select item on double click"""
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.dialog_window.response(Gtk.ResponseType.OK)
+    
+    def onKeyPressTreeview(self, treeview, event):
+        """Handle keypress event"""
+        if event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+            self.dialog_window.response(Gtk.ResponseType.OK)
