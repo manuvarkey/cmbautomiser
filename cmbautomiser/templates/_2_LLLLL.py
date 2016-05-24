@@ -29,7 +29,7 @@ MEAS_DESC = 3
 MEAS_CUST = 4
 
 # Define your latex strings here
-latex_record = r"""        $slno$ & $data1$ & $data2$ & $data3$ & $data4$ & $data5$ & $data6$ & $data7$ \\
+latex_record = r"""        $slno$ & $data1$ & \AddBreakableChars{$data2$} & $data3$ & $data4$ & $data5$ & $data6$ & $data7$ \\
                 """
 latex_item = r"""
                 % Item LLLLL

@@ -576,7 +576,7 @@ def main():
                         stream=sys.stdout,level=logging.INFO)
     # Logging to stdout
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.WARNING)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     log.addHandler(ch)
