@@ -107,14 +107,17 @@ class DataModel:
                         if isinstance(measitem, measurement.MeasurementItemAbstract):
                             self.lock_state += LockState(measitem.get_abstracted_items())
         
-        # Update dependency tree of cmbs
+        # Update 1) dependency tree of cmbs. 2) measurement abstracts
         self.cmb_ref = []
         for cmb_no, cmb in enumerate(self.cmbs):
             ref = set()
-            for meas in cmb.items:
+            for meas_no, meas in enumerate(cmb.items):
                 if isinstance(meas, measurement.Measurement):
-                    for meas_item in meas.items:
+                    for meas_item_nos, meas_item in enumerate(meas.items):
                         if isinstance(meas_item, measurement.MeasurementItemAbstract):
+                            # Update MeasurementItemAbstract
+                            meas_item.update(self.cmbs, [cmb_no, meas_no, meas_item_nos])
+                            # Update Dependency
                             for mitem in meas_item.mitems:
                                 if mitem[0] != cmb_no:
                                     ref |= set([mitem[0]])

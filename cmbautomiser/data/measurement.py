@@ -492,7 +492,7 @@ class MeasurementItemCustom(MeasurementItem):
                         data_string[i] = ''
                 # Check for carry over item possibly contains code
                 if columntype == misc.MEAS_DESC and data_string[i].find('Qty B/F') != -1:
-                    saved_path = data_string[i][9:]
+                    saved_path = data_string[i][8:]
                     cmbbf = 'ref:meas:'+ saved_path + ':1'
                     label = 'ref:abs:'+ saved_path + ':1'
                     record_code = r'Qty B/F MB.No.\emph{\nameref{' + cmbbf + r'} Pg.No. \pageref{' + cmbbf \
@@ -592,23 +592,16 @@ class MeasurementItemAbstract(MeasurementItem):
     def __init__(self, data = None):
         self.int_mitem = None  # MeasurementItemCustom for storing abstract
         self.mitems = []  # Paths to items to be abstracted
+        MeasurementItem.__init__(self, itemnos=[], records=[], 
+                remark='', item_remarks = [])
 
         if data is not None:
             self.mitems = data[0]
-            self.int_mitem = MeasurementItemCustom(data[1][1],data[1][1][5])
-            MeasurementItem.__init__(self, itemnos=self.int_mitem.itemnos, 
-                records=self.int_mitem.records, remark=self.int_mitem.remark, 
-                item_remarks = self.int_mitem.item_remarks)
-        else:
-            MeasurementItem.__init__(self, itemnos=[], records=[], 
-                remark='', item_remarks = [])
+            self.remark = data[1]
 
     def get_model(self):
         """Get data model"""
-        model = None
-        if self.int_mitem is not None:
-            model = self.int_mitem.get_model()
-        data = [self.mitems, model]
+        data = [self.mitems, self.remark]
         return ['MeasurementItemAbstract', data]
 
     def set_model(self, model):
@@ -617,21 +610,51 @@ class MeasurementItemAbstract(MeasurementItem):
             self.clear()
             self.__init__(model[1])
             
+    def update(self, cmbs, path):
+        """Update values from static itemlist"""
+        if self.mitems:
+            p = self.mitems[0]
+            item_int = cmbs[p[0]][p[1]][p[2]]
+            type_ = item_int.itemtype
+            if self.int_mitem is None:
+                self.int_mitem = MeasurementItemCustom(item_int.get_model()[1], type_)
+            # Populate values
+            self.int_mitem.records = []
+            for path in self.mitems:
+                item = cmbs[path[0]][path[1]][path[2]]
+                values = item.export_abstract(item.records, item.user_data)
+                # Save abstracted item path to record for reference
+                values[0] = 'Qty B/F ' + str(path)
+                self.int_mitem.append_record(RecordCustom(values,
+                    self.int_mitem.cust_funcs,self.int_mitem.total_func_item,
+                    self.int_mitem.columntypes))
+            # Update base class from new values
+            MeasurementItem.__init__(self, itemnos=self.int_mitem.itemnos, 
+                records=self.int_mitem.records, remark=self.remark, 
+                item_remarks = self.int_mitem.item_remarks)
+        else:
+            self.int_mitem = None
+            
     def get_abstracted_items(self):
         """Returns a list of static paths to abstracted items"""
         return self.mitems
 
     def get_latex_buffer(self, path, schedule):
-        if self.mitems is not None:
+        if self.mitems:
             return self.int_mitem.get_latex_buffer(path, schedule, True)
+        else:
+            return misc.LatexFile()
             
     def get_spreadsheet_buffer(self, path, schedule):
-        if self.mitems is not None:
+        if self.mitems:
             return self.int_mitem.get_spreadsheet_buffer(path, schedule)
+        else:
+            return misc.Spreadsheet()
 
     def print_item(self):
         print('    Abstract Item')
-        self.int_mitem.print_item()
+        if self.int_mitem is not None:
+            self.int_mitem.print_item()
 
     def get_total(self):
         if self.int_mitem is not None:
@@ -649,6 +672,7 @@ class MeasurementItemAbstract(MeasurementItem):
         if self.int_mitem is not None:
             if self.int_mitem.get_tooltip() is not None:
                 return 'Abs: ' + self.int_mitem.get_tooltip()
+        return 'Abs: NOT DEFINED'
 
 class Completion:
     """Class storing Completion date"""

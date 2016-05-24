@@ -535,6 +535,8 @@ class AbstractDialog:
                     if state is None:
                         state = False
                     self.selected[path] = not(state)
+            # Update store to set itemtype, itemnos and lockstates
+            self.update_store()
             
         if len(path) == 1:
             # Measure all items under CMB
@@ -559,36 +561,23 @@ class AbstractDialog:
     def get_model(self):
         """Return data model"""
         self.update_store()
-        if self.int_mitem != None:
-            model = [self.mitems, self.int_mitem.get_model()] 
-            return ['MeasurementItemAbstract', model]
-        else:
-            return None
+        model = [self.mitems, self.remark]
+        return ['MeasurementItemAbstract', model]
 
     def update_store(self):
         """Update data values from selection and update lockstates"""        
         # Update mitems
         self.mitems = self.selected.get_paths()
-
-        # Update self.int_mitem
+        
+        # Update itemtype and itemnos
         if self.mitems:
-            p = self.mitems[0]
-            item = self.data.cmbs[p[0]][p[1]][p[2]]
-            type_ = item.itemtype
-            if self.int_mitem is None:
-                self.int_mitem = data.measurement.MeasurementItemCustom(item.get_model()[1], type_)
-            # Populate values
-            self.int_mitem.records = []
-            for path in self.mitems:
-                item = self.data.cmbs[path[0]][path[1]][path[2]]
-                values = item.export_abstract(item.records, item.user_data)
-                # Save abstracted item path to record for reference
-                values[0] = 'Qty B/F ' + str(path)
-                self.int_mitem.append_record(data.measurement.RecordCustom(values,
-                    self.int_mitem.cust_funcs,self.int_mitem.total_func_item,
-                    self.int_mitem.columntypes))
+            path = self.mitems[0]
+            item = self.data.cmbs[path[0]][path[1]][path[2]]
+            self.itemtype = item.itemtype
+            self.itemnos = item.itemnos
         else:
-            self.int_mitem = None
+            self.itemtype = None
+            self.itemnos = []
             
         # Lock all custom items apart from the current selected int_mitem
         self.locked = self.data.get_lock_states() - self.initial_selected
@@ -602,14 +591,12 @@ class AbstractDialog:
                             if meas_item.export_abstract == None:
                                 self.locked[path] = True
                             # If one item selected, lock all other itemtypes
-                            elif self.int_mitem is not None:
-                                type_ = self.int_mitem.itemtype                               
-                                if meas_item.itemtype != type_:
+                            elif self.itemtype is not None:                              
+                                if meas_item.itemtype != self.itemtype or meas_item.itemnos != self.itemnos:
                                     self.locked[path] = True
                                             
-        if self.int_mitem is not None:
-            # Update remarks column
-            self.int_mitem.set_remark(self.entry_abstract_remark.get_text())
+        # Update remarks column
+        self.remark = self.entry_abstract_remark.get_text()
         
         # Update store from lock states
         self.measurements_view.update_store(self.selected)
@@ -662,10 +649,12 @@ class AbstractDialog:
         self.schedule = self.data.schedule
         self.cmbs = self.data.cmbs
         self.locked = self.data.get_lock_states()
-        self.initial_selected = self.data.get_lock_states()
+        self.initial_selected = data.datamodel.LockState()
         # Private variables
         self.mitems = []
-        self.int_mitem = None
+        self.remark = ''
+        self.itemtype = None
+        self.itemnos = []
 
         # Setup dialog window
         self.builder = Gtk.Builder()
@@ -687,11 +676,11 @@ class AbstractDialog:
         if model is not None:
             if model[0] == 'MeasurementItemAbstract':
                 self.mitems = model[1][0]
-                self.int_mitem = data.measurement.MeasurementItemCustom(model[1][1][1], model[1][1][1][5])
-                self.entry_abstract_remark.set_text(self.int_mitem.get_remark())
+                self.remark = model[1][1]
+                self.entry_abstract_remark.set_text(self.remark)
                 self.selected = data.datamodel.LockState(self.mitems)
                 self.initial_selected = data.datamodel.LockState(self.mitems)
-                self.locked = self.data.get_lock_states() - self.selected
+                self.locked = self.data.get_lock_states() - self.initial_selected
         
         # Update GUI
         self.update_store()
