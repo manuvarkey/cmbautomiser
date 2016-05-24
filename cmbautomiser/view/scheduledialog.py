@@ -66,6 +66,30 @@ class ScheduleDialog:
             cell.set_text(text)
 
     # Callbacks for GUI elements
+    
+    def onDeleteWindow(self, *args):
+        """Callback called on pressing the close button of main window"""
+        
+        log.info('ScheduleDialog - onDeleteWindow called')
+        # Ask confirmation from user
+        message = 'Any changes made will be lost if you continue.\n Are you sure you want to Cancel ?'
+        title = 'Confirm Cancel'
+        dialogWindow = Gtk.MessageDialog(self.window,
+                                 Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                 Gtk.MessageType.QUESTION,
+                                 Gtk.ButtonsType.YES_NO,
+                                 message)
+        dialogWindow.set_transient_for(self.window)
+        dialogWindow.set_title(title)
+        dialogWindow.set_default_response(Gtk.ResponseType.NO)
+        dialogWindow.show_all()
+        response = dialogWindow.run()
+        dialogWindow.destroy()
+        if response == Gtk.ResponseType.NO:
+            # Do not propogate signal
+            log.info('ScheduleDialog - onDeleteWindow - Cancelled by user')
+            self.window.run()
+            return True
 
     def OnItemSelectClicked(self, button, index):
         """Select item from schedule on selection using combo box"""
