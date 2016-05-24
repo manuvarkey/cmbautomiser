@@ -33,15 +33,17 @@ log = logging.getLogger(__name__)
 
 # class storing individual items in schedule of work
 class ScheduleItemGeneric:
-    """Class stores a generic schedule item"""
+    """Class stores a row in the generic schedule"""
     
     def __init__(self, item=[]):
         self.item = item
 
     def set_model(self, item):
+        """Set data model"""
         self.item = item
 
     def get_model(self):
+        """Get data model"""
         return self.item
 
     def __setitem__(self, index, value):
@@ -95,6 +97,7 @@ class ScheduleGeneric:
         self.items = items  # main data store of rows
 
     def append_item(self, item):
+        """Append item at end of schedule"""
         self.items.append(item)
 
     def get_item_by_index(self, index):
@@ -116,16 +119,19 @@ class ScheduleGeneric:
         return self.items[index]
     
     def get_model(self):
+        """Get data model"""
         items = []
         for item in self.items:
             items.append(item.get_model())
         return items
         
     def set_model(self,items):
+        """Set data model"""
         for item in items:
             self.items.append(ScheduleItemGeneric(item))
             
     def length(self):
+        """Return number of rows"""
         return len(self.items)
 
     def clear(self):
@@ -147,7 +153,7 @@ class Schedule(ScheduleGeneric):
         self.update_values()
         
     def update_values(self):
-        # Populate ScheduleItem.extended_description (Used for final billing)
+        """Populate ScheduleItem.extended_description (Used for final billing)"""
         iter = 0
         extended_description = ''
         itemno = ''
@@ -202,6 +208,7 @@ class Schedule(ScheduleGeneric):
             return None
     
     def set_model(self,items):
+        """Set data model"""
         self.items.clear()
         for item in items:
             self.items.append(ScheduleItem(*item))

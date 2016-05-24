@@ -102,7 +102,7 @@ class MainWindow:
             Gtk.main_quit()
             
         # Ask confirmation from user
-        if self.stack.canundo():
+        if self.stack.canundo(): # TODO
             message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to exit ?'
             title = 'Confirm Exit'
             dialogWindow = Gtk.MessageDialog(self.window,

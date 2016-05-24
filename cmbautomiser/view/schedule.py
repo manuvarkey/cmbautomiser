@@ -35,16 +35,24 @@ log = logging.getLogger(__name__)
 
 
 class ScheduleViewGeneric:
-    """Implements a generic schedule view"""
+    """Implements a view for display and manipulation of ScheduleGeneric over a treeview"""
 
     # Call backs for treeview
 
     def onScheduleCellEditedText(self, widget, row, new_text, column):
-        """Treeview cell renderer for editable text field"""
+        """Treeview cell renderer for editable text field
+        
+            User Data:
+                column: column in ListStore being edited
+        """
         self.cell_renderer_text(int(row), column, new_text)
 
     def onScheduleCellEditedNum(self, widget, row, new_text, column):
-        """Treeview cell renderer for editable number field"""
+        """Treeview cell renderer for editable number field
+        
+            User Data:
+                column: column in ListStore being edited
+        """
         try:  # check whether item evaluates fine
             eval(new_text)
         except:
@@ -54,7 +62,11 @@ class ScheduleViewGeneric:
         self.cell_renderer_text(int(row), column, new_text)
 
     def onEditStarted(self, widget, editable, path, column):
-        """Fill in text from schedule when schedule view column get edited"""
+        """Fill in text from schedule when schedule view column get edited
+        
+            User Data:
+                column: column in ListStore being edited
+        """
         row = int(path)
         item = self.schedule.get_item_by_index(row).get_model()
         editable.props.text = str(item[column])
@@ -120,7 +132,11 @@ class ScheduleViewGeneric:
     # Class methods
     
     def setup_column_props(self, widths, expandables):
-        """Set column properties"""
+        """Set column properties
+            Arguments:
+                widths: List of column widths type-> [int, ...]. None values are skiped.
+                expandables: List of expand property type-> [bool, ...]. None values are skiped.
+        """
         for column, width, expandable in zip(self.columns, widths, expandables):
             if width != None:
                 column.set_min_width(width)
@@ -265,7 +281,7 @@ class ScheduleViewGeneric:
         self.update_store()
 
     def clear(self):
-        """Clear all schedule items and undo/redo stack"""
+        """Clear all schedule items"""
         self.schedule.clear()
         self.update_store()
 
@@ -319,6 +335,7 @@ class ScheduleViewGeneric:
                                       misc.MEAS_L,
                                       misc.MEAS_DESC,
                                       misc.MEAS_CUST)
+                render_funcs: Fucntions generating values of CUSTOM columns
         """
         # Setup variables
         self.parent = parent
@@ -413,9 +430,16 @@ class ScheduleViewGeneric:
 
 
 class ScheduleView(ScheduleViewGeneric):
-    """Implements a schedule view for schedule of rates"""
+    """Implements a view for display and manipulation of schedule of rates over a treeview"""
     
     def __init__(self, parent, tree, schedule):
+        """Initialises a ScheduleViewGeneric and sets up custom parameters
+        
+            Arguments:
+                parent: Master window
+                tree: TreeView for implementing ScheduleView
+                schedule: Schedule Data model for storing values
+        """
         captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %']
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]

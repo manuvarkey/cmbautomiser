@@ -72,12 +72,14 @@ class Cmb:
         return len(self.items)
         
     def get_model(self):
+        """Get data model"""
         items_model = []
         for item in self.items:
             items_model.append(item.get_model())
         return ['CMB', [self.name, items_model]]
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'CMB':
             self.__init__(model[1])
 
@@ -169,12 +171,14 @@ class Measurement:
         return len(self.items)
     
     def get_model(self):
+        """Get data model"""
         items_model = []
         for item in self.items:
             items_model.append(item.get_model())
         return ['Measurement', [self.date, items_model]]
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'Measurement':
             self.__init__(model[1])
         
@@ -269,10 +273,12 @@ class MeasurementItemHeading(MeasurementItem):
             MeasurementItem.__init__(self)
     
     def get_model(self):
+        """Get data model"""
         model = ['MeasurementItemHeading', [self.remark]]
         return model
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'MeasurementItemHeading':
             self.__init__(model[1])
         
@@ -320,9 +326,11 @@ class RecordCustom:
         self.total = self.find_total()
 
     def get_model(self):
+        """Get data model"""
         return self.data_string
         
     def get_model_rendered(self, row=None):
+        """Get data model with results of custom functions included for rendering"""
         item = self.get_model()
         rendered_item = []
         for item_elem, columntype, render_func in zip(item, self.columntypes, self.cust_funcs):
@@ -352,6 +360,7 @@ class RecordCustom:
         return rendered_item
         
     def set_model(self, items, cust_funcs, total_func, columntypes):
+        """Set data model"""
         self.__init__(items, cust_funcs, total_func, columntypes)
 
     def find_total(self):
@@ -429,12 +438,15 @@ class MeasurementItemCustom(MeasurementItem):
             MeasurementItem.__init__(self)
 
     def model_width(self):
+        """Returns number of columns being measured"""
         return len(self.columntypes)
 
     def item_width(self):
+        """Returns number of itemnos being measured"""
         return len(self.itemnos_mask)
 
     def get_model(self):
+        """Get data model"""
         item_schedule = []
         for item in self.records:
             item_schedule.append(item.get_model())
@@ -443,6 +455,7 @@ class MeasurementItemCustom(MeasurementItem):
         return ['MeasurementItemCustom', data]
 
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'MeasurementItemCustom':
             self.clear()
             self.__init__(model[1], model[1][5])
@@ -591,6 +604,7 @@ class MeasurementItemAbstract(MeasurementItem):
                 remark='', item_remarks = [])
 
     def get_model(self):
+        """Get data model"""
         model = None
         if self.int_mitem is not None:
             model = self.int_mitem.get_model()
@@ -598,11 +612,13 @@ class MeasurementItemAbstract(MeasurementItem):
         return ['MeasurementItemAbstract', data]
 
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'MeasurementItemAbstract':
             self.clear()
             self.__init__(model[1])
             
     def get_abstracted_items(self):
+        """Returns a list of static paths to abstracted items"""
         return self.mitems
 
     def get_latex_buffer(self, path, schedule):
@@ -650,9 +666,11 @@ class Completion:
         return self.date
         
     def get_model(self):
+        """Get data model"""
         return ['Completion',[self.date]]
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'Completion':
             self.__init__(model[1])
     

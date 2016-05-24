@@ -113,6 +113,7 @@ class BillView:
         self.update_store()
 
     def copy_selection(self):
+        """Copy selected bill to clipboard"""
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0:  # if selection exists
             test_string = "BillView"
@@ -127,6 +128,11 @@ class BillView:
             log.warning("BillView - copy_selection - No items selected to copy")
 
     def paste_at_selection(self):
+        """Paste copied bill at selected row
+            
+            If row is not selected, bill is appended at end.
+            If any row is selected, bill is copied into new item while preserving type
+        """
         text = self.clipboard.wait_for_text()  # get text from clipboard
         if text is not None:
             try:
@@ -180,6 +186,7 @@ class BillView:
             log.warning('BillView - paste_at_selection - No text on the clipboard')
 
     def clear(self):
+        """Clear underlying ListStore"""
         self.store.clear()
 
     def update_store(self):
@@ -191,6 +198,7 @@ class BillView:
             self.store[count][1] = bill.get_text()
 
     def render_selected(self, folder, replacement_dict):
+        """Render selected item to folder using replacement dictionary given"""
         # get selection
         selection = self.tree.get_selection()
         if selection.count_selected_rows() != 0 and folder is not None:  # if selection exists
@@ -203,6 +211,13 @@ class BillView:
             return (misc.CMB_WARNING, 'Please select a Bill for rendering')
 
     def __init__(self, parent, data_model, tree):
+        """Initialises BillView
+            
+            Arguments:
+                parent: Master window
+                data_model: Main datamodel
+                tree: A TreeView for implementing schedule
+        """
         self.parent = parent
         self.data = data_model
         self.tree = tree
@@ -480,6 +495,14 @@ class BillDialog:
         self.billdata.mitems = self.selected.get_paths()
 
     def __init__(self, parent, data_object, bill_data, this_bill=None):
+        """Initialises bill dialog
+        
+            Arguments:
+                parent: Master window
+                data_object: Main datamodel
+                bill_data: Bill model being edited
+                this_bill: Row to bill being edited in main datamodel
+        """
         # Setup variables
         self.parent = parent
         self.data = data_object
@@ -541,6 +564,12 @@ class BillDialog:
         self.update_store()
 
     def run(self):
+        """Run dialog window and return values
+        
+            Returns:
+                Bill datamodel: on Ok
+                None: on Cancel
+        """
         self.window.show_all()
         response = self.window.run()
 

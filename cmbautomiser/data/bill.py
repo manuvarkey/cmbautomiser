@@ -38,6 +38,7 @@ log = logging.getLogger(__name__)
 
 class BillData:
     """Data structure for Bill Class"""
+    
     def __init__(self, bill_type=misc.BILL_NORMAL):
         self.prev_bill = None
         self.cmb_name = ''
@@ -58,6 +59,7 @@ class BillData:
         self.bill_type = bill_type
     
     def get_model(self):
+        """Get data model"""
         model = [self.prev_bill, self.cmb_name, self.title, self.bill_date, self.starting_page,
                  self.mitems, self.item_part_percentage, self.item_excess_part_percentage ,
                  self.item_excess_rates, self.item_qty, self.item_normal_amount, self.item_excess_amount,
@@ -65,6 +67,7 @@ class BillData:
         return ['BillData', model]
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'BillData':
             self.prev_bill = model[1][0]
             self.cmb_name = model[1][1]
@@ -85,6 +88,7 @@ class BillData:
 
 class Bill:
     """Class for storing bill of work"""
+    
     def __init__(self, model=None):
         self.data = BillData()
         if model is not None:
@@ -109,7 +113,8 @@ class Bill:
             Arguments:
                 clear_all: Takes values
                              True: Clears all data
-                             False: Clears only derived data"""
+                             False: Clears only derived data
+        """
         if clear_all:
             self.data = BillData(self.data.bill_type)
         # Derived data
@@ -588,3 +593,4 @@ class Bill:
             print([itemno, qty, rate, percentages, amount])
         print(['\nTotal Amount | Since Prev ', [self.bill_total_amount, self.bill_since_prev_amount]])
         print("bill end")
+        

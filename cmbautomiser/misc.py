@@ -353,7 +353,8 @@ class Spreadsheet:
 
 
 class LatexFile:
-    """Class for forating and rendering latex code"""
+    """Class for formating and rendering of latex code"""
+    
     def __init__(self, latex_buffer = ""):
         self.latex_buffer = latex_buffer
     
@@ -375,6 +376,7 @@ class LatexFile:
     # Public members
     
     def get_buffer(self):
+        """Get underlying latex buffer"""
         return self.latex_buffer
             
     def add_preffix_from_file(self,filename):
@@ -409,11 +411,14 @@ class LatexFile:
 
 class Command(object):
     """Runs a command in a seperate thread"""
+    
     def __init__(self, cmd):
+        """Initialises class with command to be executed"""
         self.cmd = cmd
         self.process = None
 
     def run(self, timeout):
+        """Run set command with selected timeout"""
         def target():
             self.process = subprocess.Popen(self.cmd)
             log.info('Sub-process spawned - ' + str(self.process.pid))
@@ -428,6 +433,7 @@ class Command(object):
             thread.join()
             return -1
         return 0
+
 
 ## GLOBAL METHODS
 
@@ -469,8 +475,13 @@ def get_user_input_text(parent, message, title='', oldval=None):
         return text
     else:
         return None
+        
+def abs_path(*args):
+    """Returns absolute path to the relative path provided"""
+    return os.path.join(os.path.split(__file__)[0],*args)
 
 def posix_path(*args):
+    """Returns platform independent filename"""
     if platform.system() == 'Linux': 
         if len(args) > 1:
             return posixpath.join(*args)
@@ -487,7 +498,8 @@ def posix_path(*args):
         else:
             return path
             
-def run_latex(folder, filename): # runs latex two passes
+def run_latex(folder, filename): 
+    """Runs latex on file to folder in two passes"""
     if filename is not None:
         latex_exec = Command([global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
         # First Pass
@@ -501,10 +513,9 @@ def run_latex(folder, filename): # runs latex two passes
             return CMB_ERROR
     return CMB_OK
 
-def abs_path(*args):
-    return os.path.join(os.path.split(__file__)[0],*args)
-
 def clean_markup(text):
+    """Clear markup text of special characters"""
     for splchar, replspelchar in zip(['&', '<', '>', ], ['&amp;', '&lt;', '&gt;']):
         text = text.replace(splchar, replspelchar)
     return text
+    

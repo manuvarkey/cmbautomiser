@@ -515,13 +515,6 @@ class AbstractDialog:
     
     # Callbacks
 
-    def OnNumberTextChanged(self, entry):
-        try:
-            val = int(entry.get_text())
-            entry.set_text(str(val))
-        except ValueError:
-            entry.set_text('')
-
     def onToggleCellRendererToggle(self, toggle, path_str):
         """On toggle clicked"""
         path_obj = Gtk.TreePath.new_from_string(path_str)
@@ -564,6 +557,7 @@ class AbstractDialog:
     # Class methods
 
     def get_model(self):
+        """Return data model"""
         self.update_store()
         if self.int_mitem != None:
             model = [self.mitems, self.int_mitem.get_model()] 
@@ -571,11 +565,8 @@ class AbstractDialog:
         else:
             return None
 
-    def clear(self):
-        self.data = None
-
     def update_store(self):
-        
+        """Update data values from selection and update lockstates"""        
         # Update mitems
         self.mitems = self.selected.get_paths()
 
@@ -656,6 +647,13 @@ class AbstractDialog:
                 self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
 
     def __init__(self, parent, datamodel, model):
+        """Initialise AbstractDialog
+        
+            Arguments:
+                parent: Master window
+                datamodel: Main datamodel
+                model: MeasurementItemAbstract model
+        """
         # Setup variables
         self.parent = parent
         self.data = datamodel
@@ -699,6 +697,11 @@ class AbstractDialog:
         self.update_store()
 
     def run(self):
+        """Display dialog window and return values on exit
+            
+            Returns:
+                MeasurementItemAbstract model: on Ok
+                None: On Cancel"""
         self.window.show_all()
         response = self.window.run()
 

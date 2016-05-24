@@ -149,8 +149,9 @@ class ScheduleDialog:
                                 misc.MEAS_NO: Integer
                                 misc.MEAS_L: Float
                                 misc.MEAS_DESC: String
-                                misc.MEAS_CUSTOM: Value from render funstion provided
-                render_funcs: Generates values of CUSTOM columns
+                                misc.MEAS_CUSTOM: Value provided through render function
+                render_funcs: Fucntions generating values of CUSTOM columns
+                dimensions: List for two lists passing column widths and expand properties
         """
         # Setup variables
         self.parent = parent
@@ -218,7 +219,6 @@ class ScheduleDialog:
             hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
             entry = Gtk.Entry()
             button_clear = Gtk.Button(stock=Gtk.STOCK_CLEAR)
-            
             button_item = Gtk.Button.new_with_label("None")
             
             # Pack row
@@ -271,8 +271,6 @@ class SelectScheduleDialog:
                 keys: List of keys of items to be displayed
                 schedule_store: ListStore of items to be displayed
                 selected: Current selected item
-            Returns:
-                Returns [True, Key] or [False] if user does not select any item.
         """
         self.keys = keys
         self.schedule_store = schedule_store
@@ -343,6 +341,11 @@ class SelectScheduleDialog:
                 self.tree.scroll_to_cell(path, None)
     
     def run(self):
+        """Show dialog and return with itemno
+        
+            Returns:
+            Returns [True, Key] or [False] if user does not select any item.
+        """
         # Show Dialog window
         self.dialog_window.show_all()
         response = self.dialog_window.run()

@@ -59,6 +59,7 @@ class DataModel:
         self.update()
     
     def get_model(self):
+        """Return data model"""
         schedule_model = self.schedule.get_model()
         cmb_models = []
         bill_models = []
@@ -69,6 +70,7 @@ class DataModel:
         return ['DataModel', [schedule_model, cmb_models, bill_models]]
     
     def set_model(self, model):
+        """Set data model"""
         if model[0] == 'DataModel':
             self.schedule.set_model(model[1][0])
             self.cmbs.clear()
@@ -119,22 +121,23 @@ class DataModel:
             self.cmb_ref.append(ref)
             
     def get_lock_states(self):
+        """Return underlying LockState object for App"""
         self.update()
         return self.lock_state
         
     # Measurement Methods
     
     def get_custom_item_template(self, module):
-        '''Get custom item template for ScheduleDialog and others'''
+        """Get custom item template for ScheduleDialog and others"""
         item = measurement.MeasurementItemCustom(None,module)
         return [item.itemnos_mask, item.captions, item.columntypes, item.cust_funcs, item.dimensions]
         
     def get_schmod_from_custmod(self, model):
-        '''Get custom item template for ScheduleDialog and others'''
+        """Get custom item template for ScheduleDialog and others"""
         return model[1][0:4]
         
     def get_custmod_from_schmod(self, schmod, custmodel, itemtype):
-        '''Get custom item template for ScheduleDialog and others'''
+        """Get custom item template for ScheduleDialog and others"""
         if custmodel is not None:
             return ['MeasurementItemCustom', schmod + custmodel[1][4:6]]
         else:
@@ -147,7 +150,7 @@ class DataModel:
         
             Arguments:
                 path: Path to item being added/deleted
-                add_flag: True for additions, Flase for deletions
+                add_flag: True for additions, False for deletions
         """
         # Initialise replacement dictionary
         mod_dict = dict()
@@ -262,6 +265,7 @@ class DataModel:
     
     @undoable
     def add_cmb_at_node(self, cmb_model, row):
+        """Undoable function for adding a Cmb to model"""
         # Obtain CMB item
         if cmb_model[0] == 'CMB':
             cmb = measurement.Cmb(cmb_model[1])
@@ -284,6 +288,7 @@ class DataModel:
         
     @undoable
     def add_measurement_at_node(self, meas_model, path):
+        """Undoable function for adding a Measurement/Completion to model"""
         # Obtain Measurement item
         if meas_model[0] == 'Measurement':
             meas = measurement.Measurement(meas_model[1])
@@ -316,6 +321,7 @@ class DataModel:
         
     @undoable
     def add_measurement_item_at_node(self,item_model,path):
+        """Undoable function for adding a MeasurementItem to model"""
         delete_path = None
         item = None
         if item_model[0] == 'MeasurementItemHeading':
@@ -360,7 +366,7 @@ class DataModel:
             
     @undoable
     def edit_measurement_item(self, path, item, newval, oldval):
-        """Edit an item in measurements view"""
+        """Undoable function for editing a MeasurementItem in model"""
         if newval != None:
             if len(path) == 1:
                 item.set_name(newval)
@@ -395,6 +401,7 @@ class DataModel:
         
     @undoable
     def delete_row_meas(self,path):
+        """Undoable function for deleting a measurement item from model"""
         item = None
         # Update static paths
         static_paths_old = self.update_static_paths(path, False)
@@ -424,7 +431,14 @@ class DataModel:
         self.update()
         
     def render_cmb(self, folder, replacement_dict, path, recursive = True):
-        """Render CMB"""
+        """Render CMB
+            
+            Arguments:
+                folder: Output folder
+                replacement_dict: Replacement dictionary for global values
+                path: Path of CMB to be rendered
+                recursive: Flag to select rendering of dependent items
+        """
         
         # Build all data structures
         self.update()
@@ -503,6 +517,7 @@ class DataModel:
     
     @undoable
     def insert_bill_at_row(self, data_model, row):  # note needs rows to be sorted
+        """Undoable function for adding a bill to model"""
         item = bill.Bill(data_model)
         if row is not None:
             new_row = row
@@ -519,6 +534,7 @@ class DataModel:
         
     @undoable
     def edit_bill_at_row(self, data_model, row):
+        """Undoable function for editing a bill in model"""
         if row is not None:
             old_data = copy.deepcopy(self.bills[row].get_model())
             self.bills[row].set_model(data_model)
@@ -532,6 +548,7 @@ class DataModel:
     
     @undoable
     def delete_bill(self, row):
+        """Undoable function for deleting a bill from model"""
         data_model = self.bills[row].get_model()
         del self.bills[row]
         self.update()
@@ -542,7 +559,14 @@ class DataModel:
         self.update()
         
     def render_bill(self, folder, replacement_dict, path, recursive=True):
-        """Render bill to file"""
+        """Render bill to file
+            
+            Arguments:
+                folder: Output folder
+                replacement_dict: Replacement dictionary for global values
+                path: Path of Bill to be rendered
+                recursive: Flag to select rendering of dependent items
+        """
                 
         # Build all data structures
         self.update()
@@ -702,3 +726,4 @@ class LockState:
             new_lock.resize(path)
             new_lock[path] = False
         return new_lock
+        
