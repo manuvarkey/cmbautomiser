@@ -71,11 +71,15 @@ class Cmb:
     def length(self):
         return len(self.items)
         
-    def get_model(self):
-        """Get data model"""
+    def get_model(self, clean=False):
+        """Get data model
+            
+            Arguments:
+                clean: Removes static items if True
+        """
         items_model = []
         for item in self.items:
-            items_model.append(item.get_model())
+            items_model.append(item.get_model(clean))
         return ['CMB', [self.name, items_model]]
     
     def set_model(self, model):
@@ -170,11 +174,15 @@ class Measurement:
     def length(self):
         return len(self.items)
     
-    def get_model(self):
-        """Get data model"""
+    def get_model(self, clean=False):
+        """Get data model
+            
+            Arguments:
+                clean: Removes static items if True
+        """
         items_model = []
         for item in self.items:
-            items_model.append(item.get_model())
+            items_model.append(item.get_model(clean))
         return ['Measurement', [self.date, items_model]]
     
     def set_model(self, model):
@@ -272,8 +280,12 @@ class MeasurementItemHeading(MeasurementItem):
         else:
             MeasurementItem.__init__(self)
     
-    def get_model(self):
-        """Get data model"""
+    def get_model(self, clean=False):
+        """Get data model
+            
+            Arguments:
+                clean: Dummy variable
+        """
         model = ['MeasurementItemHeading', [self.remark]]
         return model
     
@@ -445,8 +457,12 @@ class MeasurementItemCustom(MeasurementItem):
         """Returns number of itemnos being measured"""
         return len(self.itemnos_mask)
 
-    def get_model(self):
-        """Get data model"""
+    def get_model(self, clean=False):
+        """Get data model
+            
+            Arguments:
+                clean: Dummy variable
+        """
         item_schedule = []
         for item in self.records:
             item_schedule.append(item.get_model())
@@ -599,9 +615,16 @@ class MeasurementItemAbstract(MeasurementItem):
             self.mitems = data[0]
             self.remark = data[1]
 
-    def get_model(self):
-        """Get data model"""
-        data = [self.mitems, self.remark]
+    def get_model(self, clean=False):
+        """Get data model
+            
+            Arguments:
+                clean: Removes static items if True
+        """
+        if clean:
+            data = [[], self.remark]
+        else:
+            data = [self.mitems, self.remark]
         return ['MeasurementItemAbstract', data]
 
     def set_model(self, model):

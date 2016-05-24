@@ -259,11 +259,11 @@ class MeasurementsView:
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
             if len(path) == 1:
-                item = self.cmbs[path[0]].get_model()
+                item = self.cmbs[path[0]].get_model(clean=True)
             elif len(path) == 2:
-                item = self.cmbs[path[0]][path[1]].get_model()
+                item = self.cmbs[path[0]][path[1]].get_model(clean=True)
             elif len(path) == 3:
-                item = self.cmbs[path[0]][path[1]][path[2]].get_model()
+                item = self.cmbs[path[0]][path[1]][path[2]].get_model(clean=True)
             text = codecs.encode(pickle.dumps([test_string, item]), "base64").decode() # dump item as text
             self.clipboard.set_text(text,-1) # push to clipboard
         else: # if no selection
