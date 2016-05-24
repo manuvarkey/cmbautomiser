@@ -37,6 +37,7 @@ log = logging.getLogger(__name__)
 class DataModel:
     """Undoable class for storing agregated data model for CMBAutomiser App"""
     def __init__(self, data=None):
+        log.info('DataModel - Initialise')
         # Base data
         self.schedule = schedule.Schedule()
         self.cmbs = []
@@ -88,6 +89,8 @@ class DataModel:
     
     def update(self):
         """Update derived data values"""
+        
+        log.info('DataModel - update called')
 
         # Calculate extended descriptions
         self.schedule.update_values()
@@ -155,6 +158,7 @@ class DataModel:
                 path: Path to item being added/deleted
                 add_flag: True for additions, False for deletions
         """
+        log.info('DataModel - update_static_paths - ' + str([path, add_flag]))
         # Initialise replacement dictionary
         mod_dict = dict()
         # Paths to be deleted
@@ -252,7 +256,8 @@ class DataModel:
         
     def replace_static_paths(self, data=None):
         """Function reverses effect of update_static_paths"""
-        
+        log.info('DataModel - replace_static_paths')
+        log.debug('DataModel - replace_static_paths - \n' + str(data))
         if data is not None:
             bill_paths_old = data[0]
             bill_mitems_old = data[1]
@@ -269,6 +274,7 @@ class DataModel:
     @undoable
     def add_cmb_at_node(self, cmb_model, row):
         """Undoable function for adding a Cmb to model"""
+        log.info('DataModel - add_cmb_at_node - ' + str(row))
         # Obtain CMB item
         if cmb_model[0] == 'CMB':
             cmb = measurement.Cmb(cmb_model[1])
@@ -292,6 +298,7 @@ class DataModel:
     @undoable
     def add_measurement_at_node(self, meas_model, path):
         """Undoable function for adding a Measurement/Completion to model"""
+        log.info('DataModel - add_measurement_at_node - ' + str(path))
         # Obtain Measurement item
         if meas_model[0] == 'Measurement':
             meas = measurement.Measurement(meas_model[1])
@@ -323,8 +330,9 @@ class DataModel:
         self.delete_row_meas(delete_path)
         
     @undoable
-    def add_measurement_item_at_node(self,item_model,path):
+    def add_measurement_item_at_node(self,item_model,path):        
         """Undoable function for adding a MeasurementItem to model"""
+        log.info('DataModel - add_measurement_item_at_node - ' + str(path))
         delete_path = None
         item = None
         if item_model[0] == 'MeasurementItemHeading':
@@ -370,6 +378,7 @@ class DataModel:
     @undoable
     def edit_measurement_item(self, path, item, newval, oldval):
         """Undoable function for editing a MeasurementItem in model"""
+        log.info('DataModel - edit_measurement_item - ' + str(path))
         if newval != None:
             if len(path) == 1:
                 item.set_name(newval)
@@ -403,8 +412,9 @@ class DataModel:
             self.update()
         
     @undoable
-    def delete_row_meas(self,path):
+    def delete_row_meas(self, path):
         """Undoable function for deleting a measurement item from model"""
+        log.info('DataModel - delete_row_meas - ' + str(path))
         item = None
         # Update static paths
         static_paths_old = self.update_static_paths(path, False)
@@ -442,7 +452,7 @@ class DataModel:
                 path: Path of CMB to be rendered
                 recursive: Flag to select rendering of dependent items
         """
-        
+        log.info('DataModel - render_cmb - ' + str([path, recursive]))
         # Build all data structures
         self.update()
         
@@ -521,6 +531,7 @@ class DataModel:
     @undoable
     def insert_bill_at_row(self, data_model, row):  # note needs rows to be sorted
         """Undoable function for adding a bill to model"""
+        log.info('DataModel - insert_bill_at_row - ' + str(row))
         item = bill.Bill(data_model)
         if row is not None:
             new_row = row
@@ -538,6 +549,7 @@ class DataModel:
     @undoable
     def edit_bill_at_row(self, data_model, row):
         """Undoable function for editing a bill in model"""
+        log.info('DataModel - edit_bill_at_row - ' + str(row))
         if row is not None:
             old_data = copy.deepcopy(self.bills[row].get_model())
             self.bills[row].set_model(data_model)
@@ -552,6 +564,7 @@ class DataModel:
     @undoable
     def delete_bill(self, row):
         """Undoable function for deleting a bill from model"""
+        log.info('DataModel - delete_bill - ' + str(row))
         data_model = self.bills[row].get_model()
         del self.bills[row]
         self.update()
@@ -570,6 +583,7 @@ class DataModel:
                 path: Path of Bill to be rendered
                 recursive: Flag to select rendering of dependent items
         """
+        log.info('DataModel - render_bill - ' + str([path, recursive]))
                 
         # Build all data structures
         self.update()

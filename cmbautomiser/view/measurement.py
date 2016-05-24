@@ -307,6 +307,8 @@ class MeasurementsView:
             Arguments:
                 lock_state: (Optional) Display custom lock state
         """
+        log.info('MeasurementsView - update_store')
+        
         if lock_state is None:
             lock_state = self.data.get_lock_states()
                                 
@@ -466,6 +468,8 @@ class MeasurementsView:
                 data: Main data model
                 tree: Treeview for implementing MeasurementsView
         """
+        log.info('MeasurementsView - initialise')
+        
         self.parent = parent        
         self.tree = tree
         self.data = data
@@ -565,7 +569,9 @@ class AbstractDialog:
         return ['MeasurementItemAbstract', model]
 
     def update_store(self):
-        """Update data values from selection and update lockstates"""        
+        """Update data values from selection and update lockstates"""  
+        log.info('AbstractDialog - update_store')
+              
         # Update mitems
         self.mitems = self.selected.get_paths()
         
@@ -641,6 +647,8 @@ class AbstractDialog:
                 datamodel: Main datamodel
                 model: MeasurementItemAbstract model
         """
+        log.info('AbstractDialog - initialise')
+        
         # Setup variables
         self.parent = parent
         self.data = datamodel
@@ -697,8 +705,10 @@ class AbstractDialog:
         if response == 1:
             data = self.get_model()
             self.window.destroy()
+            log.info('AbstractDialog - run - Response Ok')
             return data
         else:
             self.window.destroy()
+            log.info('AbstractDialog - run - Response Cancel')
             return None
 

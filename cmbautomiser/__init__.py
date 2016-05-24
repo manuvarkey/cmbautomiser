@@ -64,6 +64,7 @@ class MainWindow:
     
     def update(self):
         """Refreshes all displays"""
+        log.info('MainWindow update called')
         self.data.update()
         self.schedule_view.update_store()
         self.measurements_view.update_store()
@@ -78,13 +79,15 @@ class MainWindow:
 
     def onAboutClick(self, button):
         """Show about dialog"""
+        log.info('onAboutClick - Show About window')
         self.about_dialog.show()
         response = self.about_dialog.run()
         if response == Gtk.ResponseType.CANCEL:
-            self.about_dialog.hide()
+            self.about_dialog.hide()        
 
     def onHelpClick(self, button):
         """Launch help file"""
+        log.info('onHelpClick - Launch Help file')
         if platform.system() == 'Linux':
             subprocess.call(('xdg-open', misc.abs_path('documentation', 'cmbautomisermanual.pdf')))
         elif platform.system() == 'Windows':
@@ -95,14 +98,18 @@ class MainWindow:
     def onDeleteWindow(self, *args):
         """Callback called on pressing the close button of main window"""
         
+        log.info('onDeleteWindow called')
+        
         def wait_for_exit(child_windows):
             """Wait for child windows to exit before calling Gtk.main_quit()"""
-            for window in child_windows:
+            for slno, window in enumerate(child_windows):
+                log.info('onDeleteWindow - wait_for_exit - Waiting for - ' + str(slno))
                 window.wait()
+            log.info('onDeleteWindow - wait_for_exit - All windows closed. Exiting')
             Gtk.main_quit()
             
         # Ask confirmation from user
-        if self.stack.canundo(): # TODO
+        if self.stack.haschanged():
             message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to exit ?'
             title = 'Confirm Exit'
             dialogWindow = Gtk.MessageDialog(self.window,
@@ -118,6 +125,7 @@ class MainWindow:
             dialogWindow.destroy()
             if response == Gtk.ResponseType.NO:
                 # Do not propogate signal
+                log.info('onDeleteWindow - Cancelled by user')
                 return True
         
         # Check for status of child windows
@@ -126,14 +134,17 @@ class MainWindow:
             # Wait for all child windows to exist after returning from method
             GLib.timeout_add(50, wait_for_exit, self.child_windows)
             # Propogate delete event to destroy window
+            log.info('onDeleteWindow - Waiting for child to exit')
             return False
         else:
+            log.info('onDeleteWindow - No child windows. Exiting')
             Gtk.main_quit()
 
     def onNewProjectClicked(self, button):
         """Create a new window"""
         proc = subprocess.Popen([__file__], stdin=None, stdout=None, stderr=None)
         self.child_windows.append(proc)
+        log.info('onNewProjectClicked - New window raised')
 
     def onOpenProjectClicked(self, button):
         """Open project selected by  the user"""
@@ -162,7 +173,7 @@ class MainWindow:
             self.filename = open_dialog.get_filename()
             fileobj = open(self.filename, 'r')
             if fileobj == None:
-                log.error("Error opening file - " + self.filename)
+                log.error("onOpenProjectClicked - Error opening file - " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
             else:
                 try:
@@ -171,10 +182,9 @@ class MainWindow:
                     if data[0] == misc.PROJECT_FILE_VER:
                         self.data.set_model(data[1])
                         self.project_settings_dict = data[2]
-                        # Set project as active
-                        self.PROJECT_ACTIVE = 1
 
                         self.display_status(misc.CMB_INFO, "Project successfully opened")
+                        log.info('onOpenProjectClicked - Project successfully opened - ' +self.filename)
                         # Setup paths for folder chooser objects
                         self.builder.get_object("filechooserbutton_meas").set_current_folder(misc.posix_path(
                             os.path.split(self.filename)[0]))
@@ -184,10 +194,15 @@ class MainWindow:
                         self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
                         # Clear undo/redo stack
                         self.stack.clear()
+                        # Set flags
+                        self.project_active = True
+                        # Save point in stack for checking change state
+                        self.stack.savepoint()
                         # Refresh all displays
                         self.update()
                     else:
                         self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
+                        log.warning('onOpenProjectClicked - Project could not be opened: Wrong file type selected - ' +self.filename)
                 except:
                     log.exception("Error parsing project file - " + self.filename)
                     self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
@@ -199,7 +214,7 @@ class MainWindow:
 
     def onSaveProjectClicked(self, button):
         """Save project to file already opened"""
-        if self.PROJECT_ACTIVE == 0:
+        if self.project_active is False:
             self.onSaveAsProjectClicked(button)
         else:
             # Parse data into object
@@ -210,11 +225,12 @@ class MainWindow:
             # Try to open file
             fileobj = open(self.filename, 'w')
             if fileobj == None:
-                log.error("Error opening file " + self.filename)
+                log.error("onSaveProjectClicked - Error opening file - " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
             json.dump(data, fileobj)
             fileobj.close()
             self.display_status(misc.CMB_INFO, "Project successfully saved")
+            log.info('onSaveProjectClicked -  Project successfully saved')
             self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
 
     def onSaveAsProjectClicked(self, button):
@@ -244,7 +260,7 @@ class MainWindow:
         if response_id == Gtk.ResponseType.ACCEPT:
             # Get filename and set project as active
             self.filename = open_dialog.get_filename()
-            self.PROJECT_ACTIVE = 1
+            self.project_active = True
             # Call save project
             self.onSaveProjectClicked(button)
             # Setup paths for folder chooser objects
@@ -252,6 +268,10 @@ class MainWindow:
                 os.path.split(self.filename)[0]))
             self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                 os.path.split(self.filename)[0]))
+            # Setup window name
+            self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
+            
+            log.info('onSaveAsProjectClicked -  Project successfully saved - ' + self.filename)
         # If response is "CANCEL" (the button "Cancel" has been clicked)
         elif response_id == Gtk.ResponseType.CANCEL:
             log.info("cancelled: FileChooserAction.OPEN")
@@ -260,6 +280,7 @@ class MainWindow:
         
     def onProjectSettingsClicked(self, button):
         """Display dialog to input project settings"""
+        log.info('onProjectSettingsClicked - Launch project settings')
         item_values = [self.project_settings_dict[key] for key in misc.global_vars]
         # Setup project settings dialog
         project_settings_dialog = misc.UserEntryDialog(self.window, 
@@ -462,14 +483,16 @@ class MainWindow:
 
     def onSwitchTab(self, widget, page, pagenum):
         """Refresh display on switching between views"""
+        log.info('onSwitchTab called - ' + str(pagenum))
         self.update()
 
     def __init__(self):
+        log.info('MainWindow - initialise')
         # Variable used to store handles for child window processes
         self.child_windows = []
 
-        # Check for project active state
-        self.PROJECT_ACTIVE = 0
+        # Check for project active status
+        self.project_active = False
         
         # Setup main data model
         self.data = data.datamodel.DataModel()
@@ -477,6 +500,8 @@ class MainWindow:
         # Initialise undo/redo stack
         self.stack = undo.Stack()
         undo.setstack(self.stack)
+        # Save point in stack for checking change state
+        self.stack.savepoint()
 
         # Other variables
         self.filename = None
@@ -532,6 +557,7 @@ class MainWindow:
                 menuitem.set_visible(True)
                 menuitem.connect("activate",self.onMeasCustomMenuClicked,module_name)
                 self.custom_menus.append(menuitem)
+                log.info('Plugin loaded - ' + module_name)
             except ImportError:
                 log.error('Error Loading plugin - ' + module_name)
 
@@ -565,7 +591,7 @@ def main():
     # Initialise main window
     log.info('Start Program Execution')
     MainWindow().run()
-    log.info('Main window initialised')
+    log.info('Main window initialised - Running Gtk.main()')
     Gtk.main()
     return 0
 

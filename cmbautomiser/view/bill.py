@@ -191,6 +191,8 @@ class BillView:
 
     def update_store(self):
         """Update Bill Store"""
+        log.info('BillView - update_store')
+        
         self.store.clear()
         for count, bill in enumerate(self.data.bills):
             self.store.append()
@@ -218,6 +220,8 @@ class BillView:
                 data_model: Main datamodel
                 tree: A TreeView for implementing schedule
         """
+        log.info('BillView - initialise')
+        
         self.parent = parent
         self.data = data_model
         self.tree = tree
@@ -250,6 +254,9 @@ class BillView:
         self.column_desc.add_attribute(self.renderer_desc, "markup", 1)
         # Set model for store
         self.tree.set_model(self.store)
+        
+        # Update store
+        self.update_store()
 
         # Initialise clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
@@ -461,6 +468,7 @@ class BillDialog:
         self.data = None
 
     def update_store(self):
+        log.info('BillDialog - update_store')
          
         # Update store from lock states
         self.measurements_view.update_store(self.selected)
@@ -503,6 +511,8 @@ class BillDialog:
                 bill_data: Bill model being edited
                 this_bill: Row to bill being edited in main datamodel
         """
+        log.info('BillDialog - initialise')
+        
         # Setup variables
         self.parent = parent
         self.data = data_object
@@ -576,8 +586,10 @@ class BillDialog:
         if response == 1:
             data_model = self.get_model()
             self.window.destroy()
+            log.info('BillDialog - run - Response Ok')
             return data_model
         else:
             self.window.destroy()
+            log.info('BillDialog - run - Response Cancel')
             return None
 

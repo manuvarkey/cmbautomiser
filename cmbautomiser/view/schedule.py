@@ -287,6 +287,7 @@ class ScheduleViewGeneric:
 
     def update_store(self):
         """Update store to reflect modified schedule"""
+        log.info('ScheduleViewGeneric - update_store')
         # Add or remove required rows
         rownum = 0
         for row in self.store:
@@ -337,6 +338,7 @@ class ScheduleViewGeneric:
                                       misc.MEAS_CUST)
                 render_funcs: Fucntions generating values of CUSTOM columns
         """
+        log.info('ScheduleViewGeneric - Initialise')
         # Setup variables
         self.parent = parent
         self.tree = tree
@@ -440,6 +442,7 @@ class ScheduleView(ScheduleViewGeneric):
                 tree: TreeView for implementing ScheduleView
                 schedule: Schedule Data model for storing values
         """
+        log.info('ScheduleView - Initialise')
         captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %']
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]

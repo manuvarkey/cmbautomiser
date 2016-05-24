@@ -153,6 +153,7 @@ class ScheduleDialog:
                 render_funcs: Fucntions generating values of CUSTOM columns
                 dimensions: List for two lists passing column widths and expand properties
         """
+        log.info('ScheduleDialog - Initialise')
         # Setup variables
         self.parent = parent
         self.itemnos = itemnos
@@ -254,9 +255,11 @@ class ScheduleDialog:
         if response == 1:
             data = self.get_model()
             self.window.destroy()
+            log.info('ScheduleDialog - run - Response Ok')
             return data
         else:
             self.window.destroy()
+            log.info('ScheduleDialog - run - Response Cancel')
             return None
 
     
@@ -272,6 +275,7 @@ class SelectScheduleDialog:
                 schedule_store: ListStore of items to be displayed
                 selected: Current selected item
         """
+        log.info('SelectScheduleDialog - Initialise - ' + str(selected))
         self.keys = keys
         self.schedule_store = schedule_store
         self.selected = selected
@@ -359,9 +363,11 @@ class SelectScheduleDialog:
                 path = paths[0].get_indices()
                 itemno = self.schedule_store[path][0]
                 self.dialog_window.destroy()
+            log.info('SelectScheduleDialog - run - ' + str([True, itemno]))
             return [True, itemno]
         else:
             self.dialog_window.destroy()
+            log.info('SelectScheduleDialog - run - ' + str([False]))
             return [False]
     
     def equal_func(self, model, column, key, iter, cols):
