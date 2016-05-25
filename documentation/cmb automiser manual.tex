@@ -285,7 +285,7 @@
 	 
 	 The program is organised in three tabs/views - \emph{schedule}, \emph{measurements} and \emph{bills} views. \emph{Schedule view} implements an interface to input the agreement schedule/import the schedule from a \emph{.xlsx} file. \emph{Measurements view} allows input/manipulation of details of CMBs and includes a number of convenient measurement item patterns. The \emph{Bill View} module allows billing of selected measurement items and implements part rates, excess rates for deviated items, custom previous bill support etc.
 	 
-	 Both CMBs and Bills can be rendered into a \emph{pdf} document from the respective modules. In addition \emph{Bill view} also allows export of final bill and deviation statement into a \emph{.xlsx} file for further processing.
+	 Both CMBs and Bills can be rendered into a \emph{pdf}/\emph{.xlsx} document from the respective modules. In addition \emph{Bill view} also allows the generation of the deviation statement as a \emph{.xlsx} file.
 	 
 	 \subsection{Program Interface}
 	 
@@ -314,6 +314,8 @@
 	 	\item Add a blank entry in the schedule. If a schedule entry is selected, the entry will be inserted above the selected entry. If no entry is selected, the entry will be appended at the end.\\
 	 	\begin{noteblock}{Tips!}
 	 		Pressing \fbox{\emph{Esc}} will deselect all entries.
+	 		
+	 		Start typing with the schedule selected to search through schedule entries.
 	 	\end{noteblock}
 	 	\item Adds \emph{n} number of blanks entries in the schedule.
 	 	\item Undo change. (\fbox{\emph{ctrl}} + \fbox{\emph{z}})
@@ -383,18 +385,20 @@
 	 
 	 \begin{enumerate}
 	 	\item Any remarks about the measurement should go over here.
-	 	\item Schedule item corresponding to the measurement should be selected from the drop-down menu.\\
+	 	\item Schedule item being measured can be selected from a list which pops up when this item is selected.\\
 	 	\begin{noteblock}{Note:}
 	 		For items spanning multiple rows, the last row containing the rate and quantity should be selected. This row should have an \emph{Agmnt.No.} associated with it for proper functioning of the program. If it is not there a suitable derivative of the agreement number can be used (For example: the last row of item number \emph{7.5} can be numbered \emph{7.5\_}).
  		\end{noteblock}
  		\item Short abbreviation of the item being measured in 2 or 3 words (For example: 3x4, Cable on wall, Cable in trench etc.) for easy identification.
 	 	\item Adds a blank row in the measurement. If a row is selected, the blank row will be inserted above the selected row. If no row is selected, the row will be appended at the end.\\
 	 	\begin{noteblock}{Tips!}
-	 		\begin{itemize}
-		 		\item Pressing \fbox{\emph{Ctrl}} will deselect all rows.
-		 		\item Cycle through rows horizontally using \fbox{\emph{Tab}} / \fbox{\emph{Shift}}+\fbox{\emph{Tab}} (forward/backward).
-		 		\item Cycle through rows vertically using \fbox{\emph{Enter}} / \fbox{\emph{Shift}}+\fbox{\emph{Enter}} (up/down).
-	 		\end{itemize}
+		 		Pressing \fbox{\emph{Ctrl}} will deselect all rows.
+		 		
+		 		Cycle through rows horizontally using \fbox{\emph{Tab}} / \fbox{\emph{Shift}}+\fbox{\emph{Tab}} (forward/backward).
+		 		
+		 		Cycle through rows vertically using \fbox{\emph{Enter}} / \fbox{\emph{Shift}}+\fbox{\emph{Enter}} (up/down).
+		 		
+		 		Start typing with the measurement list selected to search through measurements.
 	 	\end{noteblock}
 	 	\item Adds \emph{n} number of blank rows in the measurement.
 	 	\item Undo change. (\fbox{\emph{ctrl}} + \fbox{\emph{z}})
@@ -481,7 +485,12 @@
 	 	\includegraphics[width=1\linewidth]{screenshots/window_bill_cust_prop.png}
 	 \end{maxipage}
 	 
-	 \emph{Custom bills} appear in red colour in the bills view. After addition, it can be selected as the previous bill just like the normal bill.
+	 \emph{Custom bills} appear in red colour in the bills view. After addition, it can be selected as the previous bill just like the normal bill.\\
+	 
+	 
+	 \begin{noteblock}{Note:}
+	 	If any of the rates or quantities in the main schedule are changed after a bill has been generated, the value of the generated bill will change to correspond to the new values. In such scenarios, before making changes to the schedule, the generated bill can be copied into a custom bill with static quantities and amounts by using the \emph{Copy} option with the generated bill selected and the \emph{Paste} option with a blank custom bill selected. This custom bill can then be used for subsequent billing as the previous bill.
+	 \end{noteblock}
 	 
 	 \section{Conclution}
 	 
