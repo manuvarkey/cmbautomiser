@@ -1,5 +1,5 @@
 % %
-% Computerised measurement books for effective public works accounting Ver-D1.0
+% Computerised measurement books for effective public works accounting Ver-D1.1
 %
 
 \documentclass[twoside,a4paper]{refart}
@@ -32,7 +32,7 @@
 	Assistant Executive Engineer(Electrical) \\
 	Central Public Works Department \\}
 
-\date{25-07-2015, D1.0}
+\date{25-07-2015, D1.1}
 
 \pagestyle{myfootings}
 \markboth{Computerised measurement books for effective public works accounting}%
@@ -321,14 +321,10 @@
 	 	\item Copy selected entries to clipboard.
 	 	\item Paste entries into schedule. If a schedule entry is selected, the entries will be inserted above the selected entry. If no entry is selected, the entries will be appended at the end.
 	 	\item Select a file for reading data.
-	 	\item \attention Imports schedule entries from the selected file. Data can be read from \emph{.xlsx} files. This is the recommended method of entering data into schedule. The spreadsheet file should have data in the first sheet with columns in the same order as in the schedule list (10) and rows corresponding to the schedule items to be imported.
+	 	\item \attention Imports schedule entries from the selected file. Data can be read from \emph{.xlsx} files. This is the recommended method of entering data into schedule. The spreadsheet file should have data with columns in the same order as in the schedule list (10) and rows corresponding to the schedule items to be imported.
 	 	\item Removes selected entries from the schedule.
-	 	\item The schedule list containing entries in the format Agmnt.No, Item Description, Unit, Rate, Quantity, Reference and Excess \%. \emph{Excess \%} denotes the percentage above which item will be billed at market rates. \attention While importing a document, if the \emph{Excess \%} column is left blank, it will default to 30\%.
+	 	\item The schedule list containing entries in the format Agmnt.No, Item Description, Unit, Rate, Quantity, Reference and Excess \%. \emph{Excess \%} denotes the percentage above which item will be billed at market rates. \attention While importing a document, if the \emph{Excess \%} column is left blank, it will default to 0\%.
 	 \end{enumerate}
-	 
-	 \begin{noteblock}{Note:}
-	 	After a bill has been added to the \emph{Bills view}, changing the structure of the schedule may mess up the bill. To prevent this from happening, all extra/substituted items to be added should be added at the end of the schedule.
-	 \end{noteblock}
 	 
 	 \subsection{Measurements View}
 	 
