@@ -152,8 +152,10 @@ class ScheduleDialog:
     def onImportScheduleClicked(self, button):
         """Import xlsx file into schedule"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
-        spreadsheet = misc.Spreadsheet(filename)
-        models = spreadsheet.read_rows(columntypes = self.columntypes)
+        
+        spreadsheet_dialog = misc.SpreadsheetDialog(self.window, filename, self.columntypes, self.captions, self.dimensions)
+        models = spreadsheet_dialog.run()
+
         items = []
         for model in models:
             item = data.schedule.ScheduleItemGeneric(model)
@@ -173,7 +175,7 @@ class ScheduleDialog:
                                 misc.MEAS_NO: Integer
                                 misc.MEAS_L: Float
                                 misc.MEAS_DESC: String
-                                misc.MEAS_CUSTOM: Value provided through render function
+                                misc.MEAS_CUST: Value provided through render function
                 render_funcs: Fucntions generating values of CUSTOM columns
                 dimensions: List for two lists passing column widths and expand properties
         """
@@ -185,6 +187,7 @@ class ScheduleDialog:
         self.columntypes = columntypes
         self.render_funcs = render_funcs
         self.item_schedule = item_schedule
+        self.dimensions = dimensions
         
         # Save undo stack of parent
         self.stack_old = undo.stack()

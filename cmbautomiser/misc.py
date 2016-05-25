@@ -107,7 +107,7 @@ def set_global_platform_vars():
     if platform.system() == 'Linux':
         global_settings_dict['latex_path'] = 'pdflatex'
     elif platform.system() == 'Windows':
-        global_settings_dict['latex_path'] = misc.abs_path(
+        global_settings_dict['latex_path'] = abs_path(
                     'miketex\\miktex\\bin\\pdflatex.exe')
 
 ## GLOBAL CLASSES
@@ -198,6 +198,214 @@ class UserEntryDialog():
             self.dialog_window.destroy()
             return False
             
+class SpreadsheetDialog:
+    """Dialog for manage input and output of spreadsheets"""
+   
+    def __init__(self, parent, filename, columntypes, captions, dimensions = None):
+        """Initialise SpreadsheetDialog class
+        
+            Arguments:
+                parent: Parent widget (Main window)
+                filename: 
+                columntypes: Data types of columns. 
+                             Takes following values:
+                                misc.MEAS_NO: Integer
+                                misc.MEAS_L: Float
+                                misc.MEAS_DESC: String
+                                misc.MEAS_CUST: Value omited
+                dimensions: List of two lists passing column widths and expand properties
+        """
+        log.info('SpreadsheetDialog - Initialise')
+        # Setup variables
+        self.parent = parent
+        self.filename = filename
+        self.captions = captions
+        self.columntypes = columntypes
+        self.dimensions = dimensions
+        
+        self.top = 0
+        self.bottom = 0
+        self.left = 0
+        self.right = 0
+        self.values = []
+        self.spreadsheet = None
+        self.sheet = ''
+
+        # Setup dialog window
+        self.builder = Gtk.Builder()
+        self.builder.add_from_file(abs_path("interface","spreadsheetdialog.glade"))
+        self.window = self.builder.get_object("dialog")
+        self.window.set_transient_for(self.parent)
+        self.window.set_default_size(950,500)
+        self.builder.connect_signals(self)
+
+        # Get required objects
+        self.combo = self.builder.get_object("combobox_sheet")
+        self.combo_store = self.builder.get_object("liststore_combo")
+        self.tree = self.builder.get_object("treeview_schedule")
+        self.entry_top = self.builder.get_object("entry_top")
+        self.entry_bottom = self.builder.get_object("entry_bottom")
+        self.entry_left = self.builder.get_object("entry_left")
+        self.entry_right = self.builder.get_object("entry_right")
+        
+        # Setup treeview
+        self.columns = []
+        self.cells = []
+        # Setup row number column
+        cell_row = Gtk.CellRendererText()
+        column_row = Gtk.TreeViewColumn('', cell_row)
+        column_row.add_attribute(cell_row, "markup", 0)
+        column_row.set_min_width(50)
+        column_row.set_fixed_width(50)
+        cell_row.props.wrap_width = 50
+        cell_row.props.background = MEAS_COLOR_LOCKED
+        self.cells.append(cell_row)
+        self.columns.append(column_row)
+        self.tree.append_column(column_row)
+        # Setup remaining columns
+        for c_no, caption  in enumerate(self.captions,1):
+            cell = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(caption, cell)
+            column.add_attribute(cell, "text", c_no)
+            self.cells.append(cell)
+            self.columns.append(column)
+            self.tree.append_column(column)
+        # Setup dimensions
+        if dimensions is not None:
+            self.setup_column_props(*dimensions)
+        # Setup liststore model
+        types = [str] + [str]*len(self.columntypes)
+        self.store = Gtk.ListStore(*types)
+        self.tree.set_model(self.store)
+        # Misc options
+        self.tree.set_grid_lines(3)
+        self.tree.set_enable_search(True)
+        search_cols = [no for no,x in enumerate(self.columntypes,1) if x == MEAS_DESC]
+        self.tree.set_search_equal_func(self.equal_func, [0,1,2,3])
+        
+        # Read file into spreadsheet object
+        if filename is not None:
+            try:
+                self.spreadsheet = Spreadsheet(filename)
+            except:
+                self.spreadsheet = None
+                log.warning('SpreadsheetDialog - Spreadsheet could not be read - ' + filename)
+                
+        # Setup combobox
+        if self.spreadsheet:
+            sheets = self.spreadsheet.sheets()
+            for sheet in sheets:
+                self.combo_store.append([sheet])
+            if sheets:
+                self.combo.set_active_id(sheets[0])
+                self.update()
+            
+
+    def run(self):
+        """Display dialog box and return data model
+        
+            Returns:
+                Data Model on Ok
+                [] on Cancel
+        """
+        self.window.show_all()
+        response = self.window.run()
+        self.window.destroy()
+
+        if response == 1 and self.spreadsheet:
+            log.info('SpreadsheetDialog - run - Response Ok')
+            return self.values
+        else:
+            log.info('SpreadsheetDialog - run - Response Cancel')
+            return []
+    
+    def update(self):
+        """Update contents from input values"""
+        log.info('SpreadsheetDialog - Update')
+        
+        # Read if sheet changed
+        sheet = self.combo_store[self.combo.get_active_iter()][0]
+        if sheet != self.sheet:
+            self.sheet = sheet
+            self.spreadsheet.set_active_sheet(self.sheet)
+            self.entry_top.set_text('1')
+            self.entry_bottom.set_text(str(self.spreadsheet.length()+1))
+            self.entry_left.set_text('1')
+            
+        # Read values of entries
+        self.top = int(self.entry_top.get_text())
+        self.bottom = int(self.entry_bottom.get_text())
+        self.left = int(self.entry_left.get_text())
+        
+        # Set values
+        self.entry_right.set_text(str(self.left + len(self.columntypes)))
+        
+        # Read spreadsheet
+        self.values = self.spreadsheet.read_rows(self.columntypes, start=self.top-1, end=self.bottom-1, left=self.left-1)
+        
+        # Update store
+        self.store.clear()
+        for slno, value in enumerate(self.values, self.top):
+            self.store.append(['<b>' + str(slno) + '</b>'] + value)
+                
+    def setup_column_props(self, widths, expandables):
+        """Set column properties
+            Arguments:
+                widths: List of column widths type-> [int, ...]. None values are skiped.
+                expandables: List of expand property type-> [bool, ...]. None values are skiped.
+        """
+        for column, cell, width, expandable in zip(self.columns[1:], self.cells[1:], widths, expandables):
+            if width != None:
+                column.set_min_width(width)
+                column.set_fixed_width(width)
+                cell.props.wrap_width = width
+            if expandable != None:
+                column.set_expand(expandable)
+    
+    def equal_func(self, model, column, key, iter, cols):
+        """Equal function for interactive search"""
+        search_string = ''
+        for col in cols:
+            search_string += ' ' + model[iter][col].lower()
+        for word in key.split():
+            if word.lower() not in search_string:
+                return True
+        return False
+    
+    # Callbacks
+    
+    def onRefreshClicked(self, button):
+        """Refresh screen on button click"""
+        
+        # Sanitise entries
+        if self.entry_top.get_text() == '':
+            self.entry_top.set_text('1')
+        if self.entry_bottom.get_text() == '':
+            self.entry_bottom.set_text('1')
+        if self.entry_left.get_text() == '':
+            self.entry_left.set_text('1')
+        
+        if self.spreadsheet:
+            self.update()
+    
+    def onEntryEditedNum(self, entry):
+        """Treeview cell renderer for editable number field
+        
+            User Data:
+                column: column in ListStore being edited
+        """
+        new_text = entry.get_text()
+        num = ''
+        if new_text is not '':
+            try:  # check whether item evaluates fine
+                num = int(new_text)
+                if num <= 0:
+                   num = 1
+            except:
+                log.warning("SpreadsheetDialog - onEntryEditedNum - evaluation of [" 
+                + new_text + "] failed")
+        entry.set_text(str(num))
+
             
 class Spreadsheet:
     """Manage input and output of spreadsheets"""
@@ -306,7 +514,7 @@ class Spreadsheet:
             
     # Bulk read functions
     
-    def read_rows(self, columntypes = [], start=0, end=-1):
+    def read_rows(self, columntypes = [], start=0, end=-1, left=0):
         """Read and validate selected rows from current sheet"""
         # Get count of rows
         rowcount = self.length()
@@ -319,7 +527,7 @@ class Spreadsheet:
         for row in range(start, count_actual):
             cells = []
             skip = 0  # No of columns to be skiped ex. breakup, total etc...
-            for columntype, i in zip(columntypes, list(range(len(columntypes)))):
+            for columntype, i in zip(columntypes, list(range(left, len(columntypes)+left))):
                 cell = self.sheet.cell(row = row + 1, column = i - skip + 1).value
                 if columntype == MEAS_DESC:
                     if cell is None:
