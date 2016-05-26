@@ -2,7 +2,7 @@
 # adds uninstall information to the registry for Add/Remove Programs
 
 # All the other settings can be tweaked by editing the !defines at the top of this script
-!define APPNAME "CMB Automiser"
+!define APPNAME "CMB Automiser 3"
 !define COMPANYNAME "CPWD"
 !define DESCRIPTION "Computerised quantity accounting and cost billing application for use in public works organisations."
 # These three must be integers

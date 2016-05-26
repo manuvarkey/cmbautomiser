@@ -142,7 +142,19 @@ class MainWindow:
 
     def onNewProjectClicked(self, button):
         """Create a new window"""
-        proc = subprocess.Popen([__file__], stdin=None, stdout=None, stderr=None)
+        path = ''
+        if platform.system() == 'Linux':
+            if os.access(__file__, os.X_OK):
+                path = __file__
+            else:
+                path = '/usr/bin/cmbautomiser3'
+        elif platform.system() == 'Windows':
+            if getattr(sys, 'frozen', False):
+                path = os.path.dirname(sys.executable) + '\\__init__.exe'
+            elif __file__:
+                path = __file__
+                
+        proc = subprocess.Popen([path], stdin=None, stdout=None, stderr=None)
         self.child_windows.append(proc)
         log.info('onNewProjectClicked - New window raised')
 
