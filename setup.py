@@ -24,9 +24,9 @@ setup(
     maintainer_email="manuvarkey@gmail.com",
     url="https://github.com/manuvarkey/cmbautomiser",
     license="GPL-3.0",
-    description="CPWD billing application using computerised measurement books.",
+    description="Computerised quantity accounting and cost billing application for use in public works organisations.",
 
-    long_description=  "CMB Automiser is a CPWD billing application using computerised measurement books. CMB Automiser has been developed in hope of being useful and as time saver for CPWD staff and contractors working in CPWD.",
+    long_description=  "Computerised quantity accounting and cost billing application for use in public works organisations.",
     
      classifiers=[
           'Development Status :: 5 - Production/Stable',

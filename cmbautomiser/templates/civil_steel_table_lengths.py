@@ -154,7 +154,7 @@ class CustomItem:
                     grandtotal += t*float(userdata[6+i])
                 except:
                     pass
-            return [round(grandtotal,2)]
+            return [round(grandtotal,3)]
         
         def total_func_item(values):
             # Populate data values

@@ -37,3 +37,19 @@ New features:
     
 Ver 3.0
 =======
+Bug Fixes:
+    Codebase ported to python3 for future proofing.
+    Modifying schedule after billing breaks bill.
+    Modifying Measurements after billing breaks bill.
+    Check feasibility before trying to add measurement items.
+    Unicode errors galore.
+    Code refactored for readability and efficiency.
+    Docstrings added.
+New features:
+    CMBs can now be exported as .xlsx file.
+    Schedule and measurement lists can now be travesed using interactive search.
+    New dialog for schedule item selection with better usability and interactive search support.
+    New import dialog for spreadsheet allowing import of data from any portion of spreadsheet.
+    Exit confirmation for main window and measurement items to prevent accidental data loss.
+    Changes to documentation to reflect new features.
+    
