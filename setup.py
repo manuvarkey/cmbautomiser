@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     # Application name:
-    name="CMBAutomiser",
+    name="CMBAutomiser3",
 
     # Version number (initial):
     version="3.0.0",
@@ -14,9 +14,9 @@ setup(
     # Packages
     packages = find_packages(),
     include_package_data = True, # Include additional files into the package
-    data_files=[('/usr/share/applications', ['applications/cmbautomiser.desktop']),
-                  ('/usr/share/pixmaps', ['pixmaps/cmbautomiser.png']),
-                  ('/usr/bin', ['bin/cmbautomiser'])],
+    data_files=[('/usr/share/applications', ['applications/cmbautomiser3.desktop']),
+                  ('/usr/share/pixmaps', ['pixmaps/cmbautomiser3.png']),
+                  ('/usr/bin', ['bin/cmbautomiser3'])],
 
 
     # Details
@@ -26,7 +26,7 @@ setup(
     license="GPL-3.0",
     description="Computerised quantity accounting and cost billing application for use in public works organisations.",
 
-    long_description=  "Computerised quantity accounting and cost billing application for use in public works organisations.",
+    long_description=  "CMB Automiser is a computerised quantity accounting and cost billing application for use in public works organisations. It allows the user to perform these objectives with an intuitive interface and logical work flow. The results are presented in fully formatted, cross referenced pdf documents.",
     
      classifiers=[
           'Development Status :: 5 - Production/Stable',

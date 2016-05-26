@@ -21,10 +21,10 @@ Application can be installed using `python setup.py install`. It has been tested
 
 #### Python Modules
 
-*undo* - Included along with distribution.
-*openpyxl* - Included along with distribution.
-*jdcal* - Included along with distribution.
-*libxml* - Not included
+1. *undo* - Included along with distribution.
+2. *openpyxl* - Included along with distribution.
+3. *jdcal* - Included along with distribution.
+4. *libxml* - Not included
 
 #### Latex Modules
 
