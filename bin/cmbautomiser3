@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python3 /usr/lib/python3.4/site-packages/cmbautomiser/__init__.py
