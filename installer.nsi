@@ -4,7 +4,7 @@
 # All the other settings can be tweaked by editing the !defines at the top of this script
 !define APPNAME "CMB Automiser"
 !define COMPANYNAME "CPWD"
-!define DESCRIPTION "CPWD billing application using computerised measurement books."
+!define DESCRIPTION "Computerised quantity accounting and cost billing application for use in public works organisations."
 # These three must be integers
 !define VERSIONMAJOR 3.0
 !define VERSIONMINOR 0
@@ -13,7 +13,7 @@
 # It is possible to use "mailto:" links in here to open the email client
 !define HELPURL "mailto:manuvarkey@gmail.com" # "Support Information" link
 !define UPDATEURL "http://github.com/manuvarkey/cmbautomiser/" # "Product Updates" link
-!define ABOUTURL "http://..." # "Publisher" link
+!define ABOUTURL "http://manuiisc.blogspot.com" # "Publisher" link
 # This is the size (in kB) of all the files copied into "Program Files"
 !define INSTALLSIZE 485000
  
@@ -28,7 +28,7 @@ LicenseData "license.txt"
 # This will be in the installer/uninstaller's title bar
 Name "${APPNAME}"
 Icon "cmbautomiser.ico"
-outFile "cmbautomiser-win32-2-2-0.exe"
+outFile "cmbautomiser-win32-3-0-0.exe"
  
 !include LogicLib.nsh
  
