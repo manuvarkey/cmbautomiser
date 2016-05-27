@@ -89,6 +89,39 @@ class ScheduleItem(ScheduleItemGeneric):
         # Initialise base class
         super(ScheduleItem, self).__init__([itemno, description, unit, rate, qty, reference, excess_rate_percent])
 
+    def __setitem__(self, index, value):
+        self.item[index] = value
+        
+        if index == 0:
+            self.itemno = value
+        elif index == 1:
+            self.description = value
+        elif index == 2:
+            self.unit = value
+        elif index == 3:
+            try:
+                self.rate = round(float(eval(value)), 2)
+            except:
+                log.warning('ScheduleItem - Wrong value loaded in model - rate - ' + value)
+                self.rate = 0
+                value = '0'
+        elif index == 4:
+            try:
+                self.qty = float(eval(value))
+            except:
+                log.warning('ScheduleItem - Wrong value loaded in model - qty - ' + value)
+                self.qty = 0
+                value = '0'
+        elif index == 5:
+            self.reference = value
+        elif index == 6:
+            try:
+                self.excess_rate_percent = float(eval(value))
+            except:
+                log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + value)
+                self.excess_rate_percent = 30
+                value = '30'
+        self.item[index] = value
 
 class ScheduleGeneric:
     """Class stores a generic schedule"""
