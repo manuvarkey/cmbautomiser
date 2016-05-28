@@ -11,7 +11,7 @@ added_files = [
          ( 'miketex/', 'miketex' )
 		 ]
 
-a = Analysis(['cmbautomiser/__init__.py'],
+a = Analysis(['cmbautomiser/main.py'],
              pathex=['D:\\aee\\cmbautomiser\\cmbautomiser\\cmbautomiser'],
              binaries=None,
              datas= added_files,

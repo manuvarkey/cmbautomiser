@@ -25,11 +25,9 @@
 import copy, logging
 from gi.repository import Gtk, Gdk, GLib
 
-import undo
-
 # local files import
+from __main__ import misc, data, undo
 from . import schedule
-from __main__ import misc, data
 
 # Setup logger object
 log = logging.getLogger(__name__)

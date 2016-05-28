@@ -27,8 +27,6 @@ import subprocess, threading, os, posixpath, platform, logging
 from gi.repository import Gtk
 import openpyxl
 
-import data
-
 # Setup logger object
 log = logging.getLogger(__name__)
 

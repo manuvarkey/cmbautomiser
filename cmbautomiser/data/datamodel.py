@@ -24,10 +24,10 @@
 
 from gi.repository import Gtk, Gdk, GLib
 import os.path, copy, logging
-from undo import undoable
 
 # local files import
-from __main__ import misc
+from __main__ import misc, undo
+from undo import undoable
 from . import schedule, measurement, bill
 
 # Setup logger object
