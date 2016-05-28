@@ -148,7 +148,7 @@ class MainWindow:
                 path = ['/usr/bin/cmbautomiser3']
         elif platform.system() == 'Windows':
             if getattr(sys, 'frozen', False):
-                path = [misc.abs_path('__init__.exe')]
+                path = [misc.abs_path('main.exe')]
             elif __file__:
                 path = ['python', __file__]
                 
