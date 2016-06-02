@@ -317,7 +317,7 @@ Full-Width Styles
 
 #downloads {
   position: absolute;
-  width: 210px;
+  width: 400px;
   z-index: 10;
   bottom: -40px;
   right: 0;
@@ -352,6 +352,35 @@ Full-Width Styles
 
 .tar_download_link:hover {
   background: url(../images/sprite_download.png) no-repeat top right;
+}
+
+.exe_download_link {
+  display: block;
+  float: right;
+  width: 70px;
+  height:70px;
+  text-indent: -5000px;
+  overflow: hidden;
+  background: url(../images/sprite_app.png) no-repeat bottom left;
+}
+
+.rpm_download_link {
+  display: block;
+  float: right;
+  width: 70px;
+  height:70px;
+  text-indent: -5000px;
+  overflow: hidden;
+  background: url(../images/sprite_app.png) no-repeat bottom right;
+  margin-left: 10px;
+}
+
+.exe_download_link:hover {
+  background: url(../images/sprite_app.png) no-repeat top left;
+}
+
+.rpm_download_link:hover {
+  background: url(../images/sprite_app.png) no-repeat top right;
 }
 
 #main_content_wrap {
