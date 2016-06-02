@@ -1205,7 +1205,7 @@
     <property name="version">3.0.0</property>
     <property name="copyright" translatable="yes">Copyright © 2015 Manu Varkey</property>
     <property name="comments" translatable="yes">A computerised quantity accounting and cost billing application for use in public works organisations.</property>
-    <property name="website">https://github.com/manuvarkey/cmbautomiser</property>
+    <property name="website">http://manuvarkey.github.io/cmbautomiser/</property>
     <property name="authors">Manu Varkey
 (manuvarkey@gmail.com)
 Assistant Executive Engineer (Electrical)
