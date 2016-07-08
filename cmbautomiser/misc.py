@@ -24,7 +24,7 @@
 
 import subprocess, threading, os, posixpath, platform, logging
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Pango
 import openpyxl
 
 # Setup logger object
@@ -643,13 +643,14 @@ class Command(object):
 
 ## GLOBAL METHODS
 
-def get_user_input_text(parent, message, title='', oldval=None):
+def get_user_input_text(parent, message, title='', oldval=None, multiline=False):
     '''Gets a single user input by diplaying a dialog box
     
     Arguments:
         parent: Parent window
         message: Message to be displayed to user
         title: Dialog title text
+        multiline: Allows multiline input is True
     Returns:
         Returns user input as a string or 'None' if user does not input text.
     '''
@@ -664,18 +665,54 @@ def get_user_input_text(parent, message, title='', oldval=None):
     dialogWindow.set_default_response(Gtk.ResponseType.OK)
 
     dialogBox = dialogWindow.get_content_area()
-    userEntry = Gtk.Entry()
-    userEntry.set_activates_default(True)
-    userEntry.set_size_request(50, 0)
-    dialogBox.pack_end(userEntry, False, False, 0)
+    text = ''
     
-    # Set old value
-    if oldval != None:
-        userEntry.set_text(oldval)
+    if multiline:
+        # Function to mark first line as bold
+        def mark_heading(textbuff, tag):
+            start = textbuff.get_start_iter()
+            end = textbuff.get_end_iter()
+            textbuff.remove_all_tags(start, end)
+            match = start.forward_search('\n', 0, end)
+            if match != None:
+                match_start, match_end = match
+                textbuff.apply_tag(tag, start, match_start)
 
-    dialogWindow.show_all()
-    response = dialogWindow.run()
-    text = userEntry.get_text()
+        scrolledwindow = Gtk.ScrolledWindow()
+        scrolledwindow.set_hexpand(True)
+        scrolledwindow.set_vexpand(True)
+        scrolledwindow.set_size_request(300, 100)
+
+        textview = Gtk.TextView()
+        textbuffer = textview.get_buffer()
+        dialogBox.pack_end(scrolledwindow, False, False, 0)
+        scrolledwindow.add(textview)
+        
+        # Set old value
+        if oldval != None:
+            textbuffer.set_text(oldval)
+        
+        # Mark heading
+        tag_bold = textbuffer.create_tag("bold", weight=Pango.Weight.BOLD)
+        mark_heading(textbuffer, tag_bold)
+        textbuffer.connect("changed", mark_heading, tag_bold)
+
+        dialogWindow.show_all()
+        response = dialogWindow.run()
+        text = textbuffer.get_text(textbuffer.get_start_iter(),textbuffer.get_end_iter(), True)
+    else:
+        userEntry = Gtk.Entry()
+        userEntry.set_activates_default(True)
+        userEntry.set_size_request(50, 0)
+        dialogBox.pack_end(userEntry, False, False, 0)
+        
+        # Set old value
+        if oldval != None:
+            userEntry.set_text(oldval)
+
+        dialogWindow.show_all()
+        response = dialogWindow.run()
+        text = userEntry.get_text()
     dialogWindow.destroy()
     if (response == Gtk.ResponseType.OK) and (text != ''):
         return text

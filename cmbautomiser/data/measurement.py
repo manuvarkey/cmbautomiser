@@ -297,19 +297,24 @@ class MeasurementItemHeading(MeasurementItem):
     def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         latex_buffer.add_preffix_from_file(misc.abs_path('latex', 'measheading.tex'))
-        # replace local variables
+        # Setup data
+        heading = self.remark.splitlines()[0]
+        message = self.remark[len(heading):]
+        # Replace local variables
         measheading_local_vars = {}
-        measheading_local_vars['$cmbmeasurementheading$'] = self.remark
+        measheading_local_vars['$cmbmeasurementheading$'] = heading
+        measheading_local_vars['$cmbmeasurementmessage$'] = message
         latex_buffer.replace_and_clean(measheading_local_vars)
         return latex_buffer
     
     def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
-        spreadsheet.append_data([[str(path), self.remark], [None]], bold=True, wrap_text=False)
+        spreadsheet.append_data([[str(path), self.remark], [None]], bold=True, wrap_text=True)
         return spreadsheet
         
     def get_text(self):
-        return "<b><i>" + misc.clean_markup(self.remark) + "</i></b>"
+        heading = self.remark.splitlines()[0]
+        return "<b><i>" + misc.clean_markup(heading) + "</i></b>"
     
     def get_tooltip(self):
         return None

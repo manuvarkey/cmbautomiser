@@ -166,7 +166,7 @@ class MeasurementsView:
     def add_heading(self):
         """Add a Heading to measurement view"""
         if self.can_have_sub_item(3):
-            heading_name = misc.get_user_input_text(self.parent, "Please input Heading", "Add new Item: Heading")
+            heading_name = misc.get_user_input_text(self.parent, "Please input Heading. Any additional lines will be printed under the heading.", "Add new Item: Heading", None, True)
             if heading_name != None:
                 # get selection
                 selection = self.tree.get_selection()
@@ -398,7 +398,7 @@ class MeasurementsView:
                 item = self.cmbs[path[0]][path[1]][path[2]]
                 if isinstance(item, data.measurement.MeasurementItemHeading):
                     oldval = item.get_remark()
-                    newval = misc.get_user_input_text(self.parent, "Please input Heading", "Edit Heading",oldval)
+                    newval = misc.get_user_input_text(self.parent, "Please input Heading. Any additional lines will be printed under the heading.", "Edit Heading", oldval, True)
                     self.data.edit_measurement_item(path,item,newval,oldval)
                 elif isinstance(item, data.measurement.MeasurementItemCustom):
                     oldval = item.get_model()
