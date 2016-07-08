@@ -418,11 +418,11 @@ class Bill:
         
         return latex_buffer
 
-    def export_spreadsheet_bill(self, filename, project_settings_dict, schedule):
+    def export_spreadsheet_bill(self, filename, project_settings_dict, schedule, cmbs):
         """Export bill to spreadsheet file"""
         spreadsheet = Workbook()
 
-        # Sheet 1
+        ## Sheet 1 Data
         sheet = spreadsheet.active
         sheet.title = 'Data'
         sheet_head = ['Agmnt.No','Description','Unit','Total Qty','Below Dev Qty',
@@ -474,7 +474,8 @@ class Bill:
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
 
-        # Sheet 2 Deviation statement
+
+        ## Sheet 2 Deviation statement
         sheet2 = spreadsheet.create_sheet()
         sheet2.title = 'Deviation'
         template = load_workbook(filename = misc.abs_path('ods_templates','dev.xlsx'))
@@ -564,8 +565,238 @@ class Bill:
         sheet2['C3'] = project_settings_dict["$cmbnameofwork$"]
         sheet2['C4'] = project_settings_dict["$cmbagency$"]
         sheet2['C5'] = project_settings_dict["$cmbagmntno$"]
-
-        # Save Document
+        
+        
+        ## Sheet 3 Abstract
+        sheet = spreadsheet.create_sheet()
+        sheet.title = 'Abs'
+        template = load_workbook(filename = misc.abs_path('ods_templates','abs.xlsx'))
+        rowend = 12
+        colend = 7
+        rowend_end = 3
+        
+        # Copy all from Abstract start
+        template_start_sheet = template.get_sheet_by_name('start')
+        for row in range(1,rowend+1):
+            for column in range(1,colend+1):
+                sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
+                sheet.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                
+        # Copy all data
+        sheet['C3'] = 'ABSTRACT OF COST FOR ' + self.data.title
+        sheet['C5'] = project_settings_dict["$cmbnameofwork$"]
+        sheet['C6'] = project_settings_dict["$cmbsituation$"]
+        sheet['C7'] = project_settings_dict["$cmbagmntno$"]
+        sheet['C8'] = project_settings_dict["$cmbagency$"]
+        sheet['C9'] = project_settings_dict["$cmbdateofstart$"]
+        sheet['C10'] = project_settings_dict["$cmbdateofstartasperagmnt$"]
+        sheet['C11'] = ''
+        sheet['C12'] = self.data.bill_date
+        
+        # Copy abstract items
+        
+        itemnos = schedule.get_itemnos()
+        row_item = rowend+2
+        for itemno in itemnos:
+            # If item measured, include in bill
+            if itemno in self.item_qty and self.item_qty[itemno] != []:
+                # Setup required values
+                qty_items = self.item_qty[itemno]
+                cmb_refs = self.item_cmb_ref[itemno]
+                item_paths = self.item_paths[itemno]
+                item = schedule[itemno]
+                
+                if self.prev_bill is not None:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
+                                               - self.prev_bill.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
+                                               - self.prev_bill.item_excess_amount[itemno]
+                else:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    
+                # Copy data
+                sheet['A' + str(row_item)] = itemno
+                sheet['B' + str(row_item)] = item.extended_description
+                sheet['A' + str(row_item)].alignment = Alignment(horizontal='center')
+                sheet['B' + str(row_item)].alignment = Alignment(wrap_text=True)
+                row_item += 1
+                
+                # Include records of each item to bill
+                for qty_item, cmb_ref, item_path in zip(qty_items, cmb_refs, item_paths):
+                    if qty_item != 0:
+                        if cmb_ref != -1:  # if not prev abstract
+                            sheet['B' + str(row_item)] = 'Qty B/F Mb.No.' + str(cmbs[cmb_ref].name) + ' Pg.No.'
+                            sheet['C' + str(row_item)] = qty_item
+                            sheet['D' + str(row_item)] = item.unit
+                        else:  # if prev abstract
+                            sheet['B' + str(row_item)] = 'Qty B/F Prev Abs Mb.No.' + self.prev_bill.data.cmb_name + ' Pg.No.'
+                            sheet['C' + str(row_item)] = qty_item
+                            sheet['D' + str(row_item)] = item.unit
+                        row_item += 1
+                if self.item_excess_qty[itemno] > 0:
+                    sheet['B' + str(row_item)] = 'TOTAL'
+                    sheet['C' + str(row_item)] = sum(qty_items)
+                    sheet['D' + str(row_item)] = item.unit
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty upto deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = self.item_normal_qty[itemno]
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = item.rate
+                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = self.data.item_excess_rates[itemno]
+                    sheet['F' + str(row_item)] = round(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    row_item += 2
+                else:
+                    sheet['B' + str(row_item)] = 'TOTAL'
+                    sheet['C' + str(row_item)] = sum(self.item_qty[itemno])
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = item.rate
+                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    row_item += 2
+                
+        # Copy all from abs end
+        template_end_sheet = template.get_sheet_by_name('end')
+        for row in range(1,rowend_end+1):
+            for column in range(1,colend+1):
+                sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value
+                sheet.cell(row=row+row_item, column=column).style = template_end_sheet.cell(row=row, column=column).style
+        
+        # Fill in values
+        sheet.cell(row=1+row_item, column=7).value = '=SUM(G13:G' + str(row_item) + ')'
+        if self.prev_bill != None:
+            sheet.cell(row=2+row_item, column=7).value = self.prev_bill.bill_total_amount
+        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '-G' + str(row_item+2)
+        
+        # Abstract formatings
+        for column in range(1,colend+1):
+            # copy coumn widths
+            sheet.column_dimensions[get_column_letter(column)].width = \
+                template_start_sheet.column_dimensions[get_column_letter(column)].width
+        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.fitToHeight = 99
+        sheet.page_setup.fitToWidth = 1
+        sheet.print_options.horizontalCentered = True
+        
+        
+        ## Sheet 4 Bill
+        sheet = spreadsheet.create_sheet()
+        sheet.title = 'Bill'
+        template = load_workbook(filename = misc.abs_path('ods_templates','bill.xlsx'))
+        rowend = 7
+        colend = 8
+        rowend_end = 3
+        
+        # Copy all from bill start
+        template_start_sheet = template.get_sheet_by_name('start')
+        for row in range(1,rowend+1):
+            for column in range(1,colend+1):
+                sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
+                sheet.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                
+        # Copy all data
+        sheet['C3'] = 'SCHEDULE OF RATES FOR ' + self.data.title
+        sheet['C5'] = project_settings_dict["$cmbnameofwork$"]
+        sheet['C6'] = project_settings_dict["$cmbagmntno$"]
+        sheet['C7'] = project_settings_dict["$cmbagency$"]
+        
+        # Copy bill items
+        
+        itemnos = schedule.get_itemnos()
+        row_item = rowend+2
+        for itemno in itemnos:
+            # If item measured, include in bill
+            if itemno in self.item_qty and self.item_qty[itemno] != []:
+                # Setup required values
+                qty_items = self.item_qty[itemno]
+                cmb_refs = self.item_cmb_ref[itemno]
+                item_paths = self.item_paths[itemno]
+                item = schedule[itemno]
+                
+                if self.prev_bill is not None:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
+                                               - self.prev_bill.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
+                                               - self.prev_bill.item_excess_amount[itemno]
+                else:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    
+                # Copy data
+                sheet['A' + str(row_item)] = itemno
+                sheet['B' + str(row_item)] = item.extended_description
+                sheet['A' + str(row_item)].alignment = Alignment(horizontal='center')
+                sheet['B' + str(row_item)].alignment = Alignment(wrap_text=True)
+                row_item += 1
+                
+                if self.item_excess_qty[itemno] > 0:
+                    sheet['B' + str(row_item)] = 'TOTAL'
+                    sheet['C' + str(row_item)] = sum(qty_items)
+                    sheet['D' + str(row_item)] = item.unit
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty upto deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = self.item_normal_qty[itemno]
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = item.rate
+                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    if self.prev_bill != None:
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = self.data.item_excess_rates[itemno]
+                    sheet['F' + str(row_item)] = round(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    if self.prev_bill != None:
+                        sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - self.prev_bill.item_excess_amount[itemno]
+                    row_item += 2
+                else:
+                    sheet['B' + str(row_item)] = 'TOTAL'
+                    sheet['C' + str(row_item)] = sum(self.item_qty[itemno])
+                    sheet['D' + str(row_item)] = item.unit
+                    sheet['E' + str(row_item)] = item.rate
+                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
+                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    if self.prev_bill != None:
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                    row_item += 2
+                
+        # Copy all from bill end
+        template_end_sheet = template.get_sheet_by_name('end')
+        for row in range(1,rowend_end+1):
+            for column in range(1,colend+1):
+                sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value
+                sheet.cell(row=row+row_item, column=column).style = template_end_sheet.cell(row=row, column=column).style
+        
+        # Fill in values
+        sheet.cell(row=1+row_item, column=7).value = '=SUM(G8:G' + str(row_item) + ')'
+        if self.prev_bill != None:
+            sheet.cell(row=2+row_item, column=7).value = self.prev_bill.bill_total_amount
+        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '-G' + str(row_item+2)
+        sheet.cell(row=3+row_item, column=8).value = '=SUM(H8:H' + str(row_item) + ')'
+        
+        # Bill formatings
+        for column in range(1,colend+1):
+            # copy coumn widths
+            sheet.column_dimensions[get_column_letter(column)].width = \
+                template_start_sheet.column_dimensions[get_column_letter(column)].width
+        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.fitToHeight = 99
+        sheet.page_setup.fitToWidth = 1
+        sheet.print_options.horizontalCentered = True
+        
+        ## Save Document
         spreadsheet.save(filename)
 
     def get_text(self):

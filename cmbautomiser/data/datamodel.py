@@ -651,7 +651,7 @@ class DataModel:
                             return code
                 # Write spreadsheet output
                 filename_bill_spreadsheet = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
-                bill.export_spreadsheet_bill(filename_bill_spreadsheet, replacement_dict, self.schedule)
+                bill.export_spreadsheet_bill(filename_bill_spreadsheet, replacement_dict, self.schedule, self.cmbs)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
         else:
