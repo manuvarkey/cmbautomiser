@@ -712,7 +712,7 @@ class Completion:
     def get_date(self):
         return self.date
         
-    def get_model(self):
+    def get_model(self, clean=False):
         """Get data model"""
         return ['Completion',[self.date]]
     

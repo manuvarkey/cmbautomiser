@@ -242,6 +242,8 @@ class MainWindow:
             self.display_status(misc.CMB_INFO, "Project successfully saved")
             log.info('onSaveProjectClicked -  Project successfully saved')
             self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
+            # Save point in stack for checking change state
+            self.stack.savepoint()
 
     def onSaveAsProjectClicked(self, button):
         """Save project to file selected by the user"""
@@ -280,6 +282,8 @@ class MainWindow:
                 os.path.split(self.filename)[0]))
             # Setup window name
             self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
+            # Save point in stack for checking change state
+            self.stack.savepoint()
             
             log.info('onSaveAsProjectClicked -  Project successfully saved - ' + self.filename)
         # If response is "CANCEL" (the button "Cancel" has been clicked)
