@@ -24,7 +24,7 @@
 
 import subprocess, threading, os, posixpath, platform, logging
 
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango
 import openpyxl
 
 # Setup logger object
@@ -613,7 +613,77 @@ class LatexFile:
         file_latex = open(filename,'w')
         file_latex.write(self.latex_buffer)
         file_latex.close()
-
+        
+        
+class ProgressWindow:
+    
+    def __init__(self, parent):
+        # Setup data
+        self.step = 0
+        self.fraction = 0
+        
+        # Setup progress indicator
+        self.dialog = Gtk.Window(default_height=200, default_width=400, title='Rendering...')
+        self.dialog.set_transient_for(parent)
+        self.dialog.set_gravity(Gdk.Gravity.CENTER)
+        self.dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_vexpand(True)
+        self.store = Gtk.ListStore(str)
+        self.tree = Gtk.TreeView.new_with_model(self.store)
+        column = Gtk.TreeViewColumn("Message")
+        cell = Gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.add_attribute(cell, "text", 0)
+        self.tree.append_column(column)
+        scroll.add(self.tree)
+        
+        box.pack_start(scroll, True, True, 6)
+        self.progress = Gtk.ProgressBar()
+        box.pack_start(self.progress, False, False, 6)
+        self.dialog.add(box)
+        
+        # Connect events
+        self.dialog.connect("delete-event",self.on_delete)
+        
+    def show(self):
+        self.dialog.show_all()
+    
+    def close(self):
+        self.dialog.close()
+        
+    def on_delete(self, *args):
+        if self.fraction == 1:
+            return False
+        else:
+            # Cancel event
+            self.dialog.hide()
+            return True
+        
+    def set_pulse_step(self, width):
+        self.step = width
+        self.fraction = 0
+        
+    def pulse(self, end=False):
+        def callback():
+            self.fraction += self.step
+            if end:
+                self.fraction = 1
+            self.progress.set_fraction(self.fraction)
+            self.show()
+            return False
+        GLib.idle_add(callback)
+        
+    def add_message(self, message):
+        def callback():
+            itemiter = self.store.append([message])
+            path = self.store.get_path(itemiter)
+            self.tree.set_cursor(path)
+            return False
+        GLib.idle_add(callback)
+        
 
 class Command(object):
     """Runs a command in a seperate thread"""
@@ -718,7 +788,7 @@ def get_user_input_text(parent, message, title='', oldval=None, multiline=False)
         return text
     else:
         return None
-        
+
 def abs_path(*args):
     """Returns absolute path to the relative path provided"""
     return os.path.join(os.path.split(__file__)[0],*args)

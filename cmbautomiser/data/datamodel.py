@@ -443,7 +443,7 @@ class DataModel:
         
         self.update()
         
-    def render_cmb(self, folder, replacement_dict, path, recursive = True):
+    def render_cmb(self, folder, replacement_dict, path, recursive = True, progress=None):
         """Render CMB
             
             Arguments:
@@ -482,23 +482,47 @@ class DataModel:
 
         # Run latex on files and dependencies
         
+        # Setup progress window
+        if progress is not None:
+            billno = 0
+            cmbno = 0
+            for bill in self.bills:
+                if path[0] in bill.cmb_ref:
+                    billno += 1
+            for cmb_count, cmb in enumerate(self.cmbs):
+                if path[0] in self.cmb_ref[cmb_count]:
+                    cmbno += 1
+            progress.set_pulse_step(1/((cmbno+billno)*2 + 2))
+        
         # Run on all cmbs refered by cmb
         if recursive: # if recursive call
             for cmb_count, cmb in enumerate(self.cmbs):
                 if path[0] in self.cmb_ref[cmb_count]:
+                    if progress is not None:
+                        progress.add_message('Rendering CMB No.' + cmb.name)
                     code = self.render_cmb(folder, replacement_dict, [cmb_count],False)
+                    if progress is not None:
+                        progress.pulse()
                     if code[0] == misc.CMB_ERROR:
                         return code
         # Run on all bills refering cmb
         if recursive: # if recursive call
             for bill_count,bill in enumerate(self.bills):
                 if path[0] in bill.cmb_ref:
+                    if progress is not None:
+                        progress.add_message('Rendering Bill No.' + bill.data.cmb_name)
                     code = self.render_bill(folder, replacement_dict, [bill_count], False)
+                    if progress is not None:
+                        progress.pulse()
                     if code[0] == misc.CMB_ERROR:
                         return code
                         
         # Run latex on file
+        if progress is not None:
+            progress.add_message('Rendering CMB No.' + self.cmbs[path[0]].name)
         code = misc.run_latex(misc.posix_path(folder), filename)
+        if progress is not None:
+            progress.pulse()
         if code == misc.CMB_ERROR:
             return (misc.CMB_ERROR,'Rendering of CMB No.' + self.cmbs[path[0]].get_name() + ' failed')
 
@@ -507,22 +531,34 @@ class DataModel:
         if recursive: # if recursive call
             for cmb_count, cmb in enumerate(self.cmbs):
                 if path[0] in self.cmb_ref[cmb_count]:
+                    if progress is not None:
+                        progress.add_message('Rebuilding index for CMB No.' + cmb.name)
                     code = self.render_cmb(folder, replacement_dict, [cmb_count],False)
+                    if progress is not None:
+                        progress.pulse()
                     if code[0] == misc.CMB_ERROR:
                         return code
         # Run on all bills refering cmb
         if recursive: # if recursive call
             for bill_count,bill in enumerate(self.bills):
                 if path[0] in bill.cmb_ref:
+                    if progress is not None:
+                        progress.add_message('Rebuilding index for Bill No.' + bill.data.cmb_name)
                     code = self.render_bill(folder, replacement_dict, [bill_count], False)
+                    if progress is not None:
+                        progress.pulse()
                     if code[0] == misc.CMB_ERROR:
                         return code
         
         # Get spreadsheet buffer
+        if progress is not None:
+            progress.add_message('Rendering CMB No.' + self.cmbs[path[0]].name + ' to .xlsx')
         spreadsheet = self.cmbs[path[0]].get_spreadsheet_buffer([path[0]], self.schedule)
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.xlsx')
         spreadsheet.save(filename)
-        
+        if progress is not None:
+            progress.add_message('Rendering Finished')
+            progress.pulse(end=True)
         # Return status code for main application interface
         return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
     
@@ -574,7 +610,7 @@ class DataModel:
         self.insert_bill_at_row(data_model, row)
         self.update()
         
-    def render_bill(self, folder, replacement_dict, path, recursive=True):
+    def render_bill(self, folder, replacement_dict, path, recursive=True, progress=None):
         """Render bill to file
             
             Arguments:
@@ -613,6 +649,16 @@ class DataModel:
                     external_docs += '\externaldocument{abs_' + str(bill.data.prev_bill + 1) + '}\n'
             replacement_dict_cmbs['$cmbexternaldocs$'] = external_docs
             latex_buffer.replace(replacement_dict_cmbs)
+            
+            # Setup progress window
+            if progress is not None:
+                billno = 0
+                cmbno = len(cmb_refs)
+                if -1 in cmb_refs:
+                    cmbno -= 1
+                if bill.prev_bill is not None and bill.prev_bill.data.bill_type == misc.BILL_NORMAL:
+                    billno = 1
+                progress.set_pulse_step(1/(cmbno*2+billno+3))
 
             # Write output
             filename = misc.posix_path(folder, 'abs_' + str(path[0] + 1) + '.tex')
@@ -625,33 +671,60 @@ class DataModel:
                 # Render all cmbs depending on the bill
                 for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
+                        if progress is not None:
+                            progress.add_message('Rendering CMB No.' + self.cmbs[cmb_ref].name)
                         code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)
+                        if progress is not None:
+                            progress.pulse()
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Render prev bill
                 if bill.prev_bill is not None and bill.prev_bill.data.bill_type == misc.BILL_NORMAL:
+                    if progress is not None:
+                        progress.add_message('Rendering Bill No.' + bill.prev_bill.data.cmb_name)
                     code = self.render_bill(folder, replacement_dict, [bill.data.prev_bill], False)
+                    if progress is not None:
+                        progress.pulse()
                     if code[0] == misc.CMB_ERROR:
                         return code
 
             # Render this bill
+            if progress is not None:
+                progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Abstract')
             code = misc.run_latex(misc.posix_path(folder), filename)
+            if progress is not None:
+                progress.pulse()
             if code == misc.CMB_ERROR:
-                return (misc.CMB_ERROR, 'Rendering of Bill: ' + self.bill.data.title + ' failed')
+                return (misc.CMB_ERROR, 'Rendering of Bill: ' + bill.data.title + ' failed')
+            if progress is not None:
+                progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Schedule')
             code_bill = misc.run_latex(misc.posix_path(folder), filename_bill)
+            if progress is not None:
+                progress.pulse()
             if code_bill == misc.CMB_ERROR:
-                return (misc.CMB_ERROR, 'Rendering of Bill Schedule: ' + self.bill.data.title + ' failed')
+                return (misc.CMB_ERROR, 'Rendering of Bill Schedule: ' + bill.data.title + ' failed')
 
             # Render all cmbs again to rebuild indexes on recursive run
             if recursive:  # if recursive call
                 for cmb_ref in cmb_refs:
                     if cmb_ref is not -1:  # if not prev bill
+                        if progress is not None:
+                            progress.add_message('Rebuilding index for CMB No.' + self.cmbs[cmb_ref].name)
                         code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)
+                        if progress is not None:
+                            progress.pulse()
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Write spreadsheet output
                 filename_bill_spreadsheet = misc.posix_path(folder, 'bill_' + str(path[0] + 1) + '.xlsx')
+                if progress is not None:
+                    progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' to .xlsx')
                 bill.export_spreadsheet_bill(filename_bill_spreadsheet, replacement_dict, self.schedule, self.cmbs)
+                if progress is not None:
+                    progress.pulse()
+                if progress is not None:
+                    progress.add_message('Rendering Finished')
+                    progress.pulse(end=True)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')
         else:

@@ -199,7 +199,7 @@ class BillView:
             self.store[count][0] = str(count + 1)
             self.store[count][1] = bill.get_text()
 
-    def render_selected(self, folder, replacement_dict):
+    def render_selected(self, folder, replacement_dict, progress):
         """Render selected item to folder using replacement dictionary given"""
         # get selection
         selection = self.tree.get_selection()
@@ -207,7 +207,7 @@ class BillView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            code = self.data.render_bill(folder, replacement_dict, path)
+            code = self.data.render_bill(folder, replacement_dict, path, True, progress)
             return code
         else:
             return (misc.CMB_WARNING, 'Please select a Bill for rendering')

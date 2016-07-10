@@ -357,7 +357,7 @@ class MeasurementsView:
                 path = Gtk.TreePath.new_from_indices(old_path)
                 self.tree.set_cursor(path)
 
-    def render_selection(self, folder, replacement_dict):
+    def render_selection(self, folder, replacement_dict, progress):
         """Render selected CMB"""
         # get selection
         selection = self.tree.get_selection()
@@ -365,7 +365,7 @@ class MeasurementsView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            code = self.data.render_cmb(folder, replacement_dict, path)
+            code = self.data.render_cmb(folder, replacement_dict, path, True, progress)
             # Return status code for main application interface
             return code
         else:

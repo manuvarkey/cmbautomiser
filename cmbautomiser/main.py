@@ -22,8 +22,8 @@
 #  
 #  
 
-import subprocess, os, platform, sys, tempfile, logging, json
-from gi.repository import Gtk, Gdk, GLib
+import subprocess, os, platform, sys, tempfile, logging, json, threading, queue
+from gi.repository import Gtk, Gdk, GLib, GObject
 
 # local files import
 import undo, misc, data, view
@@ -420,13 +420,31 @@ class MainWindow:
         filechooserbutton_meas = self.builder.get_object("filechooserbutton_meas")
         if filechooserbutton_meas.get_file() != None:
             folder = filechooserbutton_meas.get_file().get_path()
-            code = self.measurements_view.render_selection(folder, self.project_settings_dict)
-            self.display_status(*code)
-            # remove temporary files
-            onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
-                                or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
-            for f in onlytempfiles:
-                os.remove(misc.posix_path(folder,f))
+            
+            # Show progress window
+            progress = misc.ProgressWindow(self.window)
+            progress.show()
+            
+            que = queue.Queue()
+            thread = threading.Thread(target = lambda q, arg : q.put(self.measurements_view.render_selection(folder, self.project_settings_dict, progress)), args = (que, 2))
+            thread.daemon = True
+            thread.start()
+            
+            def followup():
+                if thread.isAlive():
+                    return True
+                else:
+                    code = que.get()
+                    self.display_status(*code)
+                    # remove temporary files
+                    onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
+                                        or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
+                    for f in onlytempfiles:
+                        os.remove(misc.posix_path(folder,f))
+                    return False
+                    
+            # Schedule followup function
+            GLib.idle_add(followup)
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
@@ -472,13 +490,31 @@ class MainWindow:
         filechooserbutton_bill = self.builder.get_object("filechooserbutton_bill")
         if filechooserbutton_bill.get_file() != None:
             folder = filechooserbutton_bill.get_file().get_path()
-            code = self.bill_view.render_selected(folder, self.project_settings_dict)
-            self.display_status(*code)
-            # remove temporary files
-            onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
-                                or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
-            for f in onlytempfiles:
-                os.remove(misc.posix_path(folder,f))
+            
+            # Show progress window
+            progress = misc.ProgressWindow(self.window)
+            progress.show()
+            
+            que = queue.Queue()
+            thread = threading.Thread(target = lambda q, arg : q.put(self.bill_view.render_selected(folder, self.project_settings_dict, progress)), args = (que, 2))
+            thread.daemon = True
+            thread.start()
+            
+            def followup():
+                if thread.isAlive():
+                    return True
+                else:
+                    code = que.get()
+                    self.display_status(*code)
+                    # remove temporary files
+                    onlytempfiles = [f for f in os.listdir(misc.posix_path(folder)) if (f.find('.aux')!=-1 or f.find('.log')!=-1
+                                        or f.find('.out')!=-1) or f.find('.tex')!=-1 or f.find('.bak')!=-1]
+                    for f in onlytempfiles:
+                        os.remove(misc.posix_path(folder,f))
+                    return False
+                    
+            # Schedule followup function
+            GLib.idle_add(followup)
         else:
             self.display_status(misc.CMB_ERROR, 'Please select an output directory for rendering')
         
@@ -607,6 +643,9 @@ def main():
             return
         log.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
     sys.excepthook = handle_exception
+    
+    # Setup threading support
+    GObject.threads_init()
 
     # Initialise main window
     log.info('Start Program Execution')
