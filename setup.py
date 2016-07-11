@@ -22,7 +22,7 @@ setup(
     # Details
     maintainer="Manu Varkey",
     maintainer_email="manuvarkey@gmail.com",
-    url="https://github.com/manuvarkey/cmbautomiser",
+    url="http://manuvarkey.github.io/cmbautomiser/",
     license="GPL-3.0",
     description="Computerised quantity accounting and cost billing application for use in public works organisations.",
 
