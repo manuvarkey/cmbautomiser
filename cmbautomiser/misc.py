@@ -657,7 +657,11 @@ class ProgressWindow:
         dismiss.connect("clicked",self.on_dismiss)
         
     def show(self):
-        self.dialog.show_all()
+        def callback():
+            self.dialog.show_all()
+            return False
+            
+        GLib.idle_add(callback)
     
     def close(self):
         self.dialog.close()
@@ -711,7 +715,10 @@ class Command(object):
     def run(self, timeout):
         """Run set command with selected timeout"""
         def target():
-            self.process = subprocess.Popen(self.cmd)
+            if platform.system() == 'Linux':
+                self.process = subprocess.Popen(self.cmd)
+            elif platform.system() == 'Windows':
+                self.process = subprocess.Popen(self.cmd, shell=True)
             log.info('Sub-process spawned - ' + str(self.process.pid))
             self.process.communicate()
         thread = threading.Thread(target=target)

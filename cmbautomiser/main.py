@@ -423,7 +423,6 @@ class MainWindow:
             
             # Show progress window
             progress = misc.ProgressWindow(self.window)
-            progress.show()
             
             que = queue.Queue()
             thread = threading.Thread(target = lambda q, arg : q.put(self.measurements_view.render_selection(folder, self.project_settings_dict, progress)), args = (que, 2))
@@ -493,7 +492,6 @@ class MainWindow:
             
             # Show progress window
             progress = misc.ProgressWindow(self.window)
-            progress.show()
             
             que = queue.Queue()
             thread = threading.Thread(target = lambda q, arg : q.put(self.bill_view.render_selected(folder, self.project_settings_dict, progress)), args = (que, 2))

@@ -365,6 +365,7 @@ class MeasurementsView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
+            progress.show()
             code = self.data.render_cmb(folder, replacement_dict, path, True, progress)
             # Return status code for main application interface
             return code
