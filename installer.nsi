@@ -6,7 +6,7 @@
 !define COMPANYNAME "CPWD"
 !define DESCRIPTION "Computerised quantity accounting and cost billing application for use in public works organisations."
 # These three must be integers
-!define VERSIONMAJOR 3.0
+!define VERSIONMAJOR 3.1
 !define VERSIONMINOR 0
 !define VERSIONBUILD 1
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
@@ -28,7 +28,7 @@ LicenseData "license.txt"
 # This will be in the installer/uninstaller's title bar
 Name "${APPNAME}"
 Icon "cmbautomiser.ico"
-outFile "cmbautomiser-win32-3-0-0.exe"
+outFile "cmbautomiser-win32-3-1-0.exe"
  
 !include LogicLib.nsh
  

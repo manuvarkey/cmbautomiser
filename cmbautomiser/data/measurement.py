@@ -638,7 +638,7 @@ class MeasurementItemAbstract(MeasurementItem):
             self.clear()
             self.__init__(model[1])
             
-    def update(self, cmbs, path):
+    def update(self, cmbs):
         """Update values from static itemlist"""
         if self.mitems:
             p = self.mitems[0]

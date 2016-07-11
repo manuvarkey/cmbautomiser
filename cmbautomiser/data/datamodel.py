@@ -111,20 +111,21 @@ class DataModel:
                             self.lock_state += LockState(measitem.get_abstracted_items())
         
         # Update 1) dependency tree of cmbs. 2) measurement abstracts
-        self.cmb_ref = []
+        self.cmb_ref = [set()]*len(self.cmbs)
         for cmb_no, cmb in enumerate(self.cmbs):
-            ref = set()
             for meas_no, meas in enumerate(cmb.items):
                 if isinstance(meas, measurement.Measurement):
                     for meas_item_nos, meas_item in enumerate(meas.items):
                         if isinstance(meas_item, measurement.MeasurementItemAbstract):
                             # Update MeasurementItemAbstract
-                            meas_item.update(self.cmbs, [cmb_no, meas_no, meas_item_nos])
+                            meas_item.update(self.cmbs)
                             # Update Dependency
                             for mitem in meas_item.mitems:
                                 if mitem[0] != cmb_no:
-                                    ref |= set([mitem[0]])
-            self.cmb_ref.append(ref)
+                                    # Update cmb with abstract
+                                    self.cmb_ref[cmb_no] |= set([mitem[0]])
+                                    # Update cmb with item abstracted
+                                    self.cmb_ref[mitem[0]] |= set([cmb_no])
             
     def get_lock_states(self):
         """Return underlying LockState object for App"""
@@ -557,7 +558,7 @@ class DataModel:
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.xlsx')
         spreadsheet.save(filename)
         if progress is not None:
-            progress.add_message('Rendering Finished')
+            progress.add_message('<b>Rendering Finished</b>')
             progress.pulse(end=True)
         # Return status code for main application interface
         return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
@@ -723,7 +724,7 @@ class DataModel:
                 if progress is not None:
                     progress.pulse()
                 if progress is not None:
-                    progress.add_message('Rendering Finished')
+                    progress.add_message('<b>Rendering Finished</b>')
                     progress.pulse(end=True)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')

@@ -616,6 +616,7 @@ class LatexFile:
         
         
 class ProgressWindow:
+    """Class for handling display of long running proccess"""
     
     def __init__(self, parent):
         # Setup data
@@ -623,11 +624,15 @@ class ProgressWindow:
         self.fraction = 0
         
         # Setup progress indicator
-        self.dialog = Gtk.Window(default_height=200, default_width=400, title='Rendering...')
+        self.dialog = Gtk.Window(default_height=250, default_width=400, title='Process running...')
         self.dialog.set_transient_for(parent)
         self.dialog.set_gravity(Gdk.Gravity.CENTER)
         self.dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        self.dialog.set_modal(True)
+        self.dialog.set_type_hint(Gdk.WindowTypeHint.DIALOG)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        box.set_margin_left(6)
+        box.set_margin_right(6)
         
         scroll = Gtk.ScrolledWindow()
         scroll.set_vexpand(True)
@@ -636,17 +641,20 @@ class ProgressWindow:
         column = Gtk.TreeViewColumn("Message")
         cell = Gtk.CellRendererText()
         column.pack_start(cell, True)
-        column.add_attribute(cell, "text", 0)
+        column.add_attribute(cell, "markup", 0)
         self.tree.append_column(column)
         scroll.add(self.tree)
         
-        box.pack_start(scroll, True, True, 6)
+        box.pack_start(scroll, True, True, 3)
         self.progress = Gtk.ProgressBar()
-        box.pack_start(self.progress, False, False, 6)
+        box.pack_start(self.progress, False, False, 3)
+        dismiss = Gtk.Button('Dismiss')
+        box.pack_start(dismiss, False, False, 3)
         self.dialog.add(box)
         
         # Connect events
         self.dialog.connect("delete-event",self.on_delete)
+        dismiss.connect("clicked",self.on_dismiss)
         
     def show(self):
         self.dialog.show_all()
@@ -661,6 +669,12 @@ class ProgressWindow:
             # Cancel event
             self.dialog.hide()
             return True
+    
+    def on_dismiss(self, button):
+        if self.fraction == 1:
+            self.close()
+        else:
+            self.dialog.hide()
         
     def set_pulse_step(self, width):
         self.step = width
@@ -671,8 +685,9 @@ class ProgressWindow:
             self.fraction += self.step
             if end:
                 self.fraction = 1
+                self.dialog.set_title('Process Complete')
+                self.show()
             self.progress.set_fraction(self.fraction)
-            self.show()
             return False
         GLib.idle_add(callback)
         
@@ -680,7 +695,7 @@ class ProgressWindow:
         def callback():
             itemiter = self.store.append([message])
             path = self.store.get_path(itemiter)
-            self.tree.set_cursor(path)
+            self.tree.scroll_to_cell(path)
             return False
         GLib.idle_add(callback)
         

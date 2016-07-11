@@ -52,4 +52,14 @@ New features:
     New import dialog for spreadsheet allowing import of data from any portion of spreadsheet.
     Exit confirmation for main window and measurement items to prevent accidental data loss.
     Changes to documentation to reflect new features.
-    
+
+Ver 3.1
+=======
+Bug Fixes:
+    Typo in CMB preamble
+    Measurement abstarct not added when selection exists
+    Wrong behaviour tracking unsaved changes
+New features:
+    Added support for multiline heading items
+    Added support for exporting abstract and bill to xlsx
+    Added scrollbar for progress display

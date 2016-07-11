@@ -233,7 +233,7 @@ class MeasurementsView:
                     # Get selection
                     selection = self.tree.get_selection()
                     if selection.count_selected_rows() != 0: # if selection exists
-                        [model, paths] = selection.get_selected_rows()
+                        [treemodel, paths] = selection.get_selected_rows()
                         path = paths[0].get_indices()
                         self.data.add_measurement_item_at_node(model, path)
                     else: # if no selection append at end
