@@ -35,8 +35,11 @@ log = logging.getLogger(__name__)
 class ScheduleItemGeneric:
     """Class stores a row in the generic schedule"""
     
-    def __init__(self, item=[]):
-        self.item = item
+    def __init__(self, item=None):
+        if item is not None:
+            self.item = item
+        else:
+            self.item = []
 
     def set_model(self, item):
         """Set data model"""
@@ -126,8 +129,11 @@ class ScheduleItem(ScheduleItemGeneric):
 class ScheduleGeneric:
     """Class stores a generic schedule"""
     
-    def __init__(self, items=[]):
-        self.items = items  # main data store of rows
+    def __init__(self, items=None):
+        if items is not None:
+            self.items = items  # main data store of rows
+        else:
+            self.items = []
 
     def append_item(self, item):
         """Append item at end of schedule"""
@@ -180,7 +186,7 @@ class ScheduleGeneric:
 class Schedule(ScheduleGeneric):
     """Class stores the schedule of rates for work"""
     
-    def __init__(self, items=[]):
+    def __init__(self, items=None):
         #Initialise base class
         super(Schedule,self).__init__(items)
         self.update_values()
