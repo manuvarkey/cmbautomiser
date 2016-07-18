@@ -259,7 +259,7 @@ class Bill:
         # Loop over each item in schedule
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno] != []:
+            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -309,9 +309,9 @@ class Bill:
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
-                item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[itemno])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
+                item_local_vars['$cmbtotalqty$'] = str(round(sum(qty_items),3))
+                item_local_vars['$cmbnormalqty$'] = str(round(self.item_normal_qty[itemno],3))
+                item_local_vars['$cmbexcessqty$'] = str(round(self.item_excess_qty[itemno],3))
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
                     round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
@@ -361,7 +361,7 @@ class Bill:
         # Write each item to bill
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno] != []:
+            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 item_paths = self.item_paths[itemno]
@@ -390,9 +390,9 @@ class Bill:
                 item_local_vars['$cmbunit$'] = str(item.unit)
                 item_local_vars['$cmbrate$'] = str(item.rate)
                 item_local_vars['$cmbexcesspercent$'] = str(item.excess_rate_percent)
-                item_local_vars['$cmbtotalqty$'] = str(sum(qty_items))
-                item_local_vars['$cmbnormalqty$'] = str(self.item_normal_qty[itemno])
-                item_local_vars['$cmbexcessqty$'] = str(self.item_excess_qty[itemno])
+                item_local_vars['$cmbtotalqty$'] = str(round(sum(qty_items),3))
+                item_local_vars['$cmbnormalqty$'] = str(round(self.item_normal_qty[itemno],3))
+                item_local_vars['$cmbexcessqty$'] = str(round(self.item_excess_qty[itemno],3))
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
                     round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
@@ -599,7 +599,7 @@ class Bill:
         row_item = rowend+2
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno] != []:
+            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -714,7 +714,7 @@ class Bill:
         row_item = rowend+2
         for itemno in itemnos:
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno] != []:
+            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -750,6 +750,8 @@ class Bill:
                     sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
                     if self.prev_bill != None:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                    else:
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     row_item += 1
                     sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
@@ -759,6 +761,8 @@ class Bill:
                     sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
                     if self.prev_bill != None:
                         sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - self.prev_bill.item_excess_amount[itemno]
+                    else:
+                        sheet['H' + str(row_item)] = self.item_excess_amount[itemno]
                     row_item += 2
                 else:
                     sheet['B' + str(row_item)] = 'TOTAL'
@@ -769,6 +773,8 @@ class Bill:
                     sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
                     if self.prev_bill != None:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                    else:
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     row_item += 2
                 
         # Copy all from bill end

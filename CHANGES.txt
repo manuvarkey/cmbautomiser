@@ -62,4 +62,4 @@ Bug Fixes:
 New features:
     Added support for multiline heading items
     Added support for exporting abstract and bill to xlsx
-    Added scrollbar for progress display
+    Added progressbar for progress display

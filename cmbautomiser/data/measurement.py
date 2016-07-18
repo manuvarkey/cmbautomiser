@@ -508,7 +508,7 @@ class MeasurementItemCustom(MeasurementItem):
                         data_string[i] = ''
                 else:
                     try:
-                        data_string[i] = str(record.data[i]) if record.data[i] != 0 else ''
+                        data_string[i] = str(round(record.data[i],3)) if record.data[i] != 0 else ''
                     except:
                         data_string[i] = ''
                 # Check for carry over item possibly contains code
