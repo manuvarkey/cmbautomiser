@@ -230,7 +230,14 @@ class Measurement:
         
 class MeasurementItem:
     """Base class for storing Measurement items"""
-    def __init__(self, itemnos=[], records=[], remark="", item_remarks=[]):
+    def __init__(self, itemnos=None, records=None, remark="", item_remarks=None):
+        if itemnos is None:
+            itemnos = []
+        if records is None:
+            records = []
+        if item_remarks is None:
+            item_remarks = [] 
+        
         self.itemnos = itemnos
         self.records = records
         self.remark = remark

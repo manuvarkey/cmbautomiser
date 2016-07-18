@@ -754,8 +754,10 @@ class LockState:
         if len(flag_part) <= path[-1]:
             flag_part.extend([False]*(path[-1] - len(flag_part) + 1))
             
-    def get_paths(self, paths=None, flags = None, level=[]):
+    def get_paths(self, paths=None, flags = None, level=None):
         """Returns a list of paths from model"""
+        if level is None:
+            level = []
         if paths == None:
             paths = []
             flags = self.flags
