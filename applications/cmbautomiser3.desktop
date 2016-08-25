@@ -7,5 +7,5 @@ Exec=/usr/bin/cmbautomiser3
 Icon=/usr/share/pixmaps/cmbautomiser3.png
 Terminal=false
 StartupNotify=true
-Path=/usr/lib/python3.4/site-packages/cmbautomiser
+Path=/usr/lib/python3.5/site-packages/cmbautomiser
 Categories=Office;

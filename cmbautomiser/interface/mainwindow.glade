@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkFileFilter" id="filefilter_ods">
@@ -1202,7 +1202,7 @@
     <property name="transient_for">window_main</property>
     <property name="attached_to">window_main</property>
     <property name="program_name">CMB Automiser</property>
-    <property name="version">3.1.0</property>
+    <property name="version">3.1.1</property>
     <property name="copyright" translatable="yes">Copyright © 2015 Manu Varkey</property>
     <property name="comments" translatable="yes">A computerised quantity accounting and cost billing application for use in public works organisations.</property>
     <property name="website">http://manuvarkey.github.io/cmbautomiser/</property>
