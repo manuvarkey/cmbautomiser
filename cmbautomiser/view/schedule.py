@@ -70,6 +70,7 @@ class ScheduleViewGeneric:
         row = int(path)
         item = self.schedule.get_item_by_index(row).get_model()
         editable.props.text = str(item[column])
+        editable.props.width_chars = 1
 
     # for browsing with tab key
     def onKeyPressTreeviewSchedule(self, treeview, event):
