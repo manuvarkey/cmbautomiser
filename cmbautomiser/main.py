@@ -22,7 +22,10 @@
 #  
 #  
 
-import subprocess, os, platform, sys, tempfile, logging, json, threading, queue
+import subprocess, os, ntpath, platform, sys, tempfile, logging, json, threading, queue
+
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject
 
 # local files import
@@ -50,15 +53,17 @@ class MainWindow:
         if status_code == misc.CMB_ERROR:
             infobar_main.set_message_type(Gtk.MessageType.ERROR)
             label_infobar_main.set_text(message)
-            infobar_main.show()
         elif status_code == misc.CMB_WARNING:
             infobar_main.set_message_type(Gtk.MessageType.WARNING)
             label_infobar_main.set_text(message)
-            infobar_main.show()
         elif status_code == misc.CMB_INFO:
             infobar_main.set_message_type(Gtk.MessageType.INFO)
             label_infobar_main.set_text(message)
-            infobar_main.show()
+        else:
+            log.warning('display_status - Malformed status code')
+            return
+        log.info('display_status - ' + message)
+        infobar_main.show()
     
     def update(self):
         """Refreshes all displays"""
@@ -201,7 +206,8 @@ class MainWindow:
                         self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                             os.path.split(self.filename)[0]))
                         # Setup window name
-                        self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
+                        window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
+                        self.window.set_title(window_title)
                         # Clear undo/redo stack
                         self.stack.clear()
                         # Set flags
@@ -241,7 +247,6 @@ class MainWindow:
             fileobj.close()
             self.display_status(misc.CMB_INFO, "Project successfully saved")
             log.info('onSaveProjectClicked -  Project successfully saved')
-            self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
             # Save point in stack for checking change state
             self.stack.savepoint()
 
@@ -281,7 +286,8 @@ class MainWindow:
             self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                 os.path.split(self.filename)[0]))
             # Setup window name
-            self.window.set_title(self.filename + ' - ' + misc.PROGRAM_NAME)
+            window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
+            self.window.set_title(window_title)
             # Save point in stack for checking change state
             self.stack.savepoint()
             
