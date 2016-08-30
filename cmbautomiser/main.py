@@ -49,6 +49,7 @@ class MainWindow:
         """
         infobar_main = self.builder.get_object("infobar_main")
         label_infobar_main = self.builder.get_object("label_infobar_main")
+        infobar_revealer = self.builder.get_object("infobar_revealer")
         
         if status_code == misc.CMB_ERROR:
             infobar_main.set_message_type(Gtk.MessageType.ERROR)
@@ -63,7 +64,7 @@ class MainWindow:
             log.warning('display_status - Malformed status code')
             return
         log.info('display_status - ' + message)
-        infobar_main.show()
+        infobar_revealer.set_reveal_child(True)
     
     def update(self):
         """Refreshes all displays"""
@@ -314,7 +315,8 @@ class MainWindow:
 
     def onInfobarClose(self, widget, response=0):
         """Hides the infobar"""
-        widget.hide()
+        infobar_revealer = self.builder.get_object("infobar_revealer")
+        infobar_revealer.set_reveal_child(False)
 
     def onRedoClicked(self, button):
         """Redo action from stack"""
@@ -571,8 +573,6 @@ class MainWindow:
         self.builder.add_from_file(misc.abs_path("interface", "mainwindow.glade"))
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
-        # Setup infobar
-        self.builder.get_object("infobar_main").hide()
 
         # Setup project settings dictionary
         self.project_settings_dict = dict()

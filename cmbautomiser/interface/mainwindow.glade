@@ -1131,43 +1131,64 @@
           </packing>
         </child>
         <child>
-          <object class="GtkInfoBar" id="infobar_main">
+          <object class="GtkRevealer" id="infobar_revealer">
             <property name="visible">True</property>
-            <property name="app_paintable">True</property>
             <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
-            <property name="hexpand">False</property>
-            <property name="show_close_button">True</property>
-            <signal name="close" handler="onInfobarClose" swapped="no"/>
-            <signal name="response" handler="onInfobarClose" swapped="no"/>
-            <child internal-child="action_area">
-              <object class="GtkButtonBox" id="infobar-action_area1">
+            <property name="transition_type">slide-up</property>
+            <child>
+              <object class="GtkInfoBar" id="infobar_main">
+                <property name="visible">True</property>
+                <property name="app_paintable">True</property>
                 <property name="can_focus">False</property>
-                <property name="spacing">6</property>
-                <property name="layout_style">end</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child internal-child="content_area">
-              <object class="GtkBox" id="infobar-content_area1">
-                <property name="can_focus">False</property>
-                <property name="spacing">16</property>
-                <child>
-                  <object class="GtkLabel" id="label_infobar_main">
-                    <property name="visible">True</property>
+                <property name="no_show_all">True</property>
+                <property name="hexpand">False</property>
+                <child internal-child="action_area">
+                  <object class="GtkButtonBox">
                     <property name="can_focus">False</property>
-                    <property name="no_show_all">True</property>
-                    <attributes>
-                      <attribute name="style" value="normal"/>
-                      <attribute name="weight" value="bold"/>
-                    </attributes>
+                    <property name="spacing">6</property>
+                    <property name="layout_style">end</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Hide</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Dismiss Infomation Bar</property>
+                        <signal name="clicked" handler="onInfobarClose" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child internal-child="content_area">
+                  <object class="GtkBox">
+                    <property name="can_focus">False</property>
+                    <property name="spacing">16</property>
+                    <child>
+                      <object class="GtkLabel" id="label_infobar_main">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="no_show_all">True</property>
+                        <attributes>
+                          <attribute name="style" value="normal"/>
+                          <attribute name="weight" value="bold"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1175,17 +1196,15 @@
                     <property name="position">0</property>
                   </packing>
                 </child>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
+            <property name="fill">True</property>
             <property name="position">3</property>
           </packing>
         </child>
