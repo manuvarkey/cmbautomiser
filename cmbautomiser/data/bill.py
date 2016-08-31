@@ -171,11 +171,12 @@ class Bill:
             # Fill in values from Prev Bill
             if self.prev_bill is not None:
                 for itemno in itemnos:
-                    item_qty = sum(self.prev_bill.item_qty[itemno])
-                    if item_qty != 0:
-                        self.item_cmb_ref[itemno].append(-1)  # use -1 as marker for prev abstract
-                        self.item_paths[itemno].append([self.data.prev_bill, itemno])
-                        self.item_qty[itemno].append(item_qty)  # add total qty from previous bill
+                    if itemno in self.prev_bill.item_qty:
+                        item_qty = sum(self.prev_bill.item_qty[itemno])
+                        if item_qty != 0:
+                            self.item_cmb_ref[itemno].append(-1)  # use -1 as marker for prev abstract
+                            self.item_paths[itemno].append([self.data.prev_bill, itemno])
+                            self.item_qty[itemno].append(item_qty)  # add total qty from previous bill
             # Fill in values from measurement items
             for mitem in self.data.mitems:
                 item = cmbs[mitem[0]][mitem[1]][mitem[2]]
