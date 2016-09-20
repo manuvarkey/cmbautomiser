@@ -196,6 +196,9 @@ class Bill:
                 item = schedule[itemno]
                 # Determine total qty
                 total_qty = sum(self.item_qty[itemno])
+                # Determine rates
+                normal_rate = round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate,2)
+                excess_rate = round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno],2)
                 # Determine items above and at normal rates
                 if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
                     if item.unit.lower() in misc.INT_ITEMS:
@@ -208,11 +211,9 @@ class Bill:
                     self.item_excess_qty[itemno] = 0
                 # Determine amounts
                 self.item_normal_amount[itemno] = round(
-                    self.item_normal_qty[itemno] * self.data.item_part_percentage[itemno] * 0.01 *
-                    schedule[itemno].rate, 2)
+                    self.item_normal_qty[itemno] * normal_rate, 2)
                 self.item_excess_amount[itemno] = round(
-                    self.item_excess_qty[itemno] * self.data.item_excess_part_percentage[itemno] * 0.01 *
-                    self.data.item_excess_rates[itemno], 2)
+                    self.item_excess_qty[itemno] * excess_rate, 2)
                 # Update cmbs refered to by the bill
                 self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
