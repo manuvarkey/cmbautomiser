@@ -629,6 +629,10 @@ class DataModel:
         if self.bills[path[0]].data.bill_type == misc.BILL_NORMAL:
             bill = self.bills[path[0]]
             
+            # Show Progess Dialog
+            if progress:
+                progress.show()
+            
             # Fill in latex buffer
             latex_buffer = bill.get_latex_buffer([path[0]], self.schedule)
             latex_buffer_bill = bill.get_latex_buffer_bill(self.schedule)

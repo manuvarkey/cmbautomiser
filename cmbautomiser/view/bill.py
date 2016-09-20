@@ -207,7 +207,6 @@ class BillView:
             # get path of selection
             [model, paths] = selection.get_selected_rows()
             path = paths[0].get_indices()
-            progress.show()
             code = self.data.render_bill(folder, replacement_dict, path, True, progress)
             return code
         else:
