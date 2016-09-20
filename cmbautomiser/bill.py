@@ -167,6 +167,9 @@ class Bill:
             # Evaluate remaining variables from above data
             for item_index in range(sch_len):
                 item = self.schedule[item_index]
+                # Determine rates
+                normal_rate = round(self.data.item_part_percentage[item_index] * 0.01 * self.schedule[item_index].rate,2)
+                excess_rate = round(self.data.item_excess_part_percentage[item_index] * 0.01 * self.data.item_excess_rates[item_index],2)
                 # determine total qty
                 total_qty = sum(self.item_qty[item_index])
                 # determin items above and at normal rates
@@ -180,11 +183,9 @@ class Bill:
                     self.item_normal_qty[item_index] = total_qty
                 # determine amounts
                 self.item_normal_amount[item_index] = round(
-                    self.item_normal_qty[item_index] * self.data.item_part_percentage[item_index] * 0.01 *
-                    self.schedule[item_index].rate, 2)
+                    self.item_normal_qty[item_index] * normal_rate, 2)
                 self.item_excess_amount[item_index] = round(
-                    self.item_excess_qty[item_index] * self.data.item_excess_part_percentage[item_index] * 0.01 *
-                    self.data.item_excess_rates[item_index], 2)
+                    self.item_excess_qty[item_index] * excess_rate, 2)
                 # mbs refered to the bill
                 self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[item_index])  # Add any unique cmb (find union)
 
