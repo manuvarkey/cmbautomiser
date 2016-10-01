@@ -23,7 +23,11 @@
 #
 
 from gi.repository import Gtk, Gdk, GLib
-import copy, math, logging
+import copy, math, logging, hashlib
+
+from decimal import Decimal, ROUND_HALF_UP
+def Currency(x):
+  return Decimal(x).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
 
 from openpyxl import Workbook, load_workbook, worksheet
 from openpyxl.styles import Alignment, Font
@@ -197,39 +201,37 @@ class Bill:
                 # Determine total qty
                 total_qty = sum(self.item_qty[itemno])
                 # Determine rates
-                normal_rate = round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate,2)
-                excess_rate = round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno],2)
+                normal_rate = Currency(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate)
+                excess_rate = Currency(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno])
                 # Determine items above and at normal rates
                 if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
                     if item.unit.lower() in misc.INT_ITEMS:
                         self.item_normal_qty[itemno] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
                     else:
-                        self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent), 2)
+                        self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent),3)
                     self.item_excess_qty[itemno] = total_qty - self.item_normal_qty[itemno]
                 else:
                     self.item_normal_qty[itemno] = total_qty
                     self.item_excess_qty[itemno] = 0
                 # Determine amounts
-                self.item_normal_amount[itemno] = round(
-                    self.item_normal_qty[itemno] * normal_rate, 2)
-                self.item_excess_amount[itemno] = round(
-                    self.item_excess_qty[itemno] * excess_rate, 2)
+                self.item_normal_amount[itemno] = Currency(Decimal(self.item_normal_qty[itemno]) * normal_rate)
+                self.item_excess_amount[itemno] = Currency(Decimal(self.item_excess_qty[itemno]) * excess_rate)
                 # Update cmbs refered to by the bill
                 self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
             # Evaluate total
-            self.bill_total_amount = round(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()), 2)
+            self.bill_total_amount = Currency(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()))
             if self.prev_bill is not None:
-                self.bill_since_prev_amount = round(self.bill_total_amount - self.prev_bill.bill_total_amount, 2)
+                self.bill_since_prev_amount = Currency(self.bill_total_amount - self.prev_bill.bill_total_amount)
             else:
-                self.bill_since_prev_amount = self.bill_total_amount
+                self.bill_since_prev_amount = Currency(self.bill_total_amount)
         
         # If bill is a Custom bill
         elif self.data.bill_type == misc.BILL_CUSTOM:
             self.item_qty = self.data.item_qty
             self.item_normal_amount = self.data.item_normal_amount
             self.item_excess_amount = self.data.item_excess_amount
-            self.bill_total_amount = round(sum(self.data.item_normal_amount.values()) + sum(self.data.item_excess_amount.values()), 2)
+            self.bill_total_amount = Currency(sum(self.data.item_normal_amount.values()) + sum(self.data.item_excess_amount.values()))
             self.bill_since_prev_amount = self.bill_total_amount
 
     def get_latex_buffer(self, thisbillpath, schedule):
@@ -289,7 +291,8 @@ class Bill:
                             item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                         else:  # if prev abstract
                             if self.prev_bill.data.bill_type == misc.BILL_NORMAL:
-                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, itemno])
+                                hashval = hashlib.sha1(itemno.encode('utf-8')).hexdigest()
+                                item_record_vars['$cmbbf$'] = 'ref:abs:abs:' + str([self.data.prev_bill, hashval])
                                 item_record_vars['$cmblabel$'] = ''
                                 item_record_vars['$cmbnormalbillflag$'] = 'iftrue'
                             elif self.prev_bill.data.bill_type == misc.BILL_CUSTOM:
@@ -316,12 +319,14 @@ class Bill:
                 item_local_vars['$cmbexcessqty$'] = str(round(self.item_excess_qty[itemno],3))
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
+                    Currency(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate))
                 item_local_vars['$cmbexcesspr$'] = str(
-                    round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
+                    Currency(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno]))
                 item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
                 item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[itemno])
-                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + str(thisbillpath + [itemno])
+                
+                hashval = hashlib.sha1(itemno.encode('utf-8')).hexdigest()
+                item_local_vars['$cmbabslabel$'] = 'ref:abs:abs:' + str(thisbillpath + [hashval])
 
                 item_local_vars_vanilla['$cmbexcessflag$'] = excess_flag
                 item_local_vars_vanilla['$cmbrecords$'] = latex_records.latex_buffer
@@ -397,9 +402,9 @@ class Bill:
                 item_local_vars['$cmbexcessqty$'] = str(round(self.item_excess_qty[itemno],3))
                 item_local_vars['$cmbexcessrate$'] = str(self.data.item_excess_rates[itemno])
                 item_local_vars['$cmbnormalpr$'] = str(
-                    round(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate, 2))
+                    Currency(self.data.item_part_percentage[itemno] * 0.01 * schedule[itemno].rate))
                 item_local_vars['$cmbexcesspr$'] = str(
-                    round(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno], 2))
+                    Currency(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno]))
                 item_local_vars['$cmbnormalamount$'] = str(self.item_normal_amount[itemno])
                 item_local_vars['$cmbexcessamount$'] = str(self.item_excess_amount[itemno])
                 item_local_vars['$cmbnormalsinceprevamount$'] = str(sprev_item_normal_amount)
@@ -451,11 +456,11 @@ class Bill:
                 sheet.cell(row=count+2, column=4).value = sum(self.item_qty[itemno])
                 sheet.cell(row=count+2, column=5).value = self.item_normal_qty[itemno]
                 sheet.cell(row=count+2, column=6).value = self.item_excess_qty[itemno]
-                sheet.cell(row=count+2, column=8).value = round(self.data.item_part_percentage[itemno] *
-                                                 0.01 * schedule[itemno].rate, 2)
+                sheet.cell(row=count+2, column=8).value = Currency(self.data.item_part_percentage[itemno] *
+                                                 0.01 * schedule[itemno].rate)
                 sheet.cell(row=count+2, column=9).value = self.data.item_excess_rates[itemno]
-                sheet.cell(row=count+2, column=10).value = round(self.data.item_excess_part_percentage[itemno] *
-                                                 0.01 * self.data.item_excess_rates[itemno], 2)
+                sheet.cell(row=count+2, column=10).value = Currency(self.data.item_excess_part_percentage[itemno] *
+                                                 0.01 * self.data.item_excess_rates[itemno])
                 sheet.cell(row=count+2, column=11).value = self.item_normal_amount[itemno]
                 sheet.cell(row=count+2, column=12).value = self.item_excess_amount[itemno]
                 if self.prev_bill is not None and item.itemno in self.prev_bill.item_normal_amount:
@@ -645,23 +650,23 @@ class Bill:
                     sheet['C' + str(row_item)] = self.item_normal_qty[itemno]
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = item.rate
-                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     row_item += 1
                     sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = self.data.item_excess_rates[itemno]
-                    sheet['F' + str(row_item)] = round(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     row_item += 2
                 else:
                     sheet['B' + str(row_item)] = 'TOTAL'
                     sheet['C' + str(row_item)] = sum(self.item_qty[itemno])
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = item.rate
-                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     row_item += 2
                 
         # Copy all from abs end
@@ -748,8 +753,8 @@ class Bill:
                     sheet['C' + str(row_item)] = self.item_normal_qty[itemno]
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = item.rate
-                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None and itemno in self.prev_bill.item_normal_amount:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
                     else:
@@ -759,8 +764,8 @@ class Bill:
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = self.data.item_excess_rates[itemno]
-                    sheet['F' + str(row_item)] = round(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None and itemno in self.prev_bill.item_excess_amount:
                         sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - self.prev_bill.item_excess_amount[itemno]
                     else:
@@ -771,8 +776,8 @@ class Bill:
                     sheet['C' + str(row_item)] = sum(self.item_qty[itemno])
                     sheet['D' + str(row_item)] = item.unit
                     sheet['E' + str(row_item)] = item.rate
-                    sheet['F' + str(row_item)] = round(item.rate*self.data.item_part_percentage[itemno]/100,2)
-                    sheet['G' + str(row_item)] = '=C'+ str(row_item) + '*F' + str(row_item)
+                    sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None  and itemno in self.prev_bill.item_normal_amount:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
                     else:
@@ -808,7 +813,7 @@ class Bill:
         spreadsheet.save(filename)
 
     def get_text(self):
-        total = [self.bill_total_amount, self.bill_since_prev_amount]
+        total = [str(self.bill_total_amount), str(self.bill_since_prev_amount)]
         if self.data.bill_type == misc.BILL_NORMAL:
             return '<b>' + misc.clean_markup(self.data.title) + '</b> | CMB.No.<b>' + misc.clean_markup(
                 self.data.cmb_name) + ' dated ' + misc.clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(
