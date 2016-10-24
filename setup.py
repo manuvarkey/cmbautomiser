@@ -5,7 +5,7 @@ setup(
     name="CMBAutomiser3",
 
     # Version number (initial):
-    version="3.1.2",
+    version="3.1.3",
 
     # Application author details:
     author="Manu Varkey",

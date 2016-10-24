@@ -376,9 +376,9 @@ class Bill:
                 
                 if self.prev_bill is not None and itemno in self.prev_bill.item_normal_amount:
                     sprev_item_normal_amount = self.item_normal_amount[itemno] \
-                                               - self.prev_bill.item_normal_amount[itemno]
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
                     sprev_item_excess_amount = self.item_excess_amount[itemno] \
-                                               - self.prev_bill.item_excess_amount[itemno]
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
                     sprev_item_excess_amount = self.item_excess_amount[itemno]
@@ -465,9 +465,9 @@ class Bill:
                 sheet.cell(row=count+2, column=12).value = self.item_excess_amount[itemno]
                 if self.prev_bill is not None and item.itemno in self.prev_bill.item_normal_amount:
                     sprev_item_normal_amount = self.item_normal_amount[itemno] \
-                                               - self.prev_bill.item_normal_amount[itemno]
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
                     sprev_item_excess_amount = self.item_excess_amount[itemno] \
-                                               - self.prev_bill.item_excess_amount[itemno]
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
                     sprev_item_excess_amount = self.item_excess_amount[itemno]
@@ -615,9 +615,9 @@ class Bill:
                 
                 if self.prev_bill is not None and itemno in self.prev_bill.item_normal_amount:
                     sprev_item_normal_amount = self.item_normal_amount[itemno] \
-                                               - self.prev_bill.item_normal_amount[itemno]
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
                     sprev_item_excess_amount = self.item_excess_amount[itemno] \
-                                               - self.prev_bill.item_excess_amount[itemno]
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
                     sprev_item_excess_amount = self.item_excess_amount[itemno]
@@ -730,9 +730,9 @@ class Bill:
                 
                 if self.prev_bill is not None and itemno in self.prev_bill.item_normal_amount:
                     sprev_item_normal_amount = self.item_normal_amount[itemno] \
-                                               - self.prev_bill.item_normal_amount[itemno]
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
                     sprev_item_excess_amount = self.item_excess_amount[itemno] \
-                                               - self.prev_bill.item_excess_amount[itemno]
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
                     sprev_item_excess_amount = self.item_excess_amount[itemno]
@@ -756,7 +756,7 @@ class Bill:
                     sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None and itemno in self.prev_bill.item_normal_amount:
-                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - Decimal(self.prev_bill.item_normal_amount[itemno])
                     else:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     row_item += 1
@@ -767,7 +767,7 @@ class Bill:
                     sheet['F' + str(row_item)] = Currency(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None and itemno in self.prev_bill.item_excess_amount:
-                        sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - self.prev_bill.item_excess_amount[itemno]
+                        sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - Decimal(self.prev_bill.item_excess_amount[itemno])
                     else:
                         sheet['H' + str(row_item)] = self.item_excess_amount[itemno]
                     row_item += 2
@@ -779,7 +779,7 @@ class Bill:
                     sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if self.prev_bill != None  and itemno in self.prev_bill.item_normal_amount:
-                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - self.prev_bill.item_normal_amount[itemno]
+                        sheet['H' + str(row_item)] = self.item_normal_amount[itemno] - Decimal(self.prev_bill.item_normal_amount[itemno])
                     else:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     row_item += 2
