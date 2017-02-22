@@ -12,7 +12,7 @@ added_files = [
 		 ]
 
 a = Analysis(['cmbautomiser/main.py'],
-             pathex=['D:\\aee\\cmbautomiser\\cmbautomiser\\cmbautomiser'],
+             pathex=['D:\\cmbautomiser\\cmbautomiser'],
              binaries=None,
              datas= added_files,
              hiddenimports=[],
@@ -30,12 +30,10 @@ exe = EXE(pyz,
           name='main',
           debug=False,
           strip=False,
-          upx=True,
+          upx=False,
           console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
                a.datas,
-               strip=False,
-               upx=True,
                name='__init__')
