@@ -290,7 +290,6 @@ class MainWindow:
         """Hides the infobar"""
         infobar_revealer = self.builder.get_object("infobar_revealer")
         infobar_revealer.set_reveal_child(False)
-        print('Closed')
 
     def onRedoClicked(self, button):
         """Redo action from stack"""
@@ -517,9 +516,9 @@ class MainWindow:
 
     # Tab methods
 
-    def onSwitchTab(self, widget, page, pagenum):
+    def onSwitchTab(self, widget, page):
         """Refresh display on switching between views"""
-        log.info('onSwitchTab called - ' + str(pagenum))
+        log.info('onSwitchTab called')
         self.update()
 
     def __init__(self):
@@ -576,7 +575,7 @@ class MainWindow:
             if f[-3:] == '.py' and f != '__init__.py':
                 module_names.append(f[:-3])
         self.custom_menus = []
-        popupmenu = self.builder.get_object("popupmenu_meas")
+        popupmenu = self.builder.get_object("popover_meas_box")
         module_names.sort()
         for module_name in module_names:
             try:
@@ -584,10 +583,10 @@ class MainWindow:
                 module = getattr(package, module_name)
                 custom_object = module.CustomItem()
                 name = custom_object.name
-                menuitem = Gtk.MenuItem(label=name)
-                popupmenu.append(menuitem)
+                menuitem = Gtk.ModelButton(text=name)
+                popupmenu.pack_start(menuitem, False, False, 0)
                 menuitem.set_visible(True)
-                menuitem.connect("activate",self.onMeasCustomMenuClicked,module_name)
+                menuitem.connect("clicked",self.onMeasCustomMenuClicked,module_name)
                 self.custom_menus.append(menuitem)
                 log.info('Plugin loaded - ' + module_name)
             except ImportError:
@@ -709,7 +708,7 @@ if __name__ == '__main__':
                         stream=sys.stdout,level=logging.INFO)
     # Logging to stdout
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.WARNING)
+    ch.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     log.addHandler(ch)

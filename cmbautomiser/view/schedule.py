@@ -154,20 +154,21 @@ class ScheduleViewGeneric:
                 
     def insert_item_at_selection(self, itemlist):
         """Insert items at selected row"""
-        selection = self.tree.get_selection()
-        if selection.count_selected_rows() != 0:  # if selection exists
-            [model, paths] = selection.get_selected_rows()
-            rows = []
-            for i in range(0, len(itemlist)):
-                rows.append(paths[0].get_indices()[0]+i+1)
-            self.insert_item_at_row(itemlist, rows)
-            self.set_selection([paths[0].get_indices()[0]+i+1])
-        else:  # if no selection
-            rows = []
-            for i in range(0, len(itemlist)):
-                rows.append(i)
-            self.insert_item_at_row(itemlist, rows)
-            self.set_selection([i])
+        if itemlist:
+            selection = self.tree.get_selection()
+            if selection.count_selected_rows() != 0:  # if selection exists
+                [model, paths] = selection.get_selected_rows()
+                rows = []
+                for i in range(0, len(itemlist)):
+                    rows.append(paths[0].get_indices()[0]+i+1)
+                self.insert_item_at_row(itemlist, rows)
+                self.set_selection([paths[0].get_indices()[0]+i+1])
+            else:  # if no selection
+                rows = []
+                for i in range(0, len(itemlist)):
+                    rows.append(i)
+                self.insert_item_at_row(itemlist, rows)
+                self.set_selection([i])
 
     def delete_selected_rows(self):
         """Delete selected rows"""
@@ -204,7 +205,7 @@ class ScheduleViewGeneric:
         newrows = []
         for i in range(0, len(rows)):
             self.schedule.insert_item_at_index(rows[i], itemlist[i])
-            newrows.append(rows[i] + i)
+            newrows.append(rows[i])
         self.update_store()
 
         yield "Insert data items to schedule at rows '{}'".format(rows)
