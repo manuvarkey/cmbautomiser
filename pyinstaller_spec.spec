@@ -12,7 +12,7 @@ added_files = [
 		 ]
 
 a = Analysis(['cmbautomiser/main.py'],
-             pathex=['D:\\cmbautomiser\\cmbautomiser'],
+             pathex=['C:\\Users\\User\\Desktop\\cmbautomiser\\cmbautomiser'],
              binaries=None,
              datas= added_files,
              hiddenimports=[],
@@ -31,7 +31,8 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=False,
-          console=False )
+          console=False.
+          icon = 'cmbautomiser.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

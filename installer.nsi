@@ -51,7 +51,7 @@ function .onInit
 	setShellVarContext all
 	!insertmacro VerifyUserIsAdmin
 functionEnd
- 
+
 section "install"
 	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
 	setOutPath $INSTDIR
@@ -65,6 +65,7 @@ section "install"
  
 	# Start Menu
 	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
+    CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\__init__\main.exe" "" "$INSTDIR\cmbautomiser.ico"
 	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\__init__\main.exe" "" "$INSTDIR\cmbautomiser.ico"
  
 	# Registry information for add/remove programs
@@ -85,6 +86,14 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "NoRepair" 1
 	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+    
+    # Registery key for application file registration
+    
+    WriteRegStr HKLM "Software\Classes\${APPNAME}.Document" "" "${APPNAME} Project File"
+    WriteRegStr HKLM "Software\Classes\${APPNAME}.Document\DefaultIcon" "" "$INSTDIR\__init__\main.exe,0"
+    WriteRegStr HKLM "Software\Classes\${APPNAME}.Document\shell\open\command" "" '"$INSTDIR\__init__\main.exe" "%1"'
+    WriteRegStr HKLM "Software\Classes\.proj" "" "${APPNAME}.Document"
+    
 sectionEnd
  
 # Uninstaller
@@ -105,6 +114,9 @@ section "uninstall"
 	delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
 	rmDir "$SMPROGRAMS\${COMPANYNAME}"
+    
+    # Delete desktop shortcut
+    delete "$DESKTOP\${APPNAME}.lnk"
  
 	# Remove files
     rmDir /r "$INSTDIR\__init__"
@@ -118,4 +130,11 @@ section "uninstall"
  
 	# Remove uninstaller information from the registry
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}"
+    
+    # Remove association information from registry
+    DeleteRegKey HKLM "Software\Classes\${APPNAME}.Document"
+    DeleteRegKey HKLM "Software\Classes\${APPNAME}.Document\DefaultIcon"
+    DeleteRegKey HKLM "Software\Classes\${APPNAME}.Document\shell\open\command"
+    DeleteRegKey HKLM "Software\Classes\.proj"
+    
 sectionEnd
