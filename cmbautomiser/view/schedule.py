@@ -127,7 +127,7 @@ class ScheduleViewGeneric:
                             rownum = len(rows) - 1
                         path = [rownum]
                         GLib.timeout_add(50, treeview.set_cursor, path, col, True)
-                elif keyname in [Gdk.KEY_Control_L, Gdk.KEY_Control_R, Gdk.KEY_Escape]:  # unselect all
+                elif keyname in [Gdk.KEY_Alt_L , Gdk.KEY_Alt_R , Gdk.KEY_Escape]:  # unselect all
                     self.tree.get_selection().unselect_all()
 
     # Class methods
@@ -146,7 +146,12 @@ class ScheduleViewGeneric:
             if expandable != None:
                 column.set_expand(expandable)
                 
-
+    def set_selection(self, path=None):
+        if path:
+            path_iter = Gtk.TreePath.new_from_indices(path)
+            self.tree.set_cursor(path_iter)
+            self.tree.scroll_to_cell(path_iter, None)
+                
     def insert_item_at_selection(self, itemlist):
         """Insert items at selected row"""
         selection = self.tree.get_selection()
@@ -154,10 +159,15 @@ class ScheduleViewGeneric:
             [model, paths] = selection.get_selected_rows()
             rows = []
             for i in range(0, len(itemlist)):
-                rows.append(paths[0].get_indices()[0])
+                rows.append(paths[0].get_indices()[0]+i+1)
             self.insert_item_at_row(itemlist, rows)
+            self.set_selection([paths[0].get_indices()[0]+i+1])
         else:  # if no selection
-            self.append_item(itemlist)
+            rows = []
+            for i in range(0, len(itemlist)):
+                rows.append(i)
+            self.insert_item_at_row(itemlist, rows)
+            self.set_selection([i])
 
     def delete_selected_rows(self):
         """Delete selected rows"""
@@ -254,15 +264,7 @@ class ScheduleViewGeneric:
             try:
                 itemlist = pickle.loads(codecs.decode(text.encode(), "base64"))  # recover item from string
                 if itemlist[0] == test_string:
-                    selection = self.tree.get_selection()
-                    if selection.count_selected_rows() != 0:  # if selection exists
-                        [model, paths] = selection.get_selected_rows()
-                        rows = []
-                        for i in range(0, len(itemlist[1])):
-                            rows.append(int(paths[0].get_indices()[0]))
-                        self.insert_item_at_row(itemlist[1], rows)
-                    else:  # if no selection
-                        self.append_item(itemlist[1])
+                    self.insert_item_at_selection(itemlist[1])
             except:
                 log.warning('ScheduleViewGeneric - paste_at_selection - No valid data in clipboard')
         else:

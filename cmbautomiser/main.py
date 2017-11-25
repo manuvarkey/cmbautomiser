@@ -26,7 +26,7 @@ import subprocess, os, ntpath, platform, sys, tempfile, logging, json, threading
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject
+from gi.repository import Gtk, Gdk, GLib, GObject, Gio
 
 # local files import
 import undo, misc, data, view
@@ -103,14 +103,6 @@ class MainWindow:
         """Callback called on pressing the close button of main window"""
         
         log.info('onDeleteWindow called')
-        
-        def wait_for_exit(child_windows):
-            """Wait for child windows to exit before calling Gtk.main_quit()"""
-            for slno, window in enumerate(child_windows):
-                log.info('onDeleteWindow - wait_for_exit - Waiting for - ' + str(slno))
-                window.wait()
-            log.info('onDeleteWindow - wait_for_exit - All windows closed. Exiting')
-            Gtk.main_quit()
             
         # Ask confirmation from user
         if self.stack.haschanged():
@@ -132,102 +124,83 @@ class MainWindow:
                 log.info('onDeleteWindow - Cancelled by user')
                 return True
         
-        # Check for status of child windows
-        if self.child_windows:
-            self.window.hide()
-            # Wait for all child windows to exist after returning from method
-            GLib.timeout_add(50, wait_for_exit, self.child_windows)
-            # Propogate delete event to destroy window
-            log.info('onDeleteWindow - Waiting for child to exit')
-            return False
-        else:
-            log.info('onDeleteWindow - No child windows. Exiting')
-            Gtk.main_quit()
+        # Propogate delete event to destroy window
+        log.info('onDeleteWindow - Exiting')
+        return False
 
-    def onNewProjectClicked(self, button):
-        """Create a new window"""
-        path = ''
-        if platform.system() == 'Linux':
-            if os.access(__file__, os.X_OK):
-                path = [__file__]
-            else:
-                path = ['/usr/bin/cmbautomiser3']
-        elif platform.system() == 'Windows':
-            if getattr(sys, 'frozen', False):
-                path = [misc.abs_path('main.exe')]
-            elif __file__:
-                path = ['python', __file__]
-                
-        proc = subprocess.Popen(path, stdin=None, stdout=None, stderr=None)
-        self.child_windows.append(proc)
-        log.info('onNewProjectClicked - New window raised')
-
-    def onOpenProjectClicked(self, button):
+    def onOpenProjectClicked(self, button, filename=None):
         """Open project selected by  the user"""
         
-        # Create a filechooserdialog to open:
-        # The arguments are: title of the window, parent_window, action,
-        # (buttons, response)
-        open_dialog = Gtk.FileChooserDialog("Open project File", self.window,
-                                            Gtk.FileChooserAction.OPEN,
-                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                             Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
-        # Remote files can be selected in the file selector
-        open_dialog.set_local_only(True)
-        # Dialog always on top of the textview window
-        open_dialog.set_modal(True)
-        # Set filters
-        open_dialog.set_filter(self.builder.get_object("filefilter_project"))
-        # Set window position
-        open_dialog.set_gravity(Gdk.Gravity.CENTER)
-        open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        if not filename:
+            # Create a filechooserdialog to open:
+            # The arguments are: title of the window, parent_window, action,
+            # (buttons, response)
+            open_dialog = Gtk.FileChooserDialog("Open project File", self.window,
+                                                Gtk.FileChooserAction.OPEN,
+                                                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                                 Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
+            # Remote files can be selected in the file selector
+            open_dialog.set_local_only(True)
+            # Dialog always on top of the textview window
+            open_dialog.set_modal(True)
+            # Set filters
+            open_dialog.set_filter(self.builder.get_object("filefilter_project"))
+            # Set window position
+            open_dialog.set_gravity(Gdk.Gravity.CENTER)
+            open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
 
-        response_id = open_dialog.run()
-        # If response is "ACCEPT" (the button "Save" has been clicked)
-        if response_id == Gtk.ResponseType.ACCEPT:
-            # get filename and set project as active
-            self.filename = open_dialog.get_filename()
-            fileobj = open(self.filename, 'r')
-            if fileobj == None:
-                log.error("onOpenProjectClicked - Error opening file - " + self.filename)
+            response_id = open_dialog.run()
+            # If response is "ACCEPT" (the button "Save" has been clicked)
+            if response_id == Gtk.ResponseType.ACCEPT:
+                # get filename and set project as active
+                self.filename = open_dialog.get_filename()
+                # Destroy dialog
+                open_dialog.destroy()
+            # If response is "CANCEL" (the button "Cancel" has been clicked)
+            elif response_id == Gtk.ResponseType.CANCEL:
+                log.info("cancelled: FileChooserAction.OPEN")
+                # Destroy dialog
+                open_dialog.destroy()
+                return
+        else:
+            self.filename = filename
+        
+        fileobj = open(self.filename, 'r')
+        if fileobj == None:
+            log.error("onOpenProjectClicked - Error opening file - " + self.filename)
+            self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
+        else:
+            try:
+                data = json.load(fileobj)  # load data structure
+                fileobj.close()
+                if data[0] == misc.PROJECT_FILE_VER:
+                    self.data.set_model(data[1])
+                    self.project_settings_dict = data[2]
+
+                    self.display_status(misc.CMB_INFO, "Project successfully opened")
+                    log.info('onOpenProjectClicked - Project successfully opened - ' +self.filename)
+                    # Setup paths for folder chooser objects
+                    self.builder.get_object("filechooserbutton_meas").set_current_folder(misc.posix_path(
+                        os.path.split(self.filename)[0]))
+                    self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
+                        os.path.split(self.filename)[0]))
+                    # Setup window name
+                    window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
+                    self.window.set_title(window_title)
+                    # Clear undo/redo stack
+                    self.stack.clear()
+                    # Set flags
+                    self.project_active = True
+                    # Save point in stack for checking change state
+                    self.stack.savepoint()
+                    # Refresh all displays
+                    self.update()
+                else:
+                    self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
+                    log.warning('onOpenProjectClicked - Project could not be opened: Wrong file type selected - ' +self.filename)
+            except:
+                log.exception("Error parsing project file - " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
-            else:
-                try:
-                    data = json.load(fileobj)  # load data structure
-                    fileobj.close()
-                    if data[0] == misc.PROJECT_FILE_VER:
-                        self.data.set_model(data[1])
-                        self.project_settings_dict = data[2]
-
-                        self.display_status(misc.CMB_INFO, "Project successfully opened")
-                        log.info('onOpenProjectClicked - Project successfully opened - ' +self.filename)
-                        # Setup paths for folder chooser objects
-                        self.builder.get_object("filechooserbutton_meas").set_current_folder(misc.posix_path(
-                            os.path.split(self.filename)[0]))
-                        self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
-                            os.path.split(self.filename)[0]))
-                        # Setup window name
-                        window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
-                        self.window.set_title(window_title)
-                        # Clear undo/redo stack
-                        self.stack.clear()
-                        # Set flags
-                        self.project_active = True
-                        # Save point in stack for checking change state
-                        self.stack.savepoint()
-                        # Refresh all displays
-                        self.update()
-                    else:
-                        self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
-                        log.warning('onOpenProjectClicked - Project could not be opened: Wrong file type selected - ' +self.filename)
-                except:
-                    log.exception("Error parsing project file - " + self.filename)
-                    self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
-        # If response is "CANCEL" (the button "Cancel" has been clicked)
-        elif response_id == Gtk.ResponseType.CANCEL:
-            log.info("cancelled: FileChooserAction.OPEN")
-        # Destroy dialog
-        open_dialog.destroy()
 
     def onSaveProjectClicked(self, button):
         """Save project to file already opened"""
@@ -317,6 +290,7 @@ class MainWindow:
         """Hides the infobar"""
         infobar_revealer = self.builder.get_object("infobar_revealer")
         infobar_revealer.set_reveal_child(False)
+        print('Closed')
 
     def onRedoClicked(self, button):
         """Redo action from stack"""
@@ -550,8 +524,6 @@ class MainWindow:
 
     def __init__(self):
         log.info('MainWindow - initialise')
-        # Variable used to store handles for child window processes
-        self.child_windows = []
 
         # Check for project active status
         self.project_active = False
@@ -623,10 +595,111 @@ class MainWindow:
 
     def run(self, *args):
         self.window.show_all()
+        
+        
+class MainApp(Gtk.Application):
+    """Class handles application related tasks"""
+
+    def __init__(self, *args, **kwargs):
+        log.info('MainApp - Start initialisation')
+        
+        super().__init__(*args, application_id="org.cmbautomiser3.mainapp",
+                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+                         **kwargs)
+                         
+        self.window = None
+        self.about_dialog = None
+        self.windows = []
+        
+        self.add_main_option("filename", ord("f"), GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Filename of project file to open", None)
+                             
+        log.info('MainApp - Initialised')
+        
+
+    # Application function overloads
+    
+    def do_startup(self):
+        log.info('MainApp - do_startup - Start')
+        
+        Gtk.Application.do_startup(self)
+        
+        action = Gio.SimpleAction.new("new", None)
+        action.connect("activate", self.on_new)
+        self.add_action(action)
+        
+        action = Gio.SimpleAction.new("help", None)
+        action.connect("activate", self.on_help)
+        self.add_action(action)
+
+        action = Gio.SimpleAction.new("about", None)
+        action.connect("activate", self.on_about)
+        self.add_action(action)
+
+        action = Gio.SimpleAction.new("quit", None)
+        action.connect("activate", self.on_quit)
+        self.add_action(action)
+        
+        log.info('MainApp - do_startup - End')
+    
+    def do_activate(self):
+        log.info('MainApp - do_activate - Start')
+        
+        self.window = MainWindow()
+        self.windows.append(self.window)
+        self.add_window(self.window.window)
+        self.window.window.show()
+        
+        log.info('MainApp - do_activate - End')
+        
+    def do_open(self, files, hint):
+        log.info('MainApp - do_open - Start')
+        self.activate()
+        if len(files) > 1:
+            filename = files[0].get_path()
+            self.window.onOpenProjectClicked(None, filename)
+            log.info('MainApp - do_open  - opnened file ' + filename)
+        log.info('MainApp - do_open  - End')
+        return 0
+    
+    def do_command_line(self, command_line):
+        log.info('MainApp - do_command_line - Start')
+        options = command_line.get_arguments()
+        self.activate()
+        if len(options) > 1:
+            self.window.onOpenProjectClicked(None, options[1])
+        log.info('MainApp - do_command_line - End')
+        return 0
+        
+    # Application callbacks
+        
+    def on_about(self, action, param):
+        """Show about dialog"""
+        log.info('MainApp - Show About window')
+        # Setup about dialog
+        self.builder = Gtk.Builder()
+        self.builder.add_from_file(misc.abs_path("interface", "aboutdialog.glade"))
+        self.about_dialog = self.builder.get_object("aboutdialog")
+        self.about_dialog.set_transient_for(self.get_active_window())
+        self.about_dialog.set_modal(True)
+        self.about_dialog.run()
+        self.about_dialog.destroy()
+        
+    def on_help(self, action, param):
+        """Launch help file"""
+        log.info('onHelpClick - Launch Help file')
+        misc.open_file(misc.abs_path('documentation', 'cmbautomisermanual.pdf'))
+        
+    def on_new(self, action, param):
+        """Launch a new instance of the application"""
+        log.info('MainApp - Raise new window')
+        self.do_activate()
+        
+    def on_quit(self, action, param):
+        self.quit()
 
 
-def main():
-
+if __name__ == '__main__':
     # Setup Logging to temporary file
     log_file = tempfile.NamedTemporaryFile(mode='w', prefix='cmbautomiser_', 
                                                suffix='.log', delete=False)
@@ -652,13 +725,11 @@ def main():
     GObject.threads_init()
 
     # Initialise main window
+    # Initialise main window
+    
     log.info('Start Program Execution')
-    MainWindow().run()
-    log.info('Main window initialised - Running Gtk.main()')
-    Gtk.main()
-    return 0
-
-
-if __name__ == '__main__':
-    main()
+    app = MainApp()
+    log.info('Entering Gtk main loop')
+    app.run(sys.argv)
+    log.info('End Program Execution')
 

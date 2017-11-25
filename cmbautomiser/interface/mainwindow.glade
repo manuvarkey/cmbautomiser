@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.19.0 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkFileFilter" id="filefilter_ods">
@@ -117,9 +117,9 @@
                         <property name="can_focus">False</property>
                         <property name="margin_top">1</property>
                         <property name="margin_bottom">1</property>
+                        <property name="action_name">app.new</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="onNewProjectClicked" swapped="no"/>
                         <accelerator key="n" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
@@ -191,9 +191,9 @@
                         <property name="label">gtk-help</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="action_name">app.help</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="onHelpClick" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -201,9 +201,9 @@
                         <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="action_name">app.about</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="onAboutClick" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -227,10 +227,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Create a new project</property>
+                <property name="action_name">app.new</property>
                 <property name="label" translatable="yes">New</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-new</property>
-                <signal name="clicked" handler="onNewProjectClicked" swapped="no"/>
                 <accelerator key="n" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
@@ -1141,26 +1141,12 @@
                 <property name="app_paintable">True</property>
                 <property name="can_focus">False</property>
                 <property name="no_show_all">True</property>
-                <property name="hexpand">False</property>
+                <signal name="close" handler="onInfobarClose" swapped="no"/>
                 <child internal-child="action_area">
-                  <object class="GtkButtonBox">
+                  <object class="GtkButtonBox" id="infobar-action_area1">
                     <property name="can_focus">False</property>
-                    <property name="spacing">6</property>
-                    <property name="layout_style">end</property>
                     <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Hide</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Dismiss Infomation Bar</property>
-                        <signal name="clicked" handler="onInfobarClose" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
@@ -1170,16 +1156,14 @@
                   </packing>
                 </child>
                 <child internal-child="content_area">
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="infobar-content_area1">
                     <property name="can_focus">False</property>
-                    <property name="spacing">16</property>
                     <child>
                       <object class="GtkLabel" id="label_infobar_main">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="no_show_all">True</property>
+                        <property name="ellipsize">end</property>
                         <attributes>
-                          <attribute name="style" value="normal"/>
                           <attribute name="weight" value="bold"/>
                         </attributes>
                       </object>
@@ -1189,15 +1173,34 @@
                         <property name="position">0</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkButton" id="infobarclose">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="onInfobarClose" swapped="no"/>
+                        <child>
+                          <object class="GtkImage" id="image2">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="icon_name">window-close-symbolic</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="pack_type">end</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
+                    <property name="fill">False</property>
                     <property name="position">0</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
               </object>
             </child>

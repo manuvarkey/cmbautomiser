@@ -833,6 +833,12 @@ def posix_path(*args):
         else:
             return path
             
+def open_file(filename):
+    if platform.system() == 'Linux':
+        subprocess.call(('xdg-open', abs_path(filename)))
+    elif platform.system() == 'Windows':
+        os.startfile(abs_path(filename))
+            
 def run_latex(folder, filename): 
     """Runs latex on file to folder in two passes"""
     if filename is not None:
