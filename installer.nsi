@@ -64,9 +64,9 @@ section "install"
 	writeUninstaller "$INSTDIR\uninstall.exe"
  
 	# Start Menu
-	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
+	CreateDirectory "$SMPROGRAMS\${COMPANYNAME}"
     CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\__init__\main.exe" "" "$INSTDIR\cmbautomiser.ico"
-	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\__init__\main.exe" "" "$INSTDIR\cmbautomiser.ico"
+	CreateShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\__init__\main.exe" "" "$INSTDIR\cmbautomiser.ico"
  
 	# Registry information for add/remove programs
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"
