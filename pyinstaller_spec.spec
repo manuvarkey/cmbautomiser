@@ -31,7 +31,7 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=False,
-          console=False.
+          console=False,
           icon = 'cmbautomiser.ico')
 coll = COLLECT(exe,
                a.binaries,
