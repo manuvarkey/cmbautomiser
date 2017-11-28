@@ -354,7 +354,7 @@
           <object class="GtkStack" id="stack_main">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <signal name="set-focus-child" handler="onSwitchTab" swapped="no"/>
+            <signal name="notify::visible-child" handler="onSwitchTab" swapped="no"/>
             <child>
               <object class="GtkBox" id="box2">
                 <property name="visible">True</property>
