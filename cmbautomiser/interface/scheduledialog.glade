@@ -104,7 +104,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_add">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add item at selected location</property>
+                        <property name="tooltip_markup" translatable="yes">Add item at selected location &lt;i&gt;(Ctrl+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes">Add</property>
@@ -122,7 +122,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_add_mult">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Add multiple items at selected location</property>
+                        <property name="tooltip_markup" translatable="yes">Add multiple items at selected location &lt;i&gt;(Ctrl+Shift+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">＋n</property>
                         <property name="use_underline">True</property>
@@ -149,7 +149,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_undo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Undo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Undo</property>
                         <property name="use_underline">True</property>
@@ -166,7 +166,7 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_redo">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Redo Action</property>
+                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Redo</property>
                         <property name="use_underline">True</property>
@@ -194,12 +194,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Copy item</property>
+                        <property name="tooltip_markup" translatable="yes">Copy item &lt;i&gt;(Ctrl+Shift+c)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Copy</property>
                         <property name="use_underline">True</property>
                         <property name="icon_name">edit-copy-symbolic</property>
                         <signal name="clicked" handler="onCopySchedule" swapped="no"/>
+                        <accelerator key="c" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -210,12 +211,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_paste">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Paste Item</property>
+                        <property name="tooltip_markup" translatable="yes">Paste Item &lt;i&gt;(Ctrl+Shift+v)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Paste</property>
                         <property name="use_underline">True</property>
                         <property name="icon_name">edit-paste-symbolic</property>
                         <signal name="clicked" handler="onPasteSchedule" swapped="no"/>
+                        <accelerator key="v" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -283,12 +285,13 @@
                       <object class="GtkToolButton" id="toolbutton_schedule_delete">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Delete Selected Items</property>
+                        <property name="tooltip_markup" translatable="yes">Delete Selected Items &lt;i&gt;(Shift+Del)&lt;/i&gt;</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
                         <property name="icon_name">list-remove-symbolic</property>
                         <signal name="clicked" handler="onButtonScheduleDeletePressed" swapped="no"/>
+                        <accelerator key="Delete" signal="clicked" modifiers="GDK_SHIFT_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>

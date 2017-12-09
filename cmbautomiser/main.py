@@ -157,7 +157,7 @@ class MainWindow:
                 # Destroy dialog
                 open_dialog.destroy()
             # If response is "CANCEL" (the button "Cancel" has been clicked)
-            elif response_id == Gtk.ResponseType.CANCEL:
+            else:
                 log.info("cancelled: FileChooserAction.OPEN")
                 # Destroy dialog
                 open_dialog.destroy()
@@ -295,12 +295,14 @@ class MainWindow:
         """Redo action from stack"""
         log.info('Redo:' + str(self.stack.redotext()))
         self.stack.redo()
+        self.display_status(misc.CMB_INFO, 'Redo: ' + str(self.stack.redotext()))
         self.update()
 
     def onUndoClicked(self, button):
         """Undo action from stack"""
         log.info('Undo:' + str(self.stack.undotext()))
         self.stack.undo()
+        self.display_status(misc.CMB_INFO, 'Undo: ' + str(self.stack.undotext()))
         self.update()
 
     # Schedule signal handler methods

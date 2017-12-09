@@ -61,13 +61,14 @@ class BillData:
         
         # Type Flag
         self.bill_type = bill_type
+        self.bill_text = ''
     
     def get_model(self):
         """Get data model"""
         model = [self.prev_bill, self.cmb_name, self.title, self.bill_date, self.starting_page,
                  self.mitems, self.item_part_percentage, self.item_excess_part_percentage ,
                  self.item_excess_rates, self.item_qty, self.item_normal_amount, self.item_excess_amount,
-                 self.bill_type]
+                 self.bill_type, self.bill_text]
         return ['BillData', model]
     
     def set_model(self, model):
@@ -88,6 +89,12 @@ class BillData:
             self.item_excess_amount = model[1][11]
             # Type Flag
             self.bill_type = model[1][12]
+            
+            # HACK for supporting bill text field to be backward compatible
+            if len(model[1]) > 13:
+                self.bill_text = model[1][13]
+            else:
+                self.bill_text = ''
 
 
 class Bill:
@@ -253,6 +260,7 @@ class Bill:
         bill_local_vars['$cmbtitle$'] = 'ABSTRACT OF COST'
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
         bill_local_vars['$cmbstartingpage$'] = str(self.data.starting_page)
+        bill_local_vars['$cmbbilltext$'] = self.data.bill_text
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
         if self.prev_bill is not None:
             bill_local_vars['$cmbbillprevamount$'] = str(self.prev_bill.bill_total_amount)
@@ -358,6 +366,7 @@ class Bill:
         bill_local_vars = {}
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
+        
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
         if self.prev_bill is not None:
             bill_local_vars['$cmbbillprevamount$'] = str(self.prev_bill.bill_total_amount)
@@ -681,6 +690,9 @@ class Bill:
         if self.prev_bill != None:
             sheet.cell(row=2+row_item, column=7).value = self.prev_bill.bill_total_amount
         sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '-G' + str(row_item+2)
+        
+        # Fill in text
+        sheet.cell(row=5+row_item, column=2).value = self.data.bill_text
         
         # Abstract formatings
         for column in range(1,colend+1):

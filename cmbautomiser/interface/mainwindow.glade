@@ -278,8 +278,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Open an existing project from file</property>
+                <property name="tooltip_markup" translatable="yes">Open an existing project from file &lt;i&gt;(Ctrl+o)&lt;/i&gt;</property>
                 <signal name="clicked" handler="onOpenProjectClicked" swapped="no"/>
+                <accelerator key="o" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
             </child>
             <child>
@@ -287,7 +288,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Create a new project</property>
+                <property name="tooltip_markup" translatable="yes">Create a new project &lt;i&gt;(Ctrl+n)&lt;/i&gt;</property>
                 <property name="action_name">app.new</property>
                 <child>
                   <object class="GtkImage">
@@ -296,9 +297,66 @@
                     <property name="icon_name">document-new-symbolic</property>
                   </object>
                 </child>
+                <accelerator key="n" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButtonBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_left">6</property>
+                <property name="homogeneous">True</property>
+                <property name="layout_style">expand</property>
+                <child>
+                  <object class="GtkButton" id="project_undo_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
+                    <signal name="clicked" handler="onUndoClicked" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="icon_name">edit-undo-symbolic</property>
+                      </object>
+                    </child>
+                    <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="project_redo_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
+                    <signal name="clicked" handler="onRedoClicked" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="icon_name">edit-redo-symbolic</property>
+                      </object>
+                    </child>
+                    <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">4</property>
               </packing>
             </child>
             <child type="title">
@@ -335,8 +393,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Save current project</property>
+                <property name="tooltip_markup" translatable="yes">Save current project &lt;i&gt;(Ctrl+s)&lt;/i&gt;</property>
                 <signal name="clicked" handler="onSaveProjectClicked" swapped="no"/>
+                <accelerator key="s" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="pack_type">end</property>
@@ -412,51 +471,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="toolbutton_schedule_undo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Undo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-undo-symbolic</property>
-                        <signal name="clicked" handler="onUndoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton_schedule_redo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Redo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-redo-symbolic</property>
-                        <signal name="clicked" handler="onRedoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem" id="separatortoolitem2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="halign">start</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkToolButton" id="toolbutton_schedule_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -508,7 +522,7 @@
                           <object class="GtkFileChooserButton" id="filechooserbutton_schedule">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Select an ods file to import data</property>
+                            <property name="tooltip_text" translatable="yes">Select a .xlsx file to import data</property>
                             <property name="filter">filefilter_xlsx</property>
                             <property name="preview_widget_active">False</property>
                             <property name="use_preview_label">False</property>
@@ -691,48 +705,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="toolbutton_meas_undo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
-                        <property name="label" translatable="yes">Undo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-undo-symbolic</property>
-                        <signal name="clicked" handler="onUndoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton_meas_redo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
-                        <property name="label" translatable="yes">Redo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-redo-symbolic</property>
-                        <signal name="clicked" handler="onRedoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem" id="separatortoolitem4">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkToolButton" id="toolbutton_meas_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -783,7 +755,7 @@
                           <object class="GtkFileChooserButton" id="filechooserbutton_meas">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Select an ods file to import data</property>
+                            <property name="tooltip_text" translatable="yes">Select a folder to render CMB</property>
                             <property name="action">select-folder</property>
                             <property name="preview_widget_active">False</property>
                             <property name="use_preview_label">False</property>
@@ -954,48 +926,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="toolbutton_bill_undo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Undo Action &lt;i&gt;(Ctrl+z)&lt;/i&gt;</property>
-                        <property name="label" translatable="yes">Undo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-undo-symbolic</property>
-                        <signal name="clicked" handler="onUndoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton_bill_redo">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_markup" translatable="yes">Redo Action &lt;i&gt;(Ctrl+Shift+z)&lt;/i&gt;</property>
-                        <property name="label" translatable="yes">Redo</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">edit-redo-symbolic</property>
-                        <signal name="clicked" handler="onRedoClicked" swapped="no"/>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem" id="separatortoolitem7">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">False</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkToolButton" id="toolbutton_bill_copy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -1046,7 +976,7 @@
                           <object class="GtkFileChooserButton" id="filechooserbutton_bill">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Select an ods file to import data</property>
+                            <property name="tooltip_text" translatable="yes">Select a folder to render bill</property>
                             <property name="action">select-folder</property>
                             <property name="title" translatable="yes">Select output folder for rendering</property>
                           </object>

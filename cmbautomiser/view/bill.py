@@ -498,7 +498,11 @@ class BillDialog:
         self.billdata.title = self.entry_bill_title.get_text()
         self.billdata.cmb_name = self.entry_bill_cmbname.get_text()
         self.billdata.bill_date = self.entry_bill_bill_date.get_text()
-        self.billdata.starting_page = int(self.entry_bill_starting_page.get_text())
+        self.billdata.starting_page = self.entry_bill_starting_page.get_value_as_int()
+        
+        (text_start, text_end) = self.textview_bill_text.get_buffer().get_bounds()
+        self.billdata.bill_text = self.textview_bill_text.get_buffer().get_text(text_start, text_end, True)
+        
         # Update mitems
         self.billdata.mitems = self.selected.get_paths()
 
@@ -542,6 +546,7 @@ class BillDialog:
         self.entry_bill_cmbname = self.builder.get_object("entry_bill_cmbname")
         self.entry_bill_bill_date = self.builder.get_object("entry_bill_bill_date")
         self.entry_bill_starting_page = self.builder.get_object("entry_bill_starting_page")
+        self.textview_bill_text = self.builder.get_object("textview_bill_text")
 
         # Setup cmb tree view
         self.measurements_view = measurement.MeasurementsView(self.schedule, self.data, self.treeview_bill)
@@ -564,7 +569,9 @@ class BillDialog:
         self.entry_bill_title.set_text(self.billdata.title)
         self.entry_bill_cmbname.set_text(self.billdata.cmb_name)
         self.entry_bill_bill_date.set_text(self.billdata.bill_date)
-        self.entry_bill_starting_page.set_text(str(self.billdata.starting_page))
+        self.entry_bill_starting_page.set_value(self.billdata.starting_page)
+        self.textview_bill_text.get_buffer().set_text(self.billdata.bill_text)
+        
         # Special conditions for custom bill
         if self.billdata.bill_type == misc.BILL_CUSTOM:
             self.treeview_bill.set_sensitive(False)  # Deactivate measurement item entry
