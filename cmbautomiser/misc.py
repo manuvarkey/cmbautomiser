@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bill_dialog.py
+# misc.py
 #  
 #  Copyright 2014 Manu Varkey <manuvarkey@gmail.com>
 #  
@@ -25,6 +25,8 @@
 import subprocess, threading, os, posixpath, platform, logging
 
 from gi.repository import Gtk, Gdk, GLib, Pango
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 import openpyxl
 
 # Setup logger object
@@ -587,13 +589,13 @@ class LatexFile:
             
     def add_preffix_from_file(self,filename):
         """Add a latex file as preffix"""
-        latex_file = open(filename,'r')
+        latex_file = open(filename,'r', encoding="utf8")
         self.latex_buffer = latex_file.read() + '\n' + self.latex_buffer
         latex_file.close()
         
     def add_suffix_from_file(self,filename):
         """Add a latex file as suffix"""
-        latex_file = open(filename,'r')
+        latex_file = open(filename,'r', encoding="utf8")
         self.latex_buffer = self.latex_buffer + '\n' + latex_file.read()
         latex_file.close()
         
@@ -610,7 +612,7 @@ class LatexFile:
             
     def write(self, filename):
         """Write latex file to disk"""
-        file_latex = open(filename,'w')
+        file_latex = open(filename,'w', encoding="utf8")
         file_latex.write(self.latex_buffer)
         file_latex.close()
         
@@ -838,6 +840,21 @@ def open_file(filename):
         subprocess.call(('xdg-open', abs_path(filename)))
     elif platform.system() == 'Windows':
         os.startfile(abs_path(filename))
+        
+def get_file_path_from_dnd_dropped_uri(uri):
+    # Get the path to file
+    path = ""
+    if uri.startswith('file:\\\\\\'): # windows
+        path = uri[8:] # 8 is len('file:///')
+    elif uri.startswith('file://'): # nautilus, rox
+        path = uri[7:] # 7 is len('file://')
+    elif uri.startswith('file:'): # xffm
+        path = uri[5:] # 5 is len('file:')
+
+    path = url2pathname(path) # escape special chars
+    path = path.strip('\r\n\x00') # remove \r\n and NULL
+
+    return path
             
 def run_latex(folder, filename): 
     """Runs latex on file to folder in two passes"""

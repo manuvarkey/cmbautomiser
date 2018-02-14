@@ -127,6 +127,38 @@ class MainWindow:
         # Propogate delete event to destroy window
         log.info('onDeleteWindow - Exiting')
         return False
+        
+    def drag_data_received(self, widget, context, x, y, selection, target_type, timestamp):
+        if target_type == 80:
+            data_str = selection.get_data().decode('utf-8')
+            uri = data_str.strip('\r\n\x00')
+            file_uri = uri.split()[0] # we may have more than one file dropped
+            filename = misc.get_file_path_from_dnd_dropped_uri(file_uri)
+            
+            if os.path.isfile(filename):
+                # Ask confirmation from user
+                if self.stack.haschanged():
+                    message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to discard these changes ?'
+                    title = 'Confirm Open'
+                    dialogWindow = Gtk.MessageDialog(self.window,
+                                             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                             Gtk.MessageType.QUESTION,
+                                             Gtk.ButtonsType.YES_NO,
+                                             message)
+                    dialogWindow.set_transient_for(self.window)
+                    dialogWindow.set_title(title)
+                    dialogWindow.set_default_response(Gtk.ResponseType.NO)
+                    dialogWindow.show_all()
+                    response = dialogWindow.run()
+                    dialogWindow.destroy()
+                    if response != Gtk.ResponseType.YES:
+                        # Do not open file
+                        log.info('MainWindow - drag_data_received - Cancelled by user')
+                        return
+                        
+                # Open file
+                self.onOpenProjectClicked(None, filename)
+                log.info('MainApp - drag_data_received  - opnened file ' + filename)
 
     def onOpenProjectClicked(self, button, filename=None):
         """Open project selected by  the user"""
@@ -569,6 +601,12 @@ class MainWindow:
         # Setup measurement View
         self.treeview_meas = self.builder.get_object("treeview_meas")
         self.measurements_view = view.measurement.MeasurementsView(self.window, self.data, self.treeview_meas)
+        
+        # Darg-Drop support for files
+        self.window.drag_dest_set( Gtk.DestDefaults.MOTION | Gtk.DestDefaults.HIGHLIGHT | Gtk.DestDefaults.DROP,
+                  [Gtk.TargetEntry.new("text/uri-list", 0, 80)], 
+                  Gdk.DragAction.COPY)
+        self.window.connect('drag-data-received', self.drag_data_received)
         
         # Setup custom measurement items
         file_names = [f for f in os.listdir(misc.abs_path('templates'))]

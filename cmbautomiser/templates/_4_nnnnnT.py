@@ -40,7 +40,7 @@ latex_item = r"""
                 \vspace*{-\baselineskip}
                 \begin{longtabu} to \textwidth {|X[1,c]|X[10,l]|X[3,r]|X[3,r]|X[3,r]|X[3,r]|X[3,r]|X[5,r]|}
                    \hline
-                    \textbf{Sl.\newline No.} & \textbf{N1} & \textbf{N2} & \textbf{N3} & \textbf{N4} & \textbf{N5} & \textbf{N6} & \textbf{Total} \\
+                    \textbf{Sl.\newline No.} & \textbf{Description} & \textbf{N1} & \textbf{N2} & \textbf{N3} & \textbf{N4} & \textbf{N5} & \textbf{Total} \\
                    \hline
                     \endhead
                 $cmbrecords$
