@@ -343,7 +343,10 @@ class BillDialog:
                 unit = item.unit
                 rate = item.rate
                 if bill.item_excess_qty[itemno] > 0:
-                    flag = 'EXCEEDED'
+                    if misc.is_unit_item(unit):
+                        flag = 'COUNT\nEXCEEDED'
+                    else:
+                        flag = 'EXCEEDED'
                 else:
                     flag = ''
                 populated_items.append([itemno, description, unit, rate, flag])

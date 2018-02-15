@@ -212,7 +212,7 @@ class Bill:
                 excess_rate = Currency(self.data.item_excess_part_percentage[itemno] * 0.01 * self.data.item_excess_rates[itemno])
                 # Determine items above and at normal rates
                 if total_qty > (item.qty * (1 + 0.01 * item.excess_rate_percent)):
-                    if item.unit.lower() in misc.INT_ITEMS:
+                    if misc.is_unit_item(item.unit):
                         self.item_normal_qty[itemno] = math.floor(item.qty * (1 + 0.01 * item.excess_rate_percent))
                     else:
                         self.item_normal_qty[itemno] = round(item.qty * (1 + 0.01 * item.excess_rate_percent),3)

@@ -65,11 +65,25 @@ CMB_DESCRIPTION_WIDTH = 60
 CMB_DESCRIPTION_MAX_LENGTH = 1000
 # Deviation statement
 DEV_LIMIT_STATEMENT = 10
-# List of units which will be considered as integer values
-INT_ITEMS = ['point', 'points', 'pnt', 'pnts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',
-             'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each','job','jobs','set','sets',
-             'pair','pairs',
-             'pnt.', 'no.', 'nos.', 'l.s.', 'l.s']
+             
+def is_unit_item(unit):
+    # List of units which will be considered as integer values
+    integer_units = ['point', 'points', 'pnt', 'pnts', 'pt', 'pts', 'number', 'numbers', 'no', 'nos', 'lot', 'lots',
+                 'lump', 'lumpsum', 'lump-sum', 'lump sum', 'ls', 'each','job','jobs','set','sets',
+                 'pair','pairs',
+                 '10 nos', '100 nos', '1000 nos', '10 nos.', '100 nos.', '1000 nos.',
+                 'per test', 'per wheel', 'per item',
+                 'pt.','pts.', 'pnt.', 'pnts.', 'no.', 'nos.', 'l.s.', 'l.s']
+    # List of keywords appearing only in integer values
+    key_words = ['point', 'each', 'nos', 'number', 'lot', 'test', 'pair', 'job', 'set', 'wheel', 'item']
+    
+    if unit.lower() in integer_units:
+        return True
+    elif any(s in unit.lower() for s in key_words):
+        return True
+    else:
+        return False
+        
 # String used for checking file version
 PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3'
 # Item codes for project global variables
