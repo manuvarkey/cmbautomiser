@@ -290,7 +290,7 @@ class Bill:
                     if qty_item != 0:
                         # Setup variables
                         item_record_vars = {}
-                        item_record_vars['$cmbqtybf$'] = str(qty_item)
+                        item_record_vars['$cmbqtybf$'] = str(round(qty_item,3))
                         item_record_vars['$cmbunit$'] = str(item.unit)
                         if cmb_ref != -1:  # if not prev abstract
                             path_str = str([item_path[0], item_path[1], item_path[2]]) + ':' + str(item_path[3] + 1)
