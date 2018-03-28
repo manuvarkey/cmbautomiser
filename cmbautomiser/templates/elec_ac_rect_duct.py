@@ -74,6 +74,7 @@ class CustomItem:
             for item in item_list:
                 if item is not None:
                     total[0] += item.find_total()[0]
+            total[0] = round(total[0],3)
             return total
         
         def total_func_item(values):

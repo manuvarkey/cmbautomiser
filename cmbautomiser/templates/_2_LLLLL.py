@@ -99,7 +99,7 @@ class CustomItem:
             return total
         
         def total_func_item(values):
-            return values[2:7]
+            return [round(x,3) for x in values[2:7]]
                 
         def latex_postproc_func(item_list,userdata,latex_buffer,isabstract=False):
             # Do nothing return as it is

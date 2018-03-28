@@ -374,7 +374,7 @@ class RecordCustom:
                         value = int(eval(item_elem)) if item_elem not in ['0','0.0'] else 0
                         rendered_item.append(value)
                     elif columntype == misc.MEAS_L:
-                        value = eval(item_elem) if item_elem not in ['0','0.0'] else 0
+                        value = round(eval(item_elem),3) if item_elem not in ['0','0.0'] else 0
                         rendered_item.append(value)
                 else:
                     rendered_item.append(None)

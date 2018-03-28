@@ -104,7 +104,7 @@ class CustomItem:
             if len(nonzero) == 0:
                 return [0]
             else:
-                return [total]
+                return [round(total,3)]
                 
         def latex_postproc_func(item_list,userdata,latex_buffer,isabstract=False):
             # Do nothing return as it is

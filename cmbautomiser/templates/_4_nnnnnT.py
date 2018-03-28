@@ -79,7 +79,7 @@ class CustomItem:
             for item in item_list:
                 if item is not None:
                     total[0] += item.find_total()[0]
-                total[0] = round(total[0],3)
+            total[0] = round(total[0],3)
             return total
         
         def total_func_item(values):
@@ -92,7 +92,7 @@ class CustomItem:
             if len(data) == 0:
                 return [0]
             else:
-                return [total]
+                return [round(total,3)]
                 
         def latex_postproc_func(item_list,userdata,latex_buffer,isabstract=False):
             # Do nothing return as it is
