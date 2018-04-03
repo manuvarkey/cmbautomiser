@@ -24,7 +24,7 @@
 
 import logging, pickle, codecs
 
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Pango
 
 # local files import
 from __main__ import misc, data, undo
@@ -129,6 +129,17 @@ class ScheduleViewGeneric:
                         GLib.timeout_add(50, treeview.set_cursor, path, col, True)
                 elif keyname in [Gdk.KEY_Alt_L , Gdk.KEY_Alt_R , Gdk.KEY_Escape]:  # unselect all
                     self.tree.get_selection().unselect_all()
+                    
+    def on_wrap_column_resized(self, column, pspec, cell):
+        """ Automatically adjust wrapwidth to column width"""
+        
+        width = column.get_width() - 5
+        oldwidth = cell.props.wrap_width
+        
+        if width > 0 and width != oldwidth:
+            cell.props.wrap_width = width
+            # Force redraw of treeview
+            GLib.idle_add(column.queue_resize)
 
     # Class methods
     
@@ -406,11 +417,14 @@ class ScheduleViewGeneric:
                     cell.connect("edited", render_func, i)
             elif columntype == misc.MEAS_DESC:
                 cell.set_property("editable", True)
+                column.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
+                column.props.resizable = False
                 column.props.fixed_width = 150
                 column.props.min_width = 150
                 column.props.expand = True
                 cell.props.wrap_width = 150
-                cell.props.wrap_mode = 2
+                cell.props.wrap_mode = Pango.WrapMode.WORD_CHAR
+                column.connect("notify", self.on_wrap_column_resized, cell)
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedText, i)
                     cell.connect("editing_started", self.onEditStarted, i)
@@ -418,10 +432,13 @@ class ScheduleViewGeneric:
                     cell.connect("edited", render_func, i)
             elif columntype == misc.MEAS_CUST:
                 cell.set_property("editable", False)
+                column.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
+                column.props.resizable = False
                 column.props.fixed_width = 100
                 column.props.min_width = 100
                 cell.props.wrap_width = 100
-                cell.props.wrap_mode = 2
+                cell.props.wrap_mode = Pango.WrapMode.WORD_CHAR
+                column.connect("notify", self.on_wrap_column_resized, cell)
                 if render_func is None:
                     cell.connect("edited", self.onScheduleCellEditedText, i)
                     cell.connect("editing_started", self.onEditStarted, i)

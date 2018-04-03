@@ -23,7 +23,7 @@
 #  
 
 import copy, logging
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Pango
 
 # local files import
 from __main__ import misc, data, undo
@@ -304,6 +304,7 @@ class SelectScheduleDialog:
         self.keys = keys
         self.schedule_store = schedule_store
         self.selected = selected
+        self.store = schedule_store
         
         title = 'Select an item to be measured'
         self.dialog_window = Gtk.Dialog(title, parent, Gtk.DialogFlags.MODAL,
@@ -317,7 +318,7 @@ class SelectScheduleDialog:
         dialogBox = self.dialog_window.get_content_area()
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_border_width(6)
-        self.tree = Gtk.TreeView(schedule_store)
+        self.tree = Gtk.TreeView(self.store)
         dialogBox.pack_end(scrolled, True, True, 0)
         scrolled.add(self.tree)
         
@@ -357,8 +358,10 @@ class SelectScheduleDialog:
         column4.set_fixed_width(100)
         column2.props.expand = True
         
-        cell2.props.wrap_width = 500
-        cell2.props.wrap_mode = 2
+        column2.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
+        cell2.props.wrap_width = 495
+        cell2.props.wrap_mode = Pango.WrapMode.WORD_CHAR
+        column2.connect("notify", self.on_wrap_column_resized, cell2)
         
         # Set old value
         if selected != None:
@@ -416,3 +419,14 @@ class SelectScheduleDialog:
         """Handle keypress event"""
         if event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
             self.dialog_window.response(Gtk.ResponseType.OK)
+            
+    def on_wrap_column_resized(self, column, pspec, cell):
+        """ Automatically adjust wrapwidth to column width"""
+        
+        width = column.get_width() - 5
+        oldwidth = cell.props.wrap_width
+        
+        if width > 0 and width != oldwidth:
+            cell.props.wrap_width = width
+            # Force redraw of treeview
+            GLib.idle_add(column.queue_resize)
