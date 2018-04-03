@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 from openpyxl.compat import unicode
 
@@ -136,7 +136,8 @@ class Series(Serialisable):
                  bubble3D=None,
                  marker=None,
                  smooth=None,
-                 explosion=None
+                 explosion=None,
+                 extLst=None,
                 ):
         self.idx = idx
         self.order = order

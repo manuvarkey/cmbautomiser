@@ -6,9 +6,19 @@ Excel specific descriptors
 """
 
 from openpyxl.xml.constants import REL_NS
-from . import MatchPattern, MinMax, Integer, String, Typed, Sequence
-from .serialisable import Serialisable
+from openpyxl.compat import safe_string
+from openpyxl.xml.functions import Element
 
+from . import (
+    MatchPattern,
+    MinMax,
+    Integer,
+    String,
+    Typed,
+    Sequence,
+)
+from .serialisable import Serialisable
+from openpyxl.utils.cell import RANGE_EXPR
 
 class HexBinary(MatchPattern):
 
@@ -17,7 +27,7 @@ class HexBinary(MatchPattern):
 
 class UniversalMeasure(MatchPattern):
 
-    pattern = "[0-9]+(\.[0-9]+)?(mm|cm|in|pt|pc|pi)"
+    pattern = r"[0-9]+(\.[0-9]+)?(mm|cm|in|pt|pc|pi)"
 
 
 class TextPoint(MinMax):
@@ -36,7 +46,7 @@ Coordinate = Integer
 
 class Percentage(MatchPattern):
 
-    pattern = "((100)|([0-9][0-9]?))(\.[0-9][0-9]?)?%"
+    pattern = r"((100)|([0-9][0-9]?))(\.[0-9][0-9]?)?%"
 
 
 class Extension(Serialisable):
@@ -72,4 +82,25 @@ class Base64Binary(MatchPattern):
 
 class Guid(MatchPattern):
     # https://msdn.microsoft.com/en-us/library/dd946381(v=office.12).aspx
-    pattern = "{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}"
+    pattern = r"{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}"
+
+
+class CellRange(MatchPattern):
+
+    pattern = r"^[$]?([A-Za-z]{1,3})[$]?(\d+)(:[$]?([A-Za-z]{1,3})[$]?(\d+)?)?$|^[A-Za-z]{1,3}:[A-Za-z]{1,3}$"
+    allow_none = True
+
+    def __set__(self, instance, value):
+
+        if value is not None:
+            value = value.upper()
+        super(CellRange, self).__set__(instance, value)
+
+
+def _explicit_none(tagname, value, namespace=None):
+    """
+    Override serialisation because explicit none required
+    """
+    if namespace is not None:
+        tagname = "{%s}%s" % (namespace, tagname)
+    return Element(tagname, val=safe_string(value))

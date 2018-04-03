@@ -1,60 +1,37 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
+from openpyxl.xml.functions import (
+    Element,
+    SubElement,
+    tostring,
+    fromstring,
+)
 
-from openpyxl.utils.indexed_list import IndexedList
-from openpyxl.compat import iteritems
-from openpyxl.xml.constants import SHEET_MAIN_NS
-from openpyxl.xml.functions import Element, SubElement, tostring, fromstring
 from openpyxl.utils import (
     column_index_from_string,
     coordinate_from_string,
 )
-
-from .author import AuthorList
-from .properties import CommentSheet, Comment
 
 vmlns = "urn:schemas-microsoft-com:vml"
 officens = "urn:schemas-microsoft-com:office:office"
 excelns = "urn:schemas-microsoft-com:office:excel"
 
 
-class CommentWriter(object):
+class ShapeWriter(object):
+    """
+    Create VML for comments
+    """
 
-    def __init__(self, sheet):
-        self.sheet = sheet
-        self.comments = []
-        self._extract_comments()
-
-    def _extract_comments(self):
-        for _coord, cell in sorted(self.sheet._cells.items()):
-            if cell.comment is not None:
-                comment = Comment(ref=cell.coordinate)
-                comment.author = cell.comment.author
-                comment.text.t = cell.comment.text
-                comment.height = cell.comment.height
-                comment.width = cell.comment.width
-                self.comments.append(comment)
+    vml = None
+    vml_path = None
 
 
-    def write_comments(self):
-        """
-        Create list of comments and authors
-        Sorted by row, col
-        """
-        # produce xml
-        authors = IndexedList()
-
-        for comment in self.comments:
-            comment.authorId = authors.add(comment.author)
-
-        author_list = AuthorList(authors)
-        root = CommentSheet(authors=author_list, commentList=self.comments)
-
-        return tostring(root.to_tree())
+    def __init__(self, comments):
+        self.comments = comments
 
 
-    def add_shapetype_vml(self, root):
+    def add_comment_shapetype(self, root):
         shape_layout = SubElement(root, "{%s}shapelayout" % officens,
                                   {"{%s}ext" % vmlns: "edit"})
         SubElement(shape_layout,
@@ -71,38 +48,35 @@ class CommentWriter(object):
                    "{%s}path" % vmlns,
                    {"gradientshapeok": "t",
                     "{%s}connecttype" % officens: "rect"})
-        return root
 
 
-    def add_shape_vml(self, root, idx, comment):
-        col, row = coordinate_from_string(comment.ref)
+    def add_comment_shape(self, root, idx, coord):
+        col, row = coordinate_from_string(coord)
         row -= 1
         column = column_index_from_string(col) - 1
         shape = _shape_factory(row, column)
 
-        shape.set('id',  "_x0000_s%04d" % idx)
+        shape.set('id', "_x0000_s%04d" % idx)
         root.append(shape)
 
-    def write_comments_vml(self, root):
+
+    def write(self, root):
+
+        if not hasattr(root, "findall"):
+            root = Element("xml")
         # Remove any existing comment shapes
-        comments = root.findall("{%s}shape" % vmlns)
+        comments = root.findall("{%s}shape[@type='#_x0000_t202']" % vmlns)
         for c in comments:
-            if c.get("type") == '#_x0000_t202':
-                root.remove(c)
+            root.remove(c)
 
         # check whether comments shape type already exists
-        shape_types = root.findall("{%s}shapetype" % vmlns)
-        comments_type = False
-        for s in shape_types:
-            if s.get("id") == '_x0000_t202':
-                comments_type = True
-                break
 
-        if not comments_type:
-            self.add_shapetype_vml(root)
+        shape_types = root.find("{%s}shapetype[@id='_x0000_t202']" % vmlns)
+        if not shape_types:
+            self.add_comment_shapetype(root)
 
-        for idx, comment in enumerate(self.comments, 1026):
-            self.add_shape_vml(root, idx, comment)
+        for idx, (coord, comment) in enumerate(self.comments, 1026):
+            self.add_comment_shape(root, idx, coord)
 
         return tostring(root)
 

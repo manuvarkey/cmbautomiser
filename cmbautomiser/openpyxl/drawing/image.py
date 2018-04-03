@@ -1,10 +1,8 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+from __future__ import division
+# Copyright (c) 2010-2018 openpyxl
 
-from openpyxl.cell import column_index_from_string
-from openpyxl.xml.constants import PACKAGE_IMAGES
-
-from .drawing import Drawing
+from io import BytesIO
 
 
 def bounding_box(bw, bh, w, h):
@@ -16,10 +14,10 @@ def bounding_box(bw, bh, w, h):
     new_width, new_height = w, h
     if bw and new_width > bw:
         new_width = bw
-        new_height = new_width / (float(w) / h)
+        new_height = new_width / (w / h)
     if bh and new_height > bh:
         new_height = bh
-        new_width = new_height * (float(w) / h)
+        new_width = new_height * (w / h)
     return (new_width, new_height)
 
 
@@ -39,44 +37,44 @@ def _import_image(img):
 
 
 class Image(object):
-    """ Raw Image class """
+    """Image in a spreadsheet"""
 
     _id = 1
+    _path = "/xl/media/image{0}.{1}"
+    anchor = "A1"
 
-    def __init__(self, img, coordinates=((0, 0), (1, 1)), size=(None, None),
-                 nochangeaspect=True, nochangearrowheads=True):
+    def __init__(self, img):
 
-        self.image = _import_image(img)
-        self.nochangeaspect = nochangeaspect
-        self.nochangearrowheads = nochangearrowheads
+        self.ref = img
 
-        # the containing drawing
-        self.drawing = Drawing()
-        self.drawing.coordinates = coordinates
+        # don't keep the image open
+        image = _import_image(img)
+        self.width = image.size[0]
+        self.height = image.size[1]
+        try:
+            self.format = image.format.lower()
+        except AttributeError:
+            self.format = "png"
 
-        newsize = bounding_box(size[0], size[1],
-                               self.image.size[0], self.image.size[1])
-        size = newsize
-        self.drawing.width = size[0]
-        self.drawing.height = size[1]
 
-    def anchor(self, cell, anchortype="absolute"):
-        """ anchors the image to the given cell
-            optional parameter anchortype supports 'absolute' or 'oneCell'"""
-        self.drawing.anchortype = anchortype
-        if anchortype == "absolute":
-            self.drawing.left, self.drawing.top = cell.anchor
-            return ((cell.column, cell.row),
-                    cell.parent.point_pos(self.drawing.top + self.drawing.height,
-                                          self.drawing.left + self.drawing.width))
-        elif anchortype == "oneCell":
-            self.drawing.anchorcol = column_index_from_string(cell.column) - 1
-            self.drawing.anchorrow = cell.row - 1
-            return ((self.drawing.anchorcol, self.drawing.anchorrow), None)
-        else:
-            raise ValueError("unknown anchortype %s" % anchortype)
+    def _data(self):
+        """
+        Open image and write it to a buffer when saving the workbook
+        """
+        img = _import_image(self.ref)
+        fp = None
+        # don't convert these file formats
+        if self.format in ['gif', 'jpeg', 'png']:
+            if img.fp:
+                img.fp.seek(0)
+                fp = img.fp
+        if not fp:
+            fp = BytesIO()
+            img.save(fp, format=self.format)
+
+        return fp.read()
 
 
     @property
-    def _path(self):
-        return PACKAGE_IMAGES + '/image{0}.png'.format(self._id)
+    def path(self):
+        return self._path.format(self._id, self.format)

@@ -31,7 +31,7 @@ def Currency(x):
 
 from openpyxl import Workbook, load_workbook, worksheet
 from openpyxl.styles import Alignment, Font
-from openpyxl.cell import get_column_letter
+from openpyxl.utils import get_column_letter
 
 # local files import
 from __main__ import misc
@@ -500,7 +500,7 @@ class Bill:
         rowend_end = 3
         
         # Copy all from dev start
-        template_start_sheet = template.get_sheet_by_name('start')
+        template_start_sheet = template['start']
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet2.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
@@ -557,7 +557,7 @@ class Bill:
             sheet2.cell(row=count+rowend+1, column=3).alignment = Alignment(wrap_text=True)
             
         # Copy all from dev end
-        template_end_sheet = template.get_sheet_by_name('end')
+        template_end_sheet = template['end']
         for row,row_ in zip(list(range(rowend+schedule.length()+1,rowend+schedule.length()+rowend_end+1)),list(range(1,rowend_end+1))):
             for column,column_ in zip(list(range(1,colend+1)),list(range(1,colend+1))):
                 sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
@@ -592,7 +592,7 @@ class Bill:
         rowend_end = 3
         
         # Copy all from Abstract start
-        template_start_sheet = template.get_sheet_by_name('start')
+        template_start_sheet = template['start']
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
@@ -679,7 +679,7 @@ class Bill:
                     row_item += 2
                 
         # Copy all from abs end
-        template_end_sheet = template.get_sheet_by_name('end')
+        template_end_sheet = template['end']
         for row in range(1,rowend_end+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value
@@ -715,7 +715,7 @@ class Bill:
         rowend_end = 3
         
         # Copy all from bill start
-        template_start_sheet = template.get_sheet_by_name('start')
+        template_start_sheet = template['start']
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
@@ -797,7 +797,7 @@ class Bill:
                     row_item += 2
                 
         # Copy all from bill end
-        template_end_sheet = template.get_sheet_by_name('end')
+        template_end_sheet = template['end']
         for row in range(1,rowend_end+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value

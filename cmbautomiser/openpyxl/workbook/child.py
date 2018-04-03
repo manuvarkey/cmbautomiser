@@ -1,8 +1,12 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 import re
-from openpyxl.compat import unicode
+import warnings
+
+from openpyxl.compat import unicode, safe_repr
+
+from openpyxl.worksheet.header_footer import HeaderFooter
 
 """
 Base class for worksheets, chartsheets, etc. that can be added to workbooks
@@ -15,10 +19,13 @@ def avoid_duplicate_name(names, value):
     """
     Naive check to see whether name already exists.
     If name does exist suggest a name using an incrementer
+    Duplicates are case insensitive
     """
-    if value in names:
-        names = ",".join(names)
-        sheet_title_regex = re.compile("(?P<title>%s)(?P<count>\d*),?" % re.escape(value))
+    # Check for an absolute match in which case we need to find an alternative
+    match = [n for n in names if n.lower() == value.lower()]
+    if match:
+        names = u",".join(names)
+        sheet_title_regex = re.compile(r"(?P<title>%s)(?P<count>\d*),?" % re.escape(value), re.I)
         matches = sheet_title_regex.findall(names)
         if matches:
             # use name, but append with the next highest integer
@@ -26,23 +33,26 @@ def avoid_duplicate_name(names, value):
             highest = 0
             if counts:
                 highest = max(counts)
-            value = "{0}{1}".format(value, highest + 1)
+            value = u"{0}{1}".format(value, highest + 1)
     return value
 
 
 class _WorkbookChild(object):
 
     __title = ""
+    _id = None
+    _path = "{0}"
     __parent = None
     _default_title = "Sheet"
 
     def __init__(self, parent=None, title=None):
         self.__parent = parent
         self.title = title or self._default_title
+        self.HeaderFooter = HeaderFooter()
 
 
     def __repr__(self):
-        return u'<{0} "{1}">'.format(self.__class__.__name__, self.title)
+        return '<{0} "{1}">'.format(self.__class__.__name__, safe_repr(self.title))
 
 
     @property
@@ -67,6 +77,9 @@ class _WorkbookChild(object):
         Limited to 31 characters, no special characters.
         Duplicate titles will be incremented numerically
         """
+        if not self.__parent:
+            return
+
         if not value:
             raise ValueError("Title must have at least one character")
 
@@ -86,6 +99,71 @@ class _WorkbookChild(object):
             value = avoid_duplicate_name(self.parent.sheetnames, value)
 
         if len(value) > 31:
-            raise ValueError('Maximum 31 characters allowed in sheet title')
+            warnings.warn("Title is more than 31 characters. Some applications may not be able to read the file")
 
         self.__title = value
+
+
+    @property
+    def oddHeader(self):
+        return self.HeaderFooter.oddHeader
+
+
+    @oddHeader.setter
+    def oddHeader(self, value):
+        self.HeaderFooter.oddHeader = value
+
+
+    @property
+    def oddFooter(self):
+        return self.HeaderFooter.oddFooter
+
+
+    @oddFooter.setter
+    def oddFooter(self, value):
+        self.HeaderFooter.oddFooter = value
+
+
+    @property
+    def evenHeader(self):
+        return self.HeaderFooter.evenHeader
+
+
+    @evenHeader.setter
+    def evenHeader(self, value):
+        self.HeaderFooter.evenHeader = value
+
+
+    @property
+    def evenFooter(self):
+        return self.HeaderFooter.evenFooter
+
+
+    @evenFooter.setter
+    def evenFooter(self, value):
+        self.HeaderFooter.evenFooter = value
+
+
+    @property
+    def firstHeader(self):
+        return self.HeaderFooter.firstHeader
+
+
+    @firstHeader.setter
+    def firstHeader(self, value):
+        self.HeaderFooter.firstHeader = value
+
+
+    @property
+    def firstFooter(self):
+        return self.HeaderFooter.firstFooter
+
+
+    @firstFooter.setter
+    def firstFooter(self, value):
+        self.HeaderFooter.firstFooter = value
+
+
+    @property
+    def path(self):
+        return self._path.format(self._id)

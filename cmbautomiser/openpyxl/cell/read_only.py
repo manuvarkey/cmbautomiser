@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 import re
 
@@ -8,7 +8,7 @@ from openpyxl.compat import unicode, long
 from openpyxl.cell import Cell
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.datetime import from_excel
-from openpyxl.styles import is_date_format, Style
+from openpyxl.styles import is_date_format
 from openpyxl.styles.numbers import BUILTIN_FORMATS
 
 
@@ -45,6 +45,10 @@ class ReadOnlyCell(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
+    def __repr__(self):
+        return "<ReadOnlyCell {0!r}.{1}>".format(self.parent.title, self.coordinate)
+
     @property
     def shared_strings(self):
         return self.parent.shared_strings
@@ -55,8 +59,6 @@ class ReadOnlyCell(object):
 
     @property
     def coordinate(self):
-        if self.row is None or self.column is None:
-            raise AttributeError("Empty cells have no coordinates")
         column = get_column_letter(self.column)
         return "{1}{0}".format(self.row, column)
 
@@ -132,11 +134,22 @@ class ReadOnlyCell(object):
             value = _cast_number(value)
         self._value = value
 
-    @property
-    def style(self):
-        return Style(font=self.font, alignment=self.alignment,
-                     fill=self.fill, number_format=self.number_format, border=self.border,
-                     protection=self.protection)
+
+class EmptyCell(object):
+
+    __slots__ = ()
+
+    value = None
+    is_date = False
+    font = None
+    border = None
+    fill = None
+    number_format = None
+    alignment = None
+    data_type = 'n'
 
 
-EMPTY_CELL = ReadOnlyCell(None, None, None, None)
+    def __repr__(self):
+        return "<EmptyCell>"
+
+EMPTY_CELL = EmptyCell()

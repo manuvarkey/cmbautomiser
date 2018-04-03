@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 ## Incomplete!
 
@@ -15,10 +15,14 @@ from openpyxl.descriptors import (
 from openpyxl.descriptors.excel import Guid, ExtensionList
 from openpyxl.descriptors.sequence import NestedSequence
 
+from openpyxl.utils.indexed_list import IndexedList
 from openpyxl.xml.constants import SHEET_MAIN_NS
+from openpyxl.xml.functions import tostring
 
 from openpyxl.cell.text import Text
 from .author import AuthorList
+from .comments import Comment
+from .shape_writer import ShapeWriter
 
 
 class ObjectAnchor(Serialisable):
@@ -96,8 +100,7 @@ class Properties(Serialisable):
         self.anchor = anchor
 
 
-
-class Comment(Serialisable):
+class CommentRecord(Serialisable):
 
     tagname = "comment"
 
@@ -110,7 +113,7 @@ class Comment(Serialisable):
     author = String(allow_none=True)
 
     __elements__ = ('text', 'commentPr')
-    __attrs__ = ('ref', 'authorId', 'guid', 'commentPr', 'shapeId')
+    __attrs__ = ('ref', 'authorId', 'guid', 'shapeId')
 
     def __init__(self,
                  ref="",
@@ -132,6 +135,18 @@ class Comment(Serialisable):
         self.author = author
 
 
+    @classmethod
+    def from_cell(cls, cell):
+        """
+        Class method to convert cell comment
+        """
+        comment = cell._comment
+        ref = cell.coordinate
+        self = cls(ref=ref, author=comment.author)
+        self.text.t = comment.content
+        return self
+
+
     @property
     def content(self):
         """
@@ -145,8 +160,14 @@ class CommentSheet(Serialisable):
     tagname = "comments"
 
     authors = Typed(expected_type=AuthorList)
-    commentList = NestedSequence(expected_type=Comment, count=0)
+    commentList = NestedSequence(expected_type=CommentRecord, count=0)
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    _id = None
+    _path = "/xl/comments/comment{0}.xml"
+    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml"
+    _rel_type = "comments"
+    _rel_id = None
 
     __elements__ = ('authors', 'commentList')
 
@@ -163,3 +184,44 @@ class CommentSheet(Serialisable):
         tree = super(CommentSheet, self).to_tree()
         tree.set("xmlns", SHEET_MAIN_NS)
         return tree
+
+
+    @property
+    def comments(self):
+        """
+        Return a dictionary of comments keyed by coord
+        """
+        authors = self.authors.author
+
+        for c in self.commentList:
+            yield c.ref, Comment(c.content, authors[c.authorId])
+
+
+    @classmethod
+    def from_comments(cls, comments):
+        """
+        Create a comment sheet from a list of comments for a particular worksheet
+        """
+        authors = IndexedList()
+
+        # dedupe authors and get indexes
+        for comment in comments:
+            comment.authorId = authors.add(comment.author)
+
+        return cls(authors=AuthorList(authors), commentList=comments)
+
+
+    def write_shapes(self, vml=None):
+        """
+        Create the VML for comments
+        """
+        sw = ShapeWriter(self.comments)
+        return sw.write(vml)
+
+
+    @property
+    def path(self):
+        """
+        Return path within the archive
+        """
+        return self._path.format(self._id)

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -42,8 +42,8 @@ class StockChart(ChartBase):
                  dropLines=None,
                  hiLowLines=None,
                  upDownBars=None,
-                 axId=None,
                  extLst=None,
+                 **kw
                 ):
         self.ser = ser
         self.dLbls = dLbls
@@ -52,5 +52,4 @@ class StockChart(ChartBase):
         self.upDownBars = upDownBars
         self.x_axis = TextAxis()
         self.y_axis = NumericAxis()
-        super(StockChart, self).__init__()
-
+        super(StockChart, self).__init__(**kw)

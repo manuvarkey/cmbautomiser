@@ -1,12 +1,19 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 import re
 from openpyxl.compat import safe_string, basestring
-from openpyxl.descriptors import Descriptor, Typed
-
-from .hashable import HashableObject
-from openpyxl.descriptors import String, Bool, MinMax, Integer
+from openpyxl.descriptors import (
+    Descriptor,
+    String,
+    Bool,
+    MinMax,
+    Integer,
+    Typed,
+    Sequence
+)
+from openpyxl.descriptors.excel import HexBinary, ExtensionList
+from openpyxl.descriptors.serialisable import Serialisable
 
 # Default Color Index as per 18.8.27 of ECMA Part 4
 COLOR_INDEX = (
@@ -50,15 +57,16 @@ class RGB(Typed):
     expected_type = basestring
 
     def __set__(self, instance, value):
-        m = aRGB_REGEX.match(value)
-        if m is None:
-            raise ValueError("Colors must be aRGB hex values")
-        if len(value) == 6:
-            value = "00" + value
+        if not self.allow_none:
+            m = aRGB_REGEX.match(value)
+            if m is None:
+                raise ValueError("Colors must be aRGB hex values")
+            if len(value) == 6:
+                value = "00" + value
         super(RGB, self).__set__(instance, value)
 
 
-class Color(HashableObject):
+class Color(Serialisable):
     """Named colors for use in styles."""
 
     tagname = "color"
@@ -70,7 +78,6 @@ class Color(HashableObject):
     tint = MinMax(min=-1, max=1, expected_type=float)
     type = String()
 
-    __fields__ = ('rgb', 'indexed', 'auto', 'theme', 'tint', 'type')
 
     def __init__(self, rgb=BLACK, indexed=None, auto=None, theme=None, tint=0.0, index=None, type='rgb'):
         if index is not None:
@@ -110,6 +117,15 @@ class Color(HashableObject):
         return self.value
 
 
+    def __add__(self, other):
+        """
+        Adding colours is undefined behaviour best do nothing
+        """
+        if not isinstance(other, Color):
+            return super(Color, self).__add__(other)
+        return self
+
+
 class ColorDescriptor(Typed):
 
     expected_type = Color
@@ -118,3 +134,60 @@ class ColorDescriptor(Typed):
         if isinstance(value, basestring):
             value = Color(rgb=value)
         super(ColorDescriptor, self).__set__(instance, value)
+
+
+class MRUColorList(Serialisable):
+
+    color = Sequence(expected_type=Color, )
+
+    __elements__ = ('color',)
+
+    def __init__(self,
+                 color=None,
+                ):
+        self.color = color
+
+
+class RgbColor(Serialisable):
+
+    rgb = HexBinary()
+
+    def __init__(self,
+                 rgb=None,
+                ):
+        self.rgb = rgb
+
+
+class IndexedColorList(Serialisable):
+
+    rgbColor = Sequence(expected_type=RgbColor, )
+
+    __elements__ = ('rgbColor',)
+
+    def __init__(self,
+                 rgbColor=(),
+                ):
+        self.rgbColor = rgbColor
+
+
+class ColorList(Serialisable):
+
+    indexedColors = Typed(expected_type=IndexedColorList, allow_none=True)
+    mruColors = Typed(expected_type=MRUColorList, allow_none=True)
+
+    __elements__ = ('indexedColors', 'mruColors')
+
+    def __init__(self,
+                 indexedColors=None,
+                 mruColors=None,
+                ):
+        if indexedColors is None:
+            indexedColors = IndexedColorList()
+        self.indexedColors = indexedColors
+        self.mruColors = mruColors
+
+
+    @property
+    def index(self):
+        vals = self.indexedColors.rgbColor
+        return [val.rgb for val in vals]

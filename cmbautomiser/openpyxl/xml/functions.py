@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 """
 XML compatability functions
@@ -21,11 +21,14 @@ if LXML is True:
     fromstring,
     tostring,
     register_namespace,
-    iterparse,
     QName,
-    xmlfile
+    xmlfile,
+    XMLParser,
     )
     from xml.etree.cElementTree import iterparse
+    # do not resolve entities
+    safe_parser = XMLParser(resolve_entities=False)
+    fromstring = partial(fromstring, parser=safe_parser)
 else:
     try:
         from xml.etree.cElementTree import (
@@ -35,7 +38,8 @@ else:
         fromstring,
         tostring,
         iterparse,
-        QName
+        QName,
+        register_namespace
         )
     except ImportError:
         from xml.etree.ElementTree import (
@@ -45,9 +49,9 @@ else:
         fromstring,
         tostring,
         iterparse,
-        QName
+        QName,
+        register_namespace
         )
-    from .namespace import register_namespace
     from et_xmlfile import xmlfile
 
 
@@ -88,29 +92,11 @@ tostring = partial(tostring, encoding="utf-8")
 
 
 def safe_iterator(node, tag=None):
-    """Return an iterator that is compatible with Python 2.6"""
+    """Return an iterator or an empty list"""
     if node is None:
         return []
-    if hasattr(node, "iter"):
-        return node.iter(tag)
-    else:
-        return node.getiterator(tag)
+    return node.iter(tag)
 
-
-def ConditionalElement(node, tag, condition, attr=None):
-    """
-    Utility function for adding nodes if certain criteria are fulfilled
-    An optional attribute can be passed in which will always be serialised as '1'
-    """
-    sub = partial(SubElement, node, tag)
-    if bool(condition):
-        if isinstance(attr, str):
-            elem = sub({attr:'1'})
-        elif isinstance(attr, dict):
-            elem = sub(attr)
-        else:
-            elem = sub()
-        return elem
 
 
 NS_REGEX = re.compile("({(?P<namespace>.*)})?(?P<localname>.*)")

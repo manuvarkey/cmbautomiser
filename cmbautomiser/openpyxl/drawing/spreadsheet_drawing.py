@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-# Copyright (c) 2010-2016 openpyxl
+# Copyright (c) 2010-2018 openpyxl
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -8,6 +8,7 @@ from openpyxl.descriptors import (
     NoneSet,
     Integer,
     Sequence,
+    Alias,
 )
 from openpyxl.descriptors.nested import (
     NestedText,
@@ -15,13 +16,18 @@ from openpyxl.descriptors.nested import (
 )
 from openpyxl.descriptors.excel import Relation
 
-from openpyxl.packaging.relationship import Relationship
+from openpyxl.packaging.relationship import (
+    Relationship,
+    RelationshipList,
+)
 from openpyxl.utils import coordinate_to_tuple
-from openpyxl.utils.units import cm_to_EMU
+from openpyxl.utils.units import (
+    cm_to_EMU,
+    pixels_to_EMU,
+)
 from openpyxl.drawing.image import Image
 
-from openpyxl.xml.constants import SHEET_DRAWING_NS, PKG_REL_NS
-from openpyxl.xml.functions import Element
+from openpyxl.xml.constants import SHEET_DRAWING_NS
 
 from openpyxl.chart._chart import ChartBase
 from .shapes import (
@@ -33,9 +39,10 @@ from .fill import Blip
 from .graphic import (
     GroupShape,
     GraphicFrame,
-    Connector,
+    Shape,
     PictureFrame,
     ChartRelation,
+    Shape,
     )
 
 
@@ -76,10 +83,13 @@ class AnchorMarker(Serialisable):
 class _AnchorBase(Serialisable):
 
     #one of
-    sp = NestedNoneSet(values=(['cone', 'coneToMax', 'box', 'cylinder', 'pyramid', 'pyramidToMax']))
+    sp = Typed(expected_type=Shape, allow_none=True)
+    shape = Alias("sp")
     grpSp = Typed(expected_type=GroupShape, allow_none=True)
+    groupShape = Alias("grpSp")
     graphicFrame = Typed(expected_type=GraphicFrame, allow_none=True)
-    cxnSp = Typed(expected_type=Connector, allow_none=True)
+    cxnSp = Typed(expected_type=Shape, allow_none=True)
+    connectionShape = Alias("cxnSp")
     pic = Typed(expected_type=PictureFrame, allow_none=True)
     contentPart = Relation()
 
@@ -205,9 +215,33 @@ class TwoCellAnchor(_AnchorBase):
         super(TwoCellAnchor, self).__init__(**kw)
 
 
+def _check_anchor(obj):
+    """
+    Check whether an object has an existing Anchor object
+    If not create a OneCellAnchor using the provided coordinate
+    """
+    anchor = obj.anchor
+    if not isinstance(anchor, _AnchorBase):
+        row, col = coordinate_to_tuple(anchor)
+        anchor = OneCellAnchor()
+        anchor._from.row = row -1
+        anchor._from.col = col -1
+        if isinstance(obj, ChartBase):
+            anchor.ext.width = cm_to_EMU(obj.width)
+            anchor.ext.height = cm_to_EMU(obj.height)
+        elif isinstance(obj, Image):
+            anchor.ext.width = pixels_to_EMU(obj.width)
+            anchor.ext.height = pixels_to_EMU(obj.height)
+    return anchor
+
+
 class SpreadsheetDrawing(Serialisable):
 
     tagname = "wsDr"
+    mime_type = "application/vnd.openxmlformats-officedocument.drawing+xml"
+    _rel_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+    _path = PartName="/xl/drawings/drawing{0}.xml"
+    _id = None
 
     twoCellAnchor = Sequence(expected_type=TwoCellAnchor, allow_none=True)
     oneCellAnchor = Sequence(expected_type=OneCellAnchor, allow_none=True)
@@ -235,26 +269,24 @@ class SpreadsheetDrawing(Serialisable):
         return id(self)
 
 
+    def __bool__(self):
+        return bool(self.charts) or bool(self.images)
+
+    __nonzero__ = __bool__
+
+
     def _write(self):
         """
         create required structure and the serialise
         """
         anchors = []
         for idx, obj in enumerate(self.charts + self.images, 1):
+            anchor = _check_anchor(obj)
             if isinstance(obj, ChartBase):
-                rel = Relationship(type="chart", target='../charts/chart%s.xml' % obj._id)
-                anchor = obj.anchor
-                if not isinstance(anchor, _AnchorBase):
-                    row, col = coordinate_to_tuple(anchor)
-                    anchor = OneCellAnchor()
-                    anchor._from.row = row -1
-                    anchor._from.col = col -1
-                    anchor.ext.width = cm_to_EMU(obj.width)
-                    anchor.ext.height = cm_to_EMU(obj.height)
+                rel = Relationship(type="chart", Target=obj.path)
                 anchor.graphicFrame = self._chart_frame(idx)
             elif isinstance(obj, Image):
-                rel = Relationship(type="image", target='../media/image%s.png' % obj._id)
-                anchor = obj.drawing.anchor
+                rel = Relationship(type="image", Target=obj.path)
                 anchor.pic = self._picture_frame(idx)
 
             anchors.append(anchor)
@@ -299,8 +331,29 @@ class SpreadsheetDrawing(Serialisable):
 
 
     def _write_rels(self):
-        root = Element("Relationships", xmlns=PKG_REL_NS)
-        for idx, rel in enumerate(self._rels, 1):
-            rel.id = "rId{0}".format(idx)
-            root.append(rel.to_tree())
-        return root
+        rels = RelationshipList()
+        rels.Relationship = self._rels
+        return rels.to_tree()
+
+
+    @property
+    def path(self):
+        return self._path.format(self._id)
+
+
+    @property
+    def _chart_rels(self):
+        """
+        Get relationship information for each chart and bind anchor to it
+        """
+        rels = []
+        anchors = self.absoluteAnchor + self.oneCellAnchor + self.twoCellAnchor
+        for anchor in anchors:
+            if anchor.graphicFrame is not None:
+                graphic = anchor.graphicFrame.graphic
+                rel = graphic.graphicData.chart
+                if rel is not None:
+                    rel.anchor = anchor
+                    rel.anchor.graphicFrame = None
+                    rels.append(rel)
+        return rels
