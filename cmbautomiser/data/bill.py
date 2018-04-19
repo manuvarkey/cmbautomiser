@@ -30,7 +30,7 @@ def Currency(x):
   return Decimal(x).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
 
 from openpyxl import Workbook, load_workbook, worksheet
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, Border
 from openpyxl.utils import get_column_letter
 
 # local files import
@@ -504,7 +504,9 @@ class Bill:
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet2.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
-                sheet2.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                sheet2.cell(row=row, column=column).font = copy.copy(template_start_sheet.cell(row=row, column=column).font)
+                sheet2.cell(row=row, column=column).border = copy.copy(template_start_sheet.cell(row=row, column=column).border)
+                sheet2.cell(row=row, column=column).alignment = copy.copy(template_start_sheet.cell(row=row, column=column).alignment)
         
         # Copy all values
         for count in range(schedule.length()):
@@ -561,7 +563,9 @@ class Bill:
         for row,row_ in zip(list(range(rowend+schedule.length()+1,rowend+schedule.length()+rowend_end+1)),list(range(1,rowend_end+1))):
             for column,column_ in zip(list(range(1,colend+1)),list(range(1,colend+1))):
                 sheet2.cell(row=row, column=column).value = template_end_sheet.cell(row=row_, column=column_).value
-                sheet2.cell(row=row, column=column).style = template_end_sheet.cell(row=row_, column=column_).style
+                sheet2.cell(row=row, column=column).font = copy.copy(template_end_sheet.cell(row=row, column=column).font)
+                sheet2.cell(row=row, column=column).border = copy.copy(template_end_sheet.cell(row=row, column=column).border)
+                sheet2.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         sheet2.cell(row=rowend+schedule.length()+1, column=colend-1).value = \
             '=SUM('+get_column_letter(colend-1)+str(rowend+1)+':'+get_column_letter(colend-1)+\
             str(rowend+schedule.length())+')'
@@ -596,7 +600,9 @@ class Bill:
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
-                sheet.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                sheet.cell(row=row, column=column).font = copy.copy(template_start_sheet.cell(row=row, column=column).font)
+                sheet.cell(row=row, column=column).border = copy.copy(template_start_sheet.cell(row=row, column=column).border)
+                sheet.cell(row=row, column=column).alignment = copy.copy(template_start_sheet.cell(row=row, column=column).alignment)
                 
         # Copy all data
         sheet['C3'] = 'ABSTRACT OF COST FOR ' + self.data.title
@@ -683,7 +689,9 @@ class Bill:
         for row in range(1,rowend_end+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value
-                sheet.cell(row=row+row_item, column=column).style = template_end_sheet.cell(row=row, column=column).style
+                sheet.cell(row=row, column=column).font = copy.copy(template_end_sheet.cell(row=row, column=column).font)
+                sheet.cell(row=row, column=column).border = copy.copy(template_end_sheet.cell(row=row, column=column).border)
+                sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
         sheet.cell(row=1+row_item, column=7).value = '=SUM(G13:G' + str(row_item) + ')'
@@ -719,7 +727,9 @@ class Bill:
         for row in range(1,rowend+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
-                sheet.cell(row=row, column=column).style = template_start_sheet.cell(row=row, column=column).style
+                sheet.cell(row=row, column=column).font = copy.copy(template_start_sheet.cell(row=row, column=column).font)
+                sheet.cell(row=row, column=column).border = copy.copy(template_start_sheet.cell(row=row, column=column).border)
+                sheet.cell(row=row, column=column).alignment = copy.copy(template_start_sheet.cell(row=row, column=column).alignment)
                 
         # Copy all data
         sheet['C3'] = 'SCHEDULE OF RATES FOR ' + self.data.title
@@ -801,7 +811,9 @@ class Bill:
         for row in range(1,rowend_end+1):
             for column in range(1,colend+1):
                 sheet.cell(row=row+row_item, column=column).value = template_end_sheet.cell(row=row, column=column).value
-                sheet.cell(row=row+row_item, column=column).style = template_end_sheet.cell(row=row, column=column).style
+                sheet.cell(row=row, column=column).font = copy.copy(template_end_sheet.cell(row=row, column=column).font)
+                sheet.cell(row=row, column=column).border = copy.copy(template_end_sheet.cell(row=row, column=column).border)
+                sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
         sheet.cell(row=1+row_item, column=7).value = '=SUM(G8:G' + str(row_item) + ')'
