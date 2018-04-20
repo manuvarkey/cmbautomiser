@@ -29,6 +29,7 @@ from gi.repository import Gtk, Gdk, GLib, Pango
 # local files import
 from __main__ import misc, data, undo
 from undo import undoable
+from .cellrenderercustomtext import CellRendererTextView
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -69,12 +70,18 @@ class ScheduleViewGeneric:
         """
         row = int(path)
         item = self.schedule.get_item_by_index(row).get_model()
-        editable.props.text = str(item[column])
-        editable.props.width_chars = 1
+        editable.set_text(str(item[column]))
+        editable.editor.connect("key-press-event", self.onKeyPressTreeviewSchedule, self.tree)
 
     # for browsing with tab key
-    def onKeyPressTreeviewSchedule(self, treeview, event):
+    def onKeyPressTreeviewSchedule(self, widget, event, treeview):
         """Handle key presses"""
+        
+        def select_func(tree, path, col):
+            tree.grab_focus()
+            tree.set_cursor(path, col, True)
+            return False
+                        
         keyname = event.get_keyval()[1]
         state = event.get_state()
         shift_pressed = bool(state & Gdk.ModifierType.SHIFT_MASK)
@@ -100,7 +107,8 @@ class ScheduleViewGeneric:
                             else:
                                 path = tmodel.get_path(titer)
                                 prev_column = columns[-1]
-                        GLib.timeout_add(50, treeview.set_cursor, path, prev_column, True)
+                        GLib.idle_add(select_func, treeview, path, prev_column)
+                        return
                     else:
                         if colnum + 1 < len(columns):
                             next_column = columns[colnum + 1]
@@ -111,7 +119,8 @@ class ScheduleViewGeneric:
                                 titer = tmodel.get_iter_first()
                             path = tmodel.get_path(titer)
                             next_column = columns[0]
-                        GLib.timeout_add(50, treeview.set_cursor, path, next_column, True)
+                        GLib.idle_add(select_func, treeview, path, next_column)
+                        return
                 elif keyname in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                     if shift_pressed == 1:
                         if rownum - 1 >= 0:
@@ -119,14 +128,16 @@ class ScheduleViewGeneric:
                         else:
                             rownum = 0
                         path = [rownum]
-                        GLib.timeout_add(50, treeview.set_cursor, path, col, True)
+                        GLib.idle_add(select_func, treeview, path, col)
+                        return
                     else:
                         if rownum + 1 < len(rows):
                             rownum += 1
                         else:
                             rownum = len(rows) - 1
                         path = [rownum]
-                        GLib.timeout_add(50, treeview.set_cursor, path, col, True)
+                        GLib.idle_add(select_func, treeview, path, col)
+                        return
                 elif keyname in [Gdk.KEY_Alt_L , Gdk.KEY_Alt_R , Gdk.KEY_Escape]:  # unselect all
                     self.tree.get_selection().unselect_all()
                     
@@ -386,7 +397,7 @@ class ScheduleViewGeneric:
 
         for columntype, caption, render_func, i in zip(self.columntypes, self.captions, self.render_funcs,
                                                        range(len(self.columntypes))):
-            cell = Gtk.CellRendererText()
+            cell = CellRendererTextView()
 
             column = Gtk.TreeViewColumn(caption, cell, text=i)
             column.props.resizable = True
@@ -449,7 +460,7 @@ class ScheduleViewGeneric:
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)  # initialise clipboard
 
         # Connect signals with custom userdata
-        self.tree.connect("key-press-event", self.onKeyPressTreeviewSchedule)
+        self.tree.connect("key-press-event", self.onKeyPressTreeviewSchedule, self.tree)
 
 
 class ScheduleView(ScheduleViewGeneric):
