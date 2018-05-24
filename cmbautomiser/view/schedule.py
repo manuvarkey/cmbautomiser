@@ -107,7 +107,7 @@ class ScheduleViewGeneric:
                             else:
                                 path = tmodel.get_path(titer)
                                 prev_column = columns[-1]
-                        GLib.idle_add(select_func, treeview, path, prev_column)
+                        GLib.timeout_add(50, select_func, treeview, path, prev_column)
                         return
                     else:
                         if colnum + 1 < len(columns):
@@ -119,7 +119,7 @@ class ScheduleViewGeneric:
                                 titer = tmodel.get_iter_first()
                             path = tmodel.get_path(titer)
                             next_column = columns[0]
-                        GLib.idle_add(select_func, treeview, path, next_column)
+                        GLib.timeout_add(50, select_func, treeview, path, next_column)
                         return
                 elif keyname in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                     if shift_pressed == 1:
@@ -128,7 +128,7 @@ class ScheduleViewGeneric:
                         else:
                             rownum = 0
                         path = [rownum]
-                        GLib.idle_add(select_func, treeview, path, col)
+                        GLib.timeout_add(50, select_func, treeview, path, col)
                         return
                     else:
                         if rownum + 1 < len(rows):
@@ -136,7 +136,7 @@ class ScheduleViewGeneric:
                         else:
                             rownum = len(rows) - 1
                         path = [rownum]
-                        GLib.idle_add(select_func, treeview, path, col)
+                        GLib.timeout_add(50, select_func, treeview, path, col)
                         return
                 elif keyname in [Gdk.KEY_Alt_L , Gdk.KEY_Alt_R , Gdk.KEY_Escape]:  # unselect all
                     self.tree.get_selection().unselect_all()
@@ -144,7 +144,7 @@ class ScheduleViewGeneric:
     def on_wrap_column_resized(self, column, pspec, cell):
         """ Automatically adjust wrapwidth to column width"""
         
-        width = column.get_width() - 5
+        width = column.get_width()
         oldwidth = cell.props.wrap_width
         
         if width > 0 and width != oldwidth:

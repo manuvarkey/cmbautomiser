@@ -558,8 +558,6 @@ class BillDialog:
         for row, bill in enumerate(self.bills):
             if row != self.this_bill:
                 self.liststore_previous_bill.append([row + 1, bill.get_text()])
-            else:
-                break  # do not add entries beyond
 
         # Connect toggled signal of measurement view to callback
         self.measurements_view.renderer_toggle.connect("toggled", self.onToggleCellRendererToggle)

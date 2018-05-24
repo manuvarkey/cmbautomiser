@@ -122,7 +122,8 @@ class CustomEditable(Gtk.EventBox, Gtk.CellEditable):
         pass
         
     def do_start_editing(self, event):
-        self.editor.grab_focus()
+        self.show_all()
+        GLib.timeout_add(50, self.editor.grab_focus)
         
     def copy_clipboard(self):
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
@@ -143,6 +144,7 @@ class CustomEditable(Gtk.EventBox, Gtk.CellEditable):
         keyname = Gdk.keyval_name(event.get_keyval()[1])
         
         accel_masks = (Gdk.ModifierType.CONTROL_MASK | \
+                       Gdk.ModifierType.SHIFT_MASK | \
                        Gdk.ModifierType.MOD1_MASK)
         enter_keynames = ('Return', 'KP_Enter')
         cancel_keynames = ('Escape',)
@@ -157,6 +159,12 @@ class CustomEditable(Gtk.EventBox, Gtk.CellEditable):
         elif keyname in cancel_keynames:
             self.props.editing_canceled = True
             self.editing_done()
+            return True
+        elif keyname in ('c','C') and (mask & Gdk.ModifierType.CONTROL_MASK):
+            self.copy_clipboard()
+            return True
+        elif keyname in ('v','V') and (mask & Gdk.ModifierType.CONTROL_MASK):
+            self.paste_clipboard()
             return True
         # Finish editing on tab
         elif keyname in tab_keynames:
@@ -200,7 +208,6 @@ class CellRendererTextView(Gtk.CellRendererText):
         editable.connect('editing-done', self.editing_done, tree, path)
         editable.set_text(text)
         editable.set_size_request(cell_area.width-5, cell_area.height-5)
-        editable.show_all()
         return editable
 
     def editing_done(self, editable, tree, path):
