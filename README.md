@@ -7,6 +7,8 @@ The program is organised in three tabs/views - schedule, measurement and bill vi
 
 Both CMBs and Bills can be rendered into a pdf /.xlsx document from the respective modules. In addition Bill view also allows the generation of the deviation statement as a .xlsx file.
 
+Homepage: http://manuvarkey.github.io/cmbautomiser/
+
 ## Installation
 
 **CMB Automiser** binaries can be downloaded from the following website
