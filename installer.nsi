@@ -8,7 +8,7 @@
 # These three must be integers
 !define VERSIONMAJOR 3
 !define VERSIONMINOR 3
-!define VERSIONBUILD 2
+!define VERSIONBUILD 3
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client
 !define HELPURL "mailto:manuvarkey@gmail.com" # "Support Information" link
@@ -28,7 +28,7 @@ LicenseData "license.txt"
 # This will be in the installer/uninstaller's title bar
 Name "${APPNAME}"
 Icon "cmbautomiser.ico"
-outFile "cmbautomiser-win32-3-3-2.exe"
+outFile "cmbautomiser-win32-3-3-3.exe"
  
 !include LogicLib.nsh
  

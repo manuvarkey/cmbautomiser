@@ -734,7 +734,9 @@ class Command(object):
             if platform.system() == 'Linux':
                 self.process = subprocess.Popen(self.cmd)
             elif platform.system() == 'Windows':
-                self.process = subprocess.Popen(self.cmd, shell=True)
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                self.process = subprocess.Popen(self.cmd, startupinfo=startupinfo)
             log.info('Sub-process spawned - ' + str(self.process.pid))
             self.process.communicate()
         thread = threading.Thread(target=target)
