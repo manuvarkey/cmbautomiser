@@ -625,8 +625,8 @@ class DataModel:
         # Build all data structures
         self.update()
         
-        # Render only if bill is a normal bill
-        if self.bills[path[0]].data.bill_type == misc.BILL_NORMAL:
+        # Render only if bill is a normal or final bill
+        if self.bills[path[0]].data.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
             bill = self.bills[path[0]]
             
             # Show Progess Dialog
@@ -661,7 +661,7 @@ class DataModel:
                 cmbno = len(cmb_refs)
                 if -1 in cmb_refs:
                     cmbno -= 1
-                if bill.prev_bill is not None and bill.prev_bill.data.bill_type == misc.BILL_NORMAL:
+                if bill.prev_bill is not None and bill.prev_bill.data.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
                     billno = 1
                 progress.set_pulse_step(1/(cmbno*2+billno+3))
 
@@ -684,7 +684,7 @@ class DataModel:
                         if code[0] == misc.CMB_ERROR:
                             return code
                 # Render prev bill
-                if bill.prev_bill is not None and bill.prev_bill.data.bill_type == misc.BILL_NORMAL:
+                if bill.prev_bill is not None and bill.prev_bill.data.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
                     if progress is not None:
                         progress.add_message('Rendering Bill No.' + bill.prev_bill.data.cmb_name)
                     code = self.render_bill(folder, replacement_dict, [bill.data.prev_bill], False)

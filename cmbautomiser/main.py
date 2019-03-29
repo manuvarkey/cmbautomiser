@@ -197,14 +197,9 @@ class MainWindow:
         else:
             self.filename = filename
         
-        fileobj = open(self.filename, 'r')
-        if fileobj == None:
-            log.error("onOpenProjectClicked - Error opening file - " + self.filename)
-            self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
-        else:
+        with open(self.filename, 'r') as fileobj:
             try:
                 data = json.load(fileobj)  # load data structure
-                fileobj.close()
                 if data[0] == misc.PROJECT_FILE_VER:
                     self.data.set_model(data[1])
                     self.project_settings_dict = data[2]
@@ -231,7 +226,7 @@ class MainWindow:
                     self.display_status(misc.CMB_ERROR, "Project could not be opened: Wrong file type selected")
                     log.warning('onOpenProjectClicked - Project could not be opened: Wrong file type selected - ' +self.filename)
             except:
-                log.exception("Error parsing project file - " + self.filename)
+                log.error("onOpenProjectClicked - Error opening file - " + self.filename)
                 self.display_status(misc.CMB_ERROR, "Project could not be opened: Error opening file")
 
     def onSaveProjectClicked(self, button):
@@ -245,12 +240,13 @@ class MainWindow:
             data.append(self.data.get_model())
             data.append(self.project_settings_dict)
             # Try to open file
-            fileobj = open(self.filename, 'w')
-            if fileobj == None:
-                log.error("onSaveProjectClicked - Error opening file - " + self.filename)
-                self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
-            json.dump(data, fileobj)
-            fileobj.close()
+            with open(self.filename, 'w') as fileobj:
+                try:
+                    json.dump(data, fileobj)
+                except:
+                    log.error("onSaveProjectClicked - Error opening file - " + self.filename)
+                    self.display_status(misc.CMB_ERROR, "Project file could not be opened for saving")
+                    return
             self.display_status(misc.CMB_INFO, "Project successfully saved")
             log.info('onSaveProjectClicked -  Project successfully saved')
             # Save point in stack for checking change state

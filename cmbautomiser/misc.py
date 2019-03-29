@@ -54,6 +54,7 @@ child_windows = 0
 # Used in bill module for indicating type of bill
 BILL_CUSTOM = 1
 BILL_NORMAL = 2
+BILL_FINAL = 3
 # background colors for treeview
 MEAS_COLOR_LOCKED = '#BABDB6'
 MEAS_COLOR_NORMAL = '#FFFFFF'

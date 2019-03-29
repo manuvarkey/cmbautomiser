@@ -148,7 +148,7 @@ class BillView:
                         row = path[0]
                         # Handle different bill types
                         if self.bills[row].data.bill_type == misc.BILL_CUSTOM:
-                            if model.bill_type == misc.BILL_NORMAL:
+                            if model.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
                                 # create duplicate bill
                                 bill = data.bill.Bill()
                                 bill.set_model(model.get_model())
@@ -325,7 +325,7 @@ class BillDialog:
         
         itemnos = self.data.schedule.get_itemnos()
         # Items specific to normal bill
-        if self.billdata.bill_type == misc.BILL_NORMAL:
+        if self.billdata.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
             # Evaluate a bill with current selected items for determining EXCEEDED flag
             bill = data.bill.Bill(self.billdata.get_model())
             bill.update(self.schedule, self.cmbs, self.bills)
@@ -392,7 +392,7 @@ class BillDialog:
         # Create data object for current data
         records = []
         for item in populated_items:
-            if self.billdata.bill_type == misc.BILL_NORMAL:
+            if self.billdata.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
                 x = self.billdata.item_excess_rates[item[0]]
                 y = self.billdata.item_part_percentage[item[0]]
                 z = self.billdata.item_excess_part_percentage[item[0]]
@@ -412,7 +412,7 @@ class BillDialog:
         if model is not None:
             records = model[1]
             for count, item in enumerate(populated_items):
-                if self.billdata.bill_type == misc.BILL_NORMAL:
+                if self.billdata.bill_type in (misc.BILL_NORMAL, misc.BILL_FINAL):
                     self.billdata.item_excess_rates[item[0]] = float(eval(records[count][4]))
                     self.billdata.item_part_percentage[item[0]] = float(eval(records[count][5]))
                     self.billdata.item_excess_part_percentage[item[0]] = float(eval(records[count][6]))
@@ -501,6 +501,12 @@ class BillDialog:
         self.billdata.title = self.entry_bill_title.get_text()
         self.billdata.cmb_name = self.entry_bill_cmbname.get_text()
         self.billdata.bill_date = self.entry_bill_bill_date.get_text()
+        if self.checkbutton_final_bill.get_active() == True:
+            self.billdata.bill_type = misc.BILL_FINAL
+        elif self.checkbutton_final_bill.get_sensitive() == True:
+            self.billdata.bill_type = misc.BILL_NORMAL
+        else:
+            self.billdata.bill_type = misc.BILL_CUSTOM
         self.billdata.starting_page = self.entry_bill_starting_page.get_value_as_int()
         
         (text_start, text_end) = self.textview_bill_text.get_buffer().get_bounds()
@@ -550,6 +556,10 @@ class BillDialog:
         self.entry_bill_bill_date = self.builder.get_object("entry_bill_bill_date")
         self.entry_bill_starting_page = self.builder.get_object("entry_bill_starting_page")
         self.textview_bill_text = self.builder.get_object("textview_bill_text")
+        # Checkbox
+        self.checkbutton_final_bill = self.builder.get_object("checkbutton_final_bill")
+        # Popupbutton
+        self.button_billtext = self.builder.get_object("button_billtext")
 
         # Setup cmb tree view
         self.measurements_view = measurement.MeasurementsView(self.schedule, self.data, self.treeview_bill)
@@ -572,11 +582,18 @@ class BillDialog:
         self.entry_bill_bill_date.set_text(self.billdata.bill_date)
         self.entry_bill_starting_page.set_value(self.billdata.starting_page)
         self.textview_bill_text.get_buffer().set_text(self.billdata.bill_text)
+        if self.billdata.bill_type == misc.BILL_FINAL:
+            self.checkbutton_final_bill.set_active(True)
+        else:
+            self.checkbutton_final_bill.set_active(False)
         
         # Special conditions for custom bill
         if self.billdata.bill_type == misc.BILL_CUSTOM:
             self.treeview_bill.set_sensitive(False)  # Deactivate measurement item entry
             self.combobox_bill_last_bill.set_sensitive(False)  # Deactivate last bill selection
+            self.checkbutton_final_bill.set_sensitive(False)  # Deactivate final bill selection
+            self.textview_bill_text.set_sensitive(False)  # Deactivate bill text selection
+            self.button_billtext.set_sensitive(False)  # Deactivate bill text selection
         
         # Update GUI
         self.update_store()
