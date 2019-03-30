@@ -216,7 +216,7 @@ class UserEntryDialog():
 class SpreadsheetDialog:
     """Dialog for manage input and output of spreadsheets"""
    
-    def __init__(self, parent, filename, columntypes, captions, dimensions = None):
+    def __init__(self, parent, filename, columntypes, captions, dimensions = None, allow_formula=False):
         """Initialise SpreadsheetDialog class
         
             Arguments:
@@ -237,6 +237,7 @@ class SpreadsheetDialog:
         self.captions = captions
         self.columntypes = columntypes
         self.dimensions = dimensions
+        self.allow_formula = allow_formula
         
         self.top = 0
         self.bottom = 0
@@ -356,7 +357,7 @@ class SpreadsheetDialog:
         self.entry_right.set_text(str(self.left + len(self.columntypes)))
         
         # Read spreadsheet
-        self.values = self.spreadsheet.read_rows(self.columntypes, start=self.top-1, end=self.bottom-1, left=self.left-1)
+        self.values = self.spreadsheet.read_rows(self.columntypes, start=self.top-1, end=self.bottom-1, left=self.left-1, allow_formula=self.allow_formula)
         
         # Update store
         self.store.clear()
@@ -529,7 +530,7 @@ class Spreadsheet:
             
     # Bulk read functions
     
-    def read_rows(self, columntypes = [], start=0, end=-1, left=0):
+    def read_rows(self, columntypes = [], start=0, end=-1, left=0, allow_formula=False):
         """Read and validate selected rows from current sheet"""
         # Get count of rows
         rowcount = self.length()
@@ -554,7 +555,15 @@ class Spreadsheet:
                         cell_formated = "0"
                     else:
                         try:  # try evaluating float
-                            cell_formated = str(float(cell))
+                            if allow_formula:
+                                if len(cell) > 1 and cell[0] == '=':
+                                    formula = cell[1:]
+                                else:
+                                    formula = cell
+                                evaluated = str(float(eval(formula)))
+                                cell_formated = formula
+                            else:
+                                cell_formated = str(float(cell))
                         except:
                             cell_formated = '0'
                 elif columntype == MEAS_NO:
@@ -562,7 +571,15 @@ class Spreadsheet:
                         cell_formated = "0"
                     else:
                         try:  # try evaluating int
-                            cell_formated = str(int(cell))
+                            if allow_formula:
+                                if len(cell) > 1 and cell[0] == '=':
+                                    formula = cell[1:]
+                                else:
+                                    formula = cell
+                                evaluated = str(int(eval(formula)))
+                                cell_formated = formula
+                            else:
+                                cell_formated = str(int(cell))
                         except:
                             cell_formated = '0'
                 else:

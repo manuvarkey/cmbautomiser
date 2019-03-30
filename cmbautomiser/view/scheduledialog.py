@@ -151,7 +151,7 @@ class ScheduleDialog:
         """Import xlsx file into schedule"""
         filename = self.builder.get_object("filechooserbutton_schedule").get_filename()
         
-        spreadsheet_dialog = misc.SpreadsheetDialog(self.window, filename, self.columntypes, self.captions, self.dimensions)
+        spreadsheet_dialog = misc.SpreadsheetDialog(self.window, filename, self.columntypes, self.captions, self.dimensions, allow_formula=True)
         models = spreadsheet_dialog.run()
 
         items = []
