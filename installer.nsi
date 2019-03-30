@@ -7,8 +7,8 @@
 !define DESCRIPTION "Computerised quantity accounting and cost billing application for use in public works organisations."
 # These three must be integers
 !define VERSIONMAJOR 3
-!define VERSIONMINOR 3
-!define VERSIONBUILD 3
+!define VERSIONMINOR 4
+!define VERSIONBUILD 0
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client
 !define HELPURL "mailto:manuvarkey@gmail.com" # "Support Information" link
@@ -28,7 +28,7 @@ LicenseData "license.txt"
 # This will be in the installer/uninstaller's title bar
 Name "${APPNAME}"
 Icon "cmbautomiser.ico"
-outFile "cmbautomiser-win32-3-3-3.exe"
+outFile "cmbautomiser-win32-3-4-0.exe"
  
 !include LogicLib.nsh
  
