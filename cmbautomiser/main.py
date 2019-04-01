@@ -638,7 +638,7 @@ class MainApp(Gtk.Application):
     def __init__(self, *args, **kwargs):
         log.info('MainApp - Start initialisation')
         
-        super().__init__(*args, application_id="org.cmbautomiser3.mainapp",
+        super().__init__(*args, application_id="com.kavilgroup.cmbautomiser3",
                          flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
                          **kwargs)
                          
