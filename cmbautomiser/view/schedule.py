@@ -77,9 +77,9 @@ class ScheduleViewGeneric:
     def onKeyPressTreeviewSchedule(self, widget, event, treeview):
         """Handle key presses"""
         
-        def select_func(tree, path, col):
+        def select_func(tree, treepath, col):
             tree.grab_focus()
-            tree.set_cursor(path, col, True)
+            tree.set_cursor(treepath, col, True)
             return False
                         
         keyname = event.get_keyval()[1]
@@ -101,12 +101,11 @@ class ScheduleViewGeneric:
                             tmodel = treeview.get_model()
                             titer = tmodel.iter_previous(tmodel.get_iter(path))
                             if titer is None:
-                                titer = tmodel.get_iter_first()
-                                path = tmodel.get_path(titer)
                                 prev_column = columns[0]
                             else:
                                 path = tmodel.get_path(titer)
                                 prev_column = columns[-1]
+                            treeview.scroll_to_cell(path, prev_column, False)
                         GLib.idle_add(select_func, treeview, path, prev_column)
                         return
                     else:
@@ -116,28 +115,14 @@ class ScheduleViewGeneric:
                             tmodel = treeview.get_model()
                             titer = tmodel.iter_next(tmodel.get_iter(path))
                             if titer is None:
-                                titer = tmodel.get_iter_first()
-                            path = tmodel.get_path(titer)
-                            next_column = columns[0]
+                                next_column = columns[colnum]
+                            else:
+                                path = tmodel.get_path(titer)
+                                next_column = columns[0]
+                            treeview.scroll_to_cell(path, next_column, False)
                         GLib.idle_add(select_func, treeview, path, next_column)
                         return
-                elif keyname in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
-                    if shift_pressed == 1:
-                        if rownum - 1 >= 0:
-                            rownum -= 1
-                        else:
-                            rownum = 0
-                        path = [rownum]
-                        GLib.idle_add(select_func, treeview, path, col)
-                        return
-                    else:
-                        if rownum + 1 < len(rows):
-                            rownum += 1
-                        else:
-                            rownum = len(rows) - 1
-                        path = [rownum]
-                        GLib.idle_add(select_func, treeview, path, col)
-                        return
+                        
                 elif keyname in [Gdk.KEY_Alt_L , Gdk.KEY_Alt_R , Gdk.KEY_Escape]:  # unselect all
                     self.tree.get_selection().unselect_all()
                     

@@ -272,7 +272,7 @@ class Bill:
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
-            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
+            if itemno in self.item_qty and self.item_qty[itemno]:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -414,7 +414,7 @@ class Bill:
             item = schedule[itemno]
             
             # If item measured, include in bill
-            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
+            if itemno in self.item_qty and self.item_qty[itemno]:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 item_paths = self.item_paths[itemno]
@@ -693,7 +693,7 @@ class Bill:
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
-            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
+            if itemno in self.item_qty and self.item_qty[itemno]:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -834,7 +834,7 @@ class Bill:
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
-            if itemno in self.item_qty and sum(self.item_qty[itemno]) != 0:
+            if itemno in self.item_qty and self.item_qty[itemno]:
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
