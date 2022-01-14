@@ -441,7 +441,7 @@ class MainWindow:
             thread.start()
             
             def followup():
-                if thread.isAlive():
+                if thread.is_alive():
                     return True
                 else:
                     code = que.get()
@@ -510,7 +510,7 @@ class MainWindow:
             thread.start()
             
             def followup():
-                if thread.isAlive():
+                if thread.is_alive():
                     return True
                 else:
                     code = que.get()
@@ -755,11 +755,7 @@ if __name__ == '__main__':
             return
         log.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
     sys.excepthook = handle_exception
-    
-    # Setup threading support
-    GObject.threads_init()
 
-    # Initialise main window
     # Initialise main window
     
     log.info('Start Program Execution')

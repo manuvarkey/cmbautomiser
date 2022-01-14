@@ -120,10 +120,10 @@ def set_global_platform_vars():
     """Setup global platform dependent variables"""
     
     if platform.system() == 'Linux':
-        global_settings_dict['latex_path'] = 'pdflatex'
+        global_settings_dict['latex_path'] = 'lualatex'
     elif platform.system() == 'Windows':
         global_settings_dict['latex_path'] = abs_path(
-                    'miketex\\miktex\\bin\\pdflatex.exe')
+                    'miketex\\miktex\\bin\\x64\\lualatex.exe')
 
 ## GLOBAL CLASSES
 
@@ -412,7 +412,7 @@ class SpreadsheetDialog:
         """
         new_text = entry.get_text()
         num = ''
-        if new_text is not '':
+        if new_text != '':
             try:  # check whether item evaluates fine
                 num = int(new_text)
                 if num <= 0:
