@@ -108,11 +108,12 @@ class MainWindow:
         if self.stack.haschanged():
             message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to exit ?'
             title = 'Confirm Exit'
-            dialogWindow = Gtk.MessageDialog(self.window,
-                                     Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                                     Gtk.MessageType.QUESTION,
-                                     Gtk.ButtonsType.YES_NO,
-                                     message)
+            dialogWindow = Gtk.MessageDialog(transient_for=self.window,
+                                     modal=True,
+                                     destroy_with_parent=True,
+                                     message_type=Gtk.MessageType.QUESTION,
+                                     buttons=Gtk.ButtonsType.YES_NO,
+                                     text=message)
             dialogWindow.set_transient_for(self.window)
             dialogWindow.set_title(title)
             dialogWindow.set_default_response(Gtk.ResponseType.NO)
@@ -140,11 +141,12 @@ class MainWindow:
                 if self.stack.haschanged():
                     message = 'You have unsaved changes which will be lost if you continue.\n Are you sure you want to discard these changes ?'
                     title = 'Confirm Open'
-                    dialogWindow = Gtk.MessageDialog(self.window,
-                                             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                                             Gtk.MessageType.QUESTION,
-                                             Gtk.ButtonsType.YES_NO,
-                                             message)
+                    dialogWindow = Gtk.MessageDialog(transient_for=self.window,
+                                     modal=True,
+                                     destroy_with_parent=True,
+                                     message_type=Gtk.MessageType.QUESTION,
+                                     buttons=Gtk.ButtonsType.YES_NO,
+                                     text=message)
                     dialogWindow.set_transient_for(self.window)
                     dialogWindow.set_title(title)
                     dialogWindow.set_default_response(Gtk.ResponseType.NO)
@@ -167,20 +169,22 @@ class MainWindow:
             # Create a filechooserdialog to open:
             # The arguments are: title of the window, parent_window, action,
             # (buttons, response)
-            open_dialog = Gtk.FileChooserDialog("Open project File", self.window,
-                                                Gtk.FileChooserAction.OPEN,
-                                                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                                 Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
+            if platform.system() == 'Linux':
+                open_dialog = Gtk.FileChooserNative.new("Open project File", self.window,
+                                                    Gtk.FileChooserAction.OPEN,
+                                                    "Open", "Cancel")
+            elif platform.system() == 'Windows':
+                open_dialog = Gtk.FileChooserDialog(title="Open project File", 
+                                                parent=self.window,
+                                                action=Gtk.FileChooserAction.OPEN)
+                open_dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                             Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT)
             # Remote files can be selected in the file selector
             open_dialog.set_local_only(True)
             # Dialog always on top of the textview window
             open_dialog.set_modal(True)
             # Set filters
             open_dialog.set_filter(self.builder.get_object("filefilter_project"))
-            # Set window position
-            open_dialog.set_gravity(Gdk.Gravity.CENTER)
-            open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-
             response_id = open_dialog.run()
             # If response is "ACCEPT" (the button "Save" has been clicked)
             if response_id == Gtk.ResponseType.ACCEPT:
@@ -257,19 +261,22 @@ class MainWindow:
         # Create a filechooserdialog to open:
         # The arguments are: title of the window, parent_window, action,
         # (buttons, response)
-        open_dialog = Gtk.FileChooserDialog("Save project as...", self.window,
-                                            Gtk.FileChooserAction.SAVE,
-                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                             Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
+        if platform.system() == 'Linux':
+            open_dialog = Gtk.FileChooserNative.new("Save project File", self.window,
+                                                    Gtk.FileChooserAction.SAVE,
+                                                    "Save", "Cancel")
+        elif platform.system() == 'Windows':
+            open_dialog = Gtk.FileChooserDialog(title="Save project as ...", 
+                                                parent=self.window,
+                                                action=Gtk.FileChooserAction.SAVE)
+            open_dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                             Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT)
         # Remote files can be selected in the file selector
         open_dialog.set_local_only(False)
         # Dialog always on top of the textview window
         open_dialog.set_modal(True)
         # Set filters
         open_dialog.set_filter(self.builder.get_object("filefilter_project"))
-        # Set window position
-        open_dialog.set_gravity(Gdk.Gravity.CENTER)
-        open_dialog.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
         # Set overwrite confirmation
         open_dialog.set_do_overwrite_confirmation(True)
         # Set default name

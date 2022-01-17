@@ -62,7 +62,7 @@ class ScheduleItemGeneric:
 class ScheduleItem(ScheduleItemGeneric):
     """Class stores a row in the schedule of rates"""
     
-    def __init__(self, itemno='', description='', unit='', rate='0', qty='0', reference='', excess_rate_percent='30'):
+    def __init__(self, itemno='', description='', unit='', rate='0', qty='0', reference='', excess_rate_percent='100'):
         self.itemno = itemno
         self.description = description
         self.unit = unit
@@ -83,8 +83,8 @@ class ScheduleItem(ScheduleItemGeneric):
             self.excess_rate_percent = eval(excess_rate_percent)
         except:
             log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + excess_rate_percent)
-            excess_rate_percent = '30'
-            self.excess_rate_percent = 30
+            excess_rate_percent = '100'
+            self.excess_rate_percent = 100
         # extended descritption of item
         self.extended_description = ''
         self.extended_description_limited = ''
@@ -122,8 +122,8 @@ class ScheduleItem(ScheduleItemGeneric):
                 self.excess_rate_percent = float(eval(value))
             except:
                 log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + value)
-                self.excess_rate_percent = 30
-                value = '30'
+                self.excess_rate_percent = 100
+                value = '100'
         self.item[index] = value
 
 class ScheduleGeneric:
