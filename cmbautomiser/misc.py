@@ -41,6 +41,7 @@ MEAS_NO = 1
 MEAS_L = 2
 MEAS_DESC = 3
 MEAS_CUST = 4
+MEAS_BOOL = 5
 # CMB error codes used for displaying info in main window
 CMB_ERROR = -1
 CMB_WARNING = -2
@@ -86,7 +87,8 @@ def is_unit_item(unit):
         return False
         
 # String used for checking file version
-PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3'
+PROJECT_FILE_VER = 'CMBAUTOMISER_FILE_REFERENCE_VER_3.1'
+PROJECT_FILE_VERS_COMPATIBLE = ['CMBAUTOMISER_FILE_REFERENCE_VER_3', PROJECT_FILE_VER]
 # Item codes for project global variables
 global_vars = ['$cmbnameofwork$',
                '$cmbagency$',
@@ -94,6 +96,9 @@ global_vars = ['$cmbnameofwork$',
                '$cmbsituation$',
                '$cmbdateofstart$',
                '$cmbdateofstartasperagmnt$',
+               '$cmbdateofcompletion$',
+               '$cmbestimatedcost$',
+               '$cmbtenderpercentage$',
                '$cmbissuedto$',
                '$cmbvarifyingauthority$',
                '$cmbvarifyingauthorityoffice$',
@@ -104,7 +109,10 @@ global_vars_captions = ['Name of Work',
                         'Agreement Number',
                         'Situation',
                         'Date of Start',
-                        'Date of start as per Agmnt.',
+                        'Date of Start as per Agmnt.',
+                        'Date of Completion',
+                        'Estimated cost',
+                        'Tender Percentage',
                         'CMB Issued to',
                         'Varifying Authority',
                         'Varifying Authority Office',
@@ -124,6 +132,23 @@ def set_global_platform_vars():
     elif platform.system() == 'Windows':
         global_settings_dict['latex_path'] = abs_path(
                     'miketex\\miktex\\bin\\x64\\lualatex.exe')
+    
+    global_settings_dict['$cmbissuedto$'] = ''
+    global_settings_dict['$cmbvarifyingauthority$'] = ''
+    global_settings_dict['$cmbvarifyingauthorityoffice$'] = ''
+    global_settings_dict['$cmbissuingauthority$'] = ''
+    global_settings_dict['$cmbissuingauthorityoffice$'] = ''
+    
+def init_project_settings_dict():
+    project_settings_dict = dict()
+    for item_code in global_vars:
+        project_settings_dict[item_code] = ''
+    project_settings_dict['$cmbissuedto$'] = global_settings_dict['$cmbissuedto$']
+    project_settings_dict['$cmbvarifyingauthority$'] = global_settings_dict['$cmbvarifyingauthority$']
+    project_settings_dict['$cmbvarifyingauthorityoffice$'] = global_settings_dict['$cmbvarifyingauthorityoffice$']
+    project_settings_dict['$cmbissuingauthority$'] = global_settings_dict['$cmbissuingauthority$']
+    project_settings_dict['$cmbissuingauthorityoffice$'] = global_settings_dict['$cmbissuingauthorityoffice$']
+    return project_settings_dict
 
 ## GLOBAL CLASSES
 

@@ -62,7 +62,7 @@ class ScheduleItemGeneric:
 class ScheduleItem(ScheduleItemGeneric):
     """Class stores a row in the schedule of rates"""
     
-    def __init__(self, itemno='', description='', unit='', rate='0', qty='0', reference='', excess_rate_percent='100'):
+    def __init__(self, itemno='', description='', unit='', rate='0', qty='0', reference='', excess_rate_percent='100', percentage='True'):
         self.itemno = itemno
         self.description = description
         self.unit = unit
@@ -82,15 +82,21 @@ class ScheduleItem(ScheduleItemGeneric):
         try:
             self.excess_rate_percent = eval(excess_rate_percent)
         except:
-            log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + excess_rate_percent)
+            log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent - ' + excess_rate_percent)
             excess_rate_percent = '100'
             self.excess_rate_percent = 100
+        try:
+            self.percentage = eval(percentage)
+        except:
+            log.warning('ScheduleItem - Wrong value loaded in model - percentage - ' + percentage)
+            percentage = 'True'
+            self.percentage = True
         # extended descritption of item
         self.extended_description = ''
         self.extended_description_limited = ''
         
         # Initialise base class
-        super(ScheduleItem, self).__init__([itemno, description, unit, rate, qty, reference, excess_rate_percent])
+        super(ScheduleItem, self).__init__([itemno, description, unit, rate, qty, reference, excess_rate_percent, percentage])
 
     def __setitem__(self, index, value):
         self.item[index] = value
@@ -121,9 +127,16 @@ class ScheduleItem(ScheduleItemGeneric):
             try:
                 self.excess_rate_percent = float(eval(value))
             except:
-                log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent -' + value)
+                log.warning('ScheduleItem - Wrong value loaded in model - excess_rate_percent - ' + value)
                 self.excess_rate_percent = 100
                 value = '100'
+        elif index == 7:
+            try:
+                self.percentage = bool(eval(value))
+            except:
+                log.warning('ScheduleItem - Wrong value loaded in model - percentage - ' + value)
+                self.percentage = True
+                value = 'True'
         self.item[index] = value
 
 class ScheduleGeneric:

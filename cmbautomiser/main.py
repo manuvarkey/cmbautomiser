@@ -204,9 +204,10 @@ class MainWindow:
         with open(self.filename, 'r') as fileobj:
             try:
                 data = json.load(fileobj)  # load data structure
-                if data[0] == misc.PROJECT_FILE_VER:
+                if data[0] in misc.PROJECT_FILE_VERS_COMPATIBLE:
                     self.data.set_model(data[1])
-                    self.project_settings_dict = data[2]
+                    self.project_settings_dict = misc.init_project_settings_dict()
+                    self.project_settings_dict.update(data[2])
 
                     self.display_status(misc.CMB_INFO, "Project successfully opened")
                     log.info('onOpenProjectClicked - Project successfully opened - ' +self.filename)
@@ -582,13 +583,11 @@ class MainWindow:
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
 
-        # Setup project settings dictionary
-        self.project_settings_dict = dict()
-        for item_code in misc.global_vars:
-            self.project_settings_dict[item_code] = ''
-        
         # Load global Variables
         misc.set_global_platform_vars()
+        
+        # Setup project settings dictionary
+        self.project_settings_dict = misc.init_project_settings_dict()
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")

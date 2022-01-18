@@ -61,6 +61,16 @@ class ScheduleViewGeneric:
             + new_text + "] failed")
             return
         self.cell_renderer_text(int(row), column, new_text)
+        
+    def onScheduleCellEditedToggle(self, widget, row, column):
+        """Treeview cell renderer for toggle field
+        
+            User Data:
+                column: column in ListStore being edited
+        """
+        cur_state = widget.get_active()
+        new_text = str(not cur_state)
+        self.cell_renderer_text(int(row), column, new_text)
 
     def onEditStarted(self, widget, editable, path, column):
         """Fill in text from schedule when schedule view column get edited
@@ -88,7 +98,7 @@ class ScheduleViewGeneric:
         path, col = treeview.get_cursor()
         if path != None:
             ## only visible columns!!
-            columns = [c for c in treeview.get_columns() if c.get_visible() and self.celldict[c].props.editable]
+            columns = [c for c in treeview.get_columns() if c.get_visible() and self.celldict[c].props.mode in [Gtk.CellRendererMode.EDITABLE, Gtk.CellRendererMode.ACTIVATABLE ]]
             rows = [r for r in treeview.get_model()]
             if col in columns:
                 colnum = columns.index(col)
@@ -328,6 +338,9 @@ class ScheduleViewGeneric:
                         elif columntype == misc.MEAS_L:
                             value = str(round(float(eval(item_elem)), 3)) if item_elem not in ['0','0.0'] else ''
                             display_item.append(value)
+                        elif columntype == misc.MEAS_BOOL:
+                            value = eval(item_elem)
+                            display_item.append(value)
                     else:
                         display_item.append("")
                 except TypeError:
@@ -345,6 +358,7 @@ class ScheduleViewGeneric:
                 columntypes: Column data type
                     (takes the values misc.MEAS_NO,
                                       misc.MEAS_L,
+                                      misc.MEAS_BOOL,
                                       misc.MEAS_DESC,
                                       misc.MEAS_CUST)
                 render_funcs: Fucntions generating values of CUSTOM columns
@@ -359,7 +373,12 @@ class ScheduleViewGeneric:
         self.schedule = data.schedule.ScheduleGeneric()
 
         # Setup treeview
-        data_types = [str] * len(self.columntypes)
+        data_types = []
+        for coltype in self.columntypes:
+            if coltype == misc.MEAS_BOOL:
+                data_types.append(bool)
+            else:
+                data_types.append(str)
         self.store = Gtk.ListStore(*data_types)
         self.tree.set_model(self.store)
         self.celldict = dict()
@@ -382,9 +401,15 @@ class ScheduleViewGeneric:
 
         for columntype, caption, render_func, i in zip(self.columntypes, self.captions, self.render_funcs,
                                                        range(len(self.columntypes))):
-            cell = CellRendererTextView()
+            
+            if columntype == misc.MEAS_BOOL:
+                cell = Gtk.CellRendererToggle()
+                column = Gtk.TreeViewColumn(caption, cell, active=i)
+            else:
+                cell = CellRendererTextView()
+                column = Gtk.TreeViewColumn(caption, cell, text=i)
 
-            column = Gtk.TreeViewColumn(caption, cell, text=i)
+            
             column.props.resizable = True
             
             self.columns.append(column)  # Add column to list of columns
@@ -402,6 +427,13 @@ class ScheduleViewGeneric:
                     cell.connect("editing_started", self.onEditStarted, i)
                 else:
                     cell.connect("edited", render_func, i)
+            elif columntype == misc.MEAS_BOOL:
+                column.props.min_width = 30
+                column.props.fixed_width = 30
+                if render_func is None:
+                    cell.connect("toggled", self.onScheduleCellEditedToggle, i)
+                else:
+                    cell.connect("toggled", render_func, i)
             elif columntype == misc.MEAS_L:
                 cell.set_property("editable", True)
                 column.props.min_width = 75
@@ -460,12 +492,12 @@ class ScheduleView(ScheduleViewGeneric):
                 schedule: Schedule Data model for storing values
         """
         log.info('ScheduleView - Initialise')
-        captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %']
+        captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %','±']
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
-                       misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L]
-        render_funcs = [None,None,None,None,None,None,None]
-        widths = [80,500,100,100,100,100,100]
-        expandables = [False,True,False,False,False,False,False]
+                       misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L, misc.MEAS_BOOL]
+        render_funcs = [None,None,None,None,None,None,None,None]
+        widths = [80,450,100,100,100,100,100,None]
+        expandables = [False,True,False,False,False,False,False, False]
                
         # Initialise base class
         super(ScheduleView, self).__init__(parent, tree, captions, columntypes, render_funcs)
