@@ -509,11 +509,11 @@ class Bill:
         """Export bill to spreadsheet file"""
         spreadsheet = Workbook()
 
-        ## Sheet 1 Data
+        ## SHEET 1 DATA
         sheet = spreadsheet.active
         sheet.title = 'Data'
         sheet_head = ['Agmnt.No','Description','Unit','Total Qty','Below Dev Qty',
-                      'Above Dev Qty','Agmnt FR','Agmnt PR','Excess FR','Excess FR',
+                      'Above Dev Qty','Agmnt FR','Agmnt PR','Excess FR','Excess PR',
                       'Total Bel Dev','Total Above Dev',
                       'Since Prev below Dev','Since Prev Above Dev','Dev Limit']
         for c,head in enumerate(sheet_head):
@@ -562,7 +562,7 @@ class Bill:
         sheet.page_setup.fitToWidth = 1
 
 
-        ## Sheet 2 Deviation statement
+        ## SHEET 2 DEVIATION STATEMENT
         sheet2 = spreadsheet.create_sheet()
         sheet2.title = 'Deviation'
         template = load_workbook(filename = misc.abs_path('ods_templates','dev.xlsx'))
@@ -658,7 +658,7 @@ class Bill:
         sheet2['C5'] = project_settings_dict["$cmbagmntno$"]
         
         
-        ## Sheet 3 Abstract
+        ## SHEET 3 ABSTRACT
         sheet = spreadsheet.create_sheet()
         sheet.title = 'Abs'
         template = load_workbook(filename = misc.abs_path('ods_templates','abs.xlsx'))
@@ -804,7 +804,7 @@ class Bill:
         sheet.print_options.horizontalCentered = True
         
         
-        ## Sheet 4 Bill
+        ## SHEET 4 BILL
         sheet = spreadsheet.create_sheet()
         sheet.title = 'Bill'
         template = load_workbook(filename = misc.abs_path('ods_templates','bill.xlsx'))
@@ -939,6 +939,85 @@ class Bill:
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
         sheet.print_options.horizontalCentered = True
+        
+        
+        ## SHEET 5 PR
+        sheet = spreadsheet.create_sheet()
+        sheet.title = 'PR'
+        template = load_workbook(filename = misc.abs_path('ods_templates','pr.xlsx'))
+        rowend = 3
+        colend = 7
+        rowend_end = 4
+        
+        # Copy all from PR start
+        template_start_sheet = template['start']
+        for row in range(1,rowend+1):
+            for column in range(1,colend+1):
+                sheet.cell(row=row, column=column).value = template_start_sheet.cell(row=row, column=column).value
+                sheet.cell(row=row, column=column).font = copy.copy(template_start_sheet.cell(row=row, column=column).font)
+                sheet.cell(row=row, column=column).border = copy.copy(template_start_sheet.cell(row=row, column=column).border)
+                sheet.cell(row=row, column=column).alignment = copy.copy(template_start_sheet.cell(row=row, column=column).alignment)
+        
+        # Copy PR items
+        
+        itemnos = schedule.get_itemnos()
+        row_item = rowend+2
+        for itemno in itemnos:
+            item = schedule[itemno]
+            # If item measured, include in bill
+            if itemno in self.item_qty and self.item_qty[itemno]:
+                # Setup required values
+                qty_items = self.item_qty[itemno]
+                cmb_refs = self.item_cmb_ref[itemno]
+                item_paths = self.item_paths[itemno]
+                
+                if self.prev_bill is not None and itemno in self.prev_bill.item_normal_amount:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
+                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
+                else:
+                    sprev_item_normal_amount = self.item_normal_amount[itemno]
+                    sprev_item_excess_amount = self.item_excess_amount[itemno]
+                    
+                # Copy data
+                sheet['A' + str(row_item)] = itemno
+                sheet['B' + str(row_item)] = item.extended_description
+                sheet['A' + str(row_item)].alignment = Alignment(horizontal='center')
+                sheet['B' + str(row_item)].alignment = Alignment(wrap_text=True)
+                        
+                if self.item_excess_qty[itemno] > 0:
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty upto deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = item.unit
+                    sheet['D' + str(row_item)] = item.rate
+                    sheet['E' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['F' + str(row_item)] = self.data.item_part_percentage[itemno]
+                    row_item += 1
+                    sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
+                    sheet['C' + str(row_item)] = item.unit
+                    sheet['D' + str(row_item)] = self.data.item_excess_rates[itemno]
+                    sheet['E' + str(row_item)] = Currency(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100)
+                    sheet['F' + str(row_item)] = self.data.item_excess_part_percentage[itemno]
+                    row_item += 2
+                else:
+                    sheet['C' + str(row_item)] = item.unit
+                    sheet['D' + str(row_item)] = item.rate
+                    sheet['E' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
+                    sheet['F' + str(row_item)] = self.data.item_part_percentage[itemno]
+                    row_item += 1
+        
+        # PR formatings
+        for column in range(1,colend+1):
+            # copy coumn widths
+            sheet.column_dimensions[get_column_letter(column)].width = \
+                template_start_sheet.column_dimensions[get_column_letter(column)].width
+        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.fitToHeight = 99
+        sheet.page_setup.fitToWidth = 1
+        sheet.print_options.horizontalCentered = True
+        
         
         ## Save Document
         spreadsheet.save(filename)
