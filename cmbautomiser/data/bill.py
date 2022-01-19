@@ -112,11 +112,13 @@ class Bill:
         self.item_normal_amount = dict()  # total item amount for qty at normal rate
         self.item_excess_qty = dict()  # qty at excess rate
         self.item_excess_amount = dict()  # amounts for qty at excess rate
+        self.item_plusminus_amount = dict() # amounts corresponding to plusminus items
 
         self.prev_bill = None  # prev_bill data object
         self.cmb_ref = set()  # set containing refered cmbs
         self.bill_total_amount = 0  # total amount of work done uptodate
         self.bill_since_prev_amount = 0  # since previous amount of work done
+        self.bill_plusminus_amount = 0 # amount corresponding to plusminus items
 
     def clear(self, clear_all = False):
         """Clear bill data
@@ -136,11 +138,13 @@ class Bill:
         self.item_normal_amount = dict()  # total item amount for qty at normal rate
         self.item_excess_qty = dict()  # qty at excess rate
         self.item_excess_amount = dict()  # amounts for qty at excess rate
+        self.item_plusminus_amount = dict() # amounts corresponding to plusminus items
 
         self.prev_bill = None  # prev_bill data object
         self.cmb_ref = set()  # set containing refered cmbs
         self.bill_total_amount = 0  # total amount of work done uptodate
         self.bill_since_prev_amount = 0  # since previous amount of work done
+        self.bill_plusminus_amount = 0 # amount corresponding to plusminus items
 
     def get_model(self):
         """Return base model"""
@@ -154,7 +158,7 @@ class Bill:
         """Return paths to billed items"""
         return self.data.mitems
 
-    def update(self, schedule, cmbs, bills):
+    def update(self, schedule, cmbs, bills, percentage=0):
         """Update bill data structures from other objects"""
         
         # Get required datas
@@ -223,15 +227,17 @@ class Bill:
                 # Determine amounts
                 self.item_normal_amount[itemno] = Currency(Decimal(self.item_normal_qty[itemno]) * normal_rate)
                 self.item_excess_amount[itemno] = Currency(Decimal(self.item_excess_qty[itemno]) * excess_rate)
+                self.item_plusminus_amount[itemno] = self.item_normal_amount[itemno] if item.percentage else 0
                 # Update cmbs refered to by the bill
                 self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
-            # Evaluate total
+            # Evaluate totals
             self.bill_total_amount = Currency(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()))
             if self.prev_bill is not None:
                 self.bill_since_prev_amount = Currency(self.bill_total_amount - self.prev_bill.bill_total_amount)
             else:
                 self.bill_since_prev_amount = Currency(self.bill_total_amount)
+            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * (percentage+100)/100)
         
         # If bill is a Custom bill
         elif self.data.bill_type == misc.BILL_CUSTOM:
@@ -240,6 +246,12 @@ class Bill:
             self.item_excess_amount = self.data.item_excess_amount
             self.bill_total_amount = Currency(sum(self.data.item_normal_amount.values()) + sum(self.data.item_excess_amount.values()))
             self.bill_since_prev_amount = self.bill_total_amount
+            # Compile plusminus items
+            for itemno in itemnos:
+                if itemno in self.item_normal_amount:
+                    item = schedule[itemno]
+                    self.item_plusminus_amount[itemno] = self.item_normal_amount[itemno] if item.percentage else 0
+            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * (percentage+100)/100)
 
     def get_latex_buffer(self, thisbillpath, schedule):
         """Return abstract latex buffer"""
@@ -255,6 +267,7 @@ class Bill:
 
         # Setup substitution dictionary
         bill_local_vars = dict()  # bill substitution dictionary
+        bill_local_vars_vanilla = dict()  # bill substitution dictionary
         bill_local_vars['$cmbbookno$'] = self.data.cmb_name
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbtitle$'] = 'ABSTRACT OF COST'
@@ -267,6 +280,10 @@ class Bill:
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
+        if self.data.bill_type == misc.BILL_FINAL:
+            bill_local_vars_vanilla['$finalbillflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$finalbillflag$'] = '\iffalse'
         
         # Loop over each item in schedule
         for itemno in itemnos:
@@ -383,6 +400,7 @@ class Bill:
         # Add abstract end latex block
         latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endabstract.tex'))
         latex_buffer.replace_and_clean(bill_local_vars)
+        latex_buffer.replace(bill_local_vars_vanilla)
         
         return latex_buffer
 

@@ -626,7 +626,8 @@ class MainWindow:
         self.project_settings_dict = misc.init_project_settings_dict(self.program_settings)
         
         # Setup main data model
-        self.data = data.datamodel.DataModel(settings=self.program_settings)
+        self.data = data.datamodel.DataModel(program_settings=self.program_settings,
+                                             project_settings=self.project_settings_dict)
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")

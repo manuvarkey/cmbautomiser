@@ -36,13 +36,14 @@ log = logging.getLogger(__name__)
 
 class DataModel:
     """Undoable class for storing agregated data model for CMBAutomiser App"""
-    def __init__(self, data=None, settings=None):
+    def __init__(self, data=None, program_settings=None, project_settings=None):
         log.info('DataModel - Initialise')
         # Base data
         self.schedule = schedule.Schedule()
         self.cmbs = []
         self.bills = []
-        self.settings = settings
+        self.program_settings = program_settings
+        self.project_settings = project_settings
         # Derived data
         self.lock_state = LockState()  # Billed/Abstracted states of measurement items
         self.cmb_ref = []  # Array of sets corresponding to cmbs refered to by particular cmb
@@ -54,7 +55,7 @@ class DataModel:
                 cmb.set_model(cmb_model)
                 self.cmbs.append(cmb)
             for bill_model in data[2]:
-                bill_item = bill.Bill()
+                bill_item = bill.Bill(project_settings=self.project_settings)
                 bill_item.set_model(bill_model)
                 self.bills.append(bill_item)
         # Update values
@@ -98,7 +99,11 @@ class DataModel:
         
         # Update all bills
         for bill in self.bills:
-            bill.update(self.schedule, self.cmbs, self.bills)
+            try:
+                percentage = float(eval(self.project_settings['$cmbtenderpercentage$']))
+            except:
+                percentage = 0
+            bill.update(self.schedule, self.cmbs, self.bills, percentage)
         
         # Update locks
         self.lock_state = LockState()
@@ -522,7 +527,7 @@ class DataModel:
         # Run latex on file
         if progress is not None:
             progress.add_message('Rendering CMB No.' + self.cmbs[path[0]].name)
-        code = misc.run_latex(misc.posix_path(folder), filename, self.settings['latex_path'])
+        code = misc.run_latex(misc.posix_path(folder), filename, self.program_settings['latex_path'])
         if progress is not None:
             progress.pulse()
         if code == misc.CMB_ERROR:
@@ -697,14 +702,14 @@ class DataModel:
             # Render this bill
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Abstract')
-            code = misc.run_latex(misc.posix_path(folder), filename, self.settings['latex_path'])
+            code = misc.run_latex(misc.posix_path(folder), filename, self.program_settings['latex_path'])
             if progress is not None:
                 progress.pulse()
             if code == misc.CMB_ERROR:
                 return (misc.CMB_ERROR, 'Rendering of Bill: ' + bill.data.title + ' failed')
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Schedule')
-            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill, self.settings['latex_path'])
+            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill, self.program_settings['latex_path'])
             if progress is not None:
                 progress.pulse()
             if code_bill == misc.CMB_ERROR:
