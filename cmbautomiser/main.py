@@ -27,6 +27,7 @@ import subprocess, os, ntpath, platform, sys, tempfile, logging, json, threading
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, Gio
+import appdirs
 
 # local files import
 import undo, misc, data, view
@@ -206,7 +207,7 @@ class MainWindow:
                 data = json.load(fileobj)  # load data structure
                 if data[0] in misc.PROJECT_FILE_VERS_COMPATIBLE:
                     self.data.set_model(data[1])
-                    self.project_settings_dict = misc.init_project_settings_dict()
+                    self.project_settings_dict = misc.init_project_settings_dict(self.program_settings)
                     self.project_settings_dict.update(data[2])
 
                     self.display_status(misc.CMB_INFO, "Project successfully opened")
@@ -321,6 +322,23 @@ class MainWindow:
         project_settings_dialog.run()
         for key,item in zip(misc.global_vars,item_values):
             self.project_settings_dict[key] = item
+            
+    def onProgramSettingsClicked(self, button):
+        """Display dialog to input program settings"""
+        log.info('onProgramSettingsClicked - Launch program settings')
+        default_vars_dict = misc.init_global_platform_vars()
+        item_values = [self.program_settings[key] for key in default_vars_dict]
+        # Setup project settings dialog
+        program_settings_dialog = misc.UserEntryDialog(self.window, 
+                                      'Program Settings',
+                                      item_values,
+                                      misc.global_platform_vars_captions)
+        # Show settings dialog
+        program_settings_dialog.run()
+        for key,item in zip(default_vars_dict, item_values):
+            self.program_settings[key] = item
+        with open(self.settings_filename, 'w') as fp:
+            json.dump(self.program_settings, fp)
 
     def onInfobarClose(self, widget, response=0):
         """Hides the infobar"""
@@ -565,9 +583,6 @@ class MainWindow:
         # Check for project active status
         self.project_active = False
         
-        # Setup main data model
-        self.data = data.datamodel.DataModel()
-        
         # Initialise undo/redo stack
         self.stack = undo.Stack()
         undo.setstack(self.stack)
@@ -583,11 +598,35 @@ class MainWindow:
         self.window = self.builder.get_object("window_main")
         self.builder.connect_signals(self)
 
-        # Load global Variables
-        misc.set_global_platform_vars()
+        # Load global Variables 
+        self.program_settings = misc.init_global_platform_vars()
+        log.info('Setting up program settings')
+        dirs = appdirs.AppDirs(misc.PROGRAM_NAME, misc.PROGRAM_AUTHOR, version=misc.PROGRAM_VER)
+        settings_dir = dirs.user_data_dir
+        self.settings_filename = misc.posix_path(settings_dir,'settings.ini')
+        # Create directory if does not exist
+        if not os.path.exists(settings_dir):
+            os.makedirs(settings_dir)
+        try:
+            if os.path.exists(self.settings_filename):
+                with open(self.settings_filename, 'r') as fp:
+                    settings = json.load(fp)
+                    self.program_settings.update(settings)
+                    log.info('Program settings opened at ' + str(self.settings_filename))
+            else:
+                with open(self.settings_filename, 'w') as fp:
+                    json.dump(self.program_settings, fp)
+                log.info('Program settings saved at ' + str(self.settings_filename))
+        except:
+            # If an error load default program preference
+            log.info('Error reading program settings from disk - Proceeding with temporary settings')
+        log.info('Program settings initialised')
         
         # Setup project settings dictionary
-        self.project_settings_dict = misc.init_project_settings_dict()
+        self.project_settings_dict = misc.init_project_settings_dict(self.program_settings)
+        
+        # Setup main data model
+        self.data = data.datamodel.DataModel(settings=self.program_settings)
         
         # Setup about dialog
         self.about_dialog = self.builder.get_object("aboutdialog")

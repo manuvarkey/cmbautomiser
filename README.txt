@@ -31,6 +31,7 @@ Python Modules:
 undo - Included along with distribution.
 openpyxl - Included along with distribution.
 jdcal - Included along with distribution.
+appdirs - Included along with distribution.
 libxml - Not included
 
 Latex Modules:

@@ -35,7 +35,9 @@ log = logging.getLogger(__name__)
 ## GLOBAL CONSTANTS
 
 # Program name
-PROGRAM_NAME = 'CMB Automiser'
+PROGRAM_NAME = 'CMBAutomiser'
+PROGRAM_AUTHOR = 'KAVILGROUP'
+PROGRAM_VER = '3'
 # Item codes for data types
 MEAS_NO = 1
 MEAS_L = 2
@@ -121,11 +123,11 @@ global_vars_captions = ['Name of Work',
                
 ## GLOBAL VARIABLES
 
-# Dict for storing saved settings
-global_settings_dict = dict()
 
-def set_global_platform_vars():
+def init_global_platform_vars():
     """Setup global platform dependent variables"""
+    
+    global_settings_dict = dict()
     
     if platform.system() == 'Linux':
         global_settings_dict['latex_path'] = 'lualatex'
@@ -138,16 +140,25 @@ def set_global_platform_vars():
     global_settings_dict['$cmbvarifyingauthorityoffice$'] = ''
     global_settings_dict['$cmbissuingauthority$'] = ''
     global_settings_dict['$cmbissuingauthorityoffice$'] = ''
+    return global_settings_dict
+
+global_platform_vars_captions = ['Latex path',
+                        'CMB Issued to (Default Value)',
+                        'Varifying Authority (Default Value)',
+                        'Varifying Authority Office (Default Value)',
+                        'Issuing Authority (Default Value)',
+                        'Issuing Authority Office (Default Value)']
     
-def init_project_settings_dict():
+def init_project_settings_dict(program_settings):
     project_settings_dict = dict()
     for item_code in global_vars:
         project_settings_dict[item_code] = ''
-    project_settings_dict['$cmbissuedto$'] = global_settings_dict['$cmbissuedto$']
-    project_settings_dict['$cmbvarifyingauthority$'] = global_settings_dict['$cmbvarifyingauthority$']
-    project_settings_dict['$cmbvarifyingauthorityoffice$'] = global_settings_dict['$cmbvarifyingauthorityoffice$']
-    project_settings_dict['$cmbissuingauthority$'] = global_settings_dict['$cmbissuingauthority$']
-    project_settings_dict['$cmbissuingauthorityoffice$'] = global_settings_dict['$cmbissuingauthorityoffice$']
+
+    project_settings_dict['$cmbissuedto$'] = program_settings['$cmbissuedto$']
+    project_settings_dict['$cmbvarifyingauthority$'] = program_settings['$cmbvarifyingauthority$']
+    project_settings_dict['$cmbvarifyingauthorityoffice$'] = program_settings['$cmbvarifyingauthorityoffice$']
+    project_settings_dict['$cmbissuingauthority$'] = program_settings['$cmbissuingauthority$']
+    project_settings_dict['$cmbissuingauthorityoffice$'] = program_settings['$cmbissuingauthorityoffice$']
     return project_settings_dict
 
 ## GLOBAL CLASSES
@@ -915,10 +926,10 @@ def get_file_path_from_dnd_dropped_uri(uri):
 
     return path
             
-def run_latex(folder, filename): 
+def run_latex(folder, filename, latex_path): 
     """Runs latex on file to folder in two passes"""
     if filename is not None:
-        latex_exec = Command([global_settings_dict['latex_path'], '-interaction=batchmode', '-output-directory=' + folder, filename])
+        latex_exec = Command([latex_path, '-interaction=batchmode', '-output-directory=' + folder, filename])
         # First Pass
         code = latex_exec.run(timeout=LATEX_TIMEOUT)
         if code == 0:

@@ -26,7 +26,8 @@ Application can be installed using `python setup.py install`. It has been tested
 1. *undo* - Included along with distribution.
 2. *openpyxl* - Included along with distribution.
 3. *jdcal* - Included along with distribution.
-4. *libxml* - Not included
+4. *appdirs* - Included along with distribution.
+5. *libxml* - Not included
 
 #### Latex Modules
 

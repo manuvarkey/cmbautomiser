@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.16"/>
   <object class="GtkFileFilter" id="filefilter_project">
@@ -184,6 +184,20 @@
           </packing>
         </child>
         <child>
+          <object class="GtkModelButton" id="menubutton_program_settings">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="text" translatable="yes">Program Settings...</property>
+            <signal name="clicked" handler="onProgramSettingsClicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkSeparator">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -191,7 +205,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
         <child>
@@ -205,7 +219,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">4</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
@@ -219,7 +233,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">5</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
@@ -230,7 +244,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">6</property>
+            <property name="position">7</property>
           </packing>
         </child>
         <child>
@@ -244,7 +258,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">7</property>
+            <property name="position">8</property>
           </packing>
         </child>
       </object>
@@ -263,6 +277,9 @@
     <property name="default_height">600</property>
     <property name="icon_name">applications-engineering-symbolic</property>
     <signal name="delete-event" handler="onDeleteWindow" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>

@@ -36,12 +36,13 @@ log = logging.getLogger(__name__)
 
 class DataModel:
     """Undoable class for storing agregated data model for CMBAutomiser App"""
-    def __init__(self, data=None):
+    def __init__(self, data=None, settings=None):
         log.info('DataModel - Initialise')
         # Base data
         self.schedule = schedule.Schedule()
         self.cmbs = []
         self.bills = []
+        self.settings = settings
         # Derived data
         self.lock_state = LockState()  # Billed/Abstracted states of measurement items
         self.cmb_ref = []  # Array of sets corresponding to cmbs refered to by particular cmb
@@ -521,7 +522,7 @@ class DataModel:
         # Run latex on file
         if progress is not None:
             progress.add_message('Rendering CMB No.' + self.cmbs[path[0]].name)
-        code = misc.run_latex(misc.posix_path(folder), filename)
+        code = misc.run_latex(misc.posix_path(folder), filename, self.settings['latex_path'])
         if progress is not None:
             progress.pulse()
         if code == misc.CMB_ERROR:
@@ -696,14 +697,14 @@ class DataModel:
             # Render this bill
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Abstract')
-            code = misc.run_latex(misc.posix_path(folder), filename)
+            code = misc.run_latex(misc.posix_path(folder), filename, self.settings['latex_path'])
             if progress is not None:
                 progress.pulse()
             if code == misc.CMB_ERROR:
                 return (misc.CMB_ERROR, 'Rendering of Bill: ' + bill.data.title + ' failed')
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Schedule')
-            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill)
+            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill, self.settings['latex_path'])
             if progress is not None:
                 progress.pulse()
             if code_bill == misc.CMB_ERROR:
