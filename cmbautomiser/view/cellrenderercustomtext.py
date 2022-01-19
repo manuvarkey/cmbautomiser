@@ -208,6 +208,13 @@ class CellRendererTextView(Gtk.CellRendererText):
         editable.connect('editing-done', self.editing_done, tree, path)
         editable.set_text(text)
         editable.scrolled.set_policy(Gtk.PolicyType.NEVER,Gtk.PolicyType.EXTERNAL)
+        
+        text_buffer = editable.editor.get_buffer()
+        def select_all(text_buffer):
+            [start, end] = text_buffer.get_bounds()
+            text_buffer.select_range(start, end)
+        GLib.idle_add(select_all, text_buffer)
+        
         return editable
 
     def editing_done(self, editable, tree, path):
