@@ -1,8 +1,14 @@
     \hline
       & & &  &  &  & & \\*
-      & \multicolumn{5}{l}{\textbf{TOTAL UPTODATE AMOUNT}} & \textbf{$cmbbilltotalamount$} & \textbf{$cmbbillsinceprevamount$} \\*
-      & \multicolumn{5}{l}{\textbf{LAST BILL AMOUNT}} & \textbf{$cmbbillprevamount$} & \\*\cline{1-8}
-      & \multicolumn{5}{l}{\textbf{SINCE PREVIOUS AMOUNT}} & \textbf{$cmbbillsinceprevamount$} & \textbf{$cmbbillsinceprevamount$}\\*\cline{1-8}
+      & \multicolumn{5}{l}{\textbf{TOTAL UPTODATE AMOUNT}} & \textbf{$cmbbilltotalamount$} & \textbf{$cmbbilltotalamountsp$} \\*
+      $billpercentageflag$
+      & \multicolumn{5}{l}{\textbf{ADD TENDER PERCENTAGE @ $cmbbillpercentage$\%}} & \textbf{$cmbbillplusminusamount$} & \textbf{$cmbbillplusminusamountsp$} \\*\cline{1-8}
+      & \multicolumn{5}{l}{\textbf{NET UPTODATE AMOUNT}} & \textbf{$cmbbillnettotalamount$} & \textbf{$cmbbillsinceprevamountcalc$} \\*
+      \else
+      \fi
+      & \multicolumn{4}{l}{\textbf{LAST BILL AMOUNT}} & (-) & \textbf{$cmbbillprevamount$} & \\*\cline{1-8}
+      & \multicolumn{5}{l}{\textbf{SINCE PREVIOUS AMOUNT}} & \textbf{$cmbbillsinceprevamount$} & \textbf{$cmbbillsinceprevamountcalc$}\\*
+      & \multicolumn{5}{l}{\textbf{SAY}} & \textbf{$cmbbillsinceprevamountR$} & \textbf{$cmbbillsinceprevamountR$}\\*\cline{1-8} \noalign{\vskip\doublerulesep \vskip-\arrayrulewidth} \cline{1-8}
 \end{longtabu} \\[2cm]
 
 \begin{longtabu} to \textwidth {X[10,l] X[30,c]}
