@@ -1,8 +1,14 @@
     \hline
       &  & &  &  &  & \\*
       & \textbf{TOTAL UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbilltotalamount$} \\*
-      & \textbf{LAST BILL AMOUNT} & &  &  &  & \textbf{$cmbbillprevamount$} \\*\cline{1-7}
-      & \textbf{SINCE PREVIOUS AMOUNT} & &  &  &  & \textbf{$cmbbillsinceprevamount$} \\*\cline{1-7}
+      $billpercentageflag$
+      & \textbf{ADD TENDER PERCENTAGE @\emph{$cmbbillpercentage$\%}} & &  &  &  & \textbf{$cmbbillplusminusamount$} \\*\cline{1-7}
+      & \textbf{NET UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbillnettotalamount$} \\*
+      \else
+      \fi
+      & \textbf{LAST BILL AMOUNT} & &  &  & (-) & \textbf{$cmbbillprevamount$} \\*\cline{1-7}
+      & \textbf{SINCE PREVIOUS AMOUNT} & &  &  &  & \textbf{$cmbbillsinceprevamount$} \\*
+      & \textbf{SAY} & &  &  &  & \textbf{$cmbbillsinceprevamountR$} \\*\cline{1-7} \noalign{\vskip\doublerulesep \vskip-\arrayrulewidth} \cline{1-7}
 \end{longtabu}
 
 $cmbbilltext$

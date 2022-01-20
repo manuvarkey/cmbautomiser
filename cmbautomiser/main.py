@@ -207,7 +207,7 @@ class MainWindow:
                 data = json.load(fileobj)  # load data structure
                 if data[0] in misc.PROJECT_FILE_VERS_COMPATIBLE:
                     self.data.set_model(data[1])
-                    self.project_settings_dict = misc.init_project_settings_dict(self.program_settings)
+                    self.project_settings_dict.update(misc.init_project_settings_dict(self.program_settings)) # Clear values
                     self.project_settings_dict.update(data[2])
 
                     self.display_status(misc.CMB_INFO, "Project successfully opened")
@@ -322,6 +322,7 @@ class MainWindow:
         project_settings_dialog.run()
         for key,item in zip(misc.global_vars,item_values):
             self.project_settings_dict[key] = item
+        self.update()
             
     def onProgramSettingsClicked(self, button):
         """Display dialog to input program settings"""

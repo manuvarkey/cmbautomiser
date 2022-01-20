@@ -99,10 +99,7 @@ class DataModel:
         
         # Update all bills
         for bill in self.bills:
-            try:
-                percentage = float(eval(self.project_settings['$cmbtenderpercentage$']))
-            except:
-                percentage = 0
+            percentage = misc.float_from_str(self.project_settings['$cmbtenderpercentage$'])
             bill.update(self.schedule, self.cmbs, self.bills, percentage)
         
         # Update locks
@@ -640,8 +637,8 @@ class DataModel:
                 progress.show()
             
             # Fill in latex buffer
-            latex_buffer = bill.get_latex_buffer([path[0]], self.schedule)
-            latex_buffer_bill = bill.get_latex_buffer_bill(self.schedule)
+            latex_buffer = bill.get_latex_buffer([path[0]], self.schedule, self.project_settings)
+            latex_buffer_bill = bill.get_latex_buffer_bill(self.schedule, self.project_settings)
             # Make global variables replacements
             latex_buffer.replace_and_clean(replacement_dict)
             latex_buffer_bill.replace_and_clean(replacement_dict)

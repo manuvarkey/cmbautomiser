@@ -29,6 +29,9 @@ from decimal import Decimal, ROUND_HALF_UP
 def Currency(x):
   return Decimal(x).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
 
+def CurrencyR(x):
+  return Decimal(x).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
 from openpyxl import Workbook, load_workbook, worksheet
 from openpyxl.styles import Alignment, Font, Border
 from openpyxl.utils import get_column_letter
@@ -143,8 +146,9 @@ class Bill:
         self.prev_bill = None  # prev_bill data object
         self.cmb_ref = set()  # set containing refered cmbs
         self.bill_total_amount = 0  # total amount of work done uptodate
+        self.bill_plusminus_amount = 0 # component corresponding to plusminus items
+        self.bill_nettotal_amount = 0 # net amount of work done uptodate after plusminus
         self.bill_since_prev_amount = 0  # since previous amount of work done
-        self.bill_plusminus_amount = 0 # amount corresponding to plusminus items
 
     def get_model(self):
         """Return base model"""
@@ -233,11 +237,12 @@ class Bill:
 
             # Evaluate totals
             self.bill_total_amount = Currency(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()))
+            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
+            self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             if self.prev_bill is not None:
-                self.bill_since_prev_amount = Currency(self.bill_total_amount - self.prev_bill.bill_total_amount)
+                self.bill_since_prev_amount = Currency(self.bill_nettotal_amount) - CurrencyR(self.prev_bill.bill_nettotal_amount)
             else:
-                self.bill_since_prev_amount = Currency(self.bill_total_amount)
-            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * (percentage+100)/100)
+                self.bill_since_prev_amount = Currency(self.bill_nettotal_amount)
         
         # If bill is a Custom bill
         elif self.data.bill_type == misc.BILL_CUSTOM:
@@ -245,16 +250,21 @@ class Bill:
             self.item_normal_amount = self.data.item_normal_amount
             self.item_excess_amount = self.data.item_excess_amount
             self.bill_total_amount = Currency(sum(self.data.item_normal_amount.values()) + sum(self.data.item_excess_amount.values()))
-            self.bill_since_prev_amount = self.bill_total_amount
             # Compile plusminus items
             for itemno in itemnos:
                 if itemno in self.item_normal_amount:
                     item = schedule[itemno]
                     self.item_plusminus_amount[itemno] = self.item_normal_amount[itemno] if item.percentage else 0
-            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * (percentage+100)/100)
+            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
+            self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
+            self.bill_since_prev_amount = self.bill_nettotal_amount
 
-    def get_latex_buffer(self, thisbillpath, schedule):
+    def get_latex_buffer(self, thisbillpath, schedule, project_settings_dict):
         """Return abstract latex buffer"""
+        
+        percentage_text = project_settings_dict["$cmbtenderpercentage$"]
+        percentage = misc.float_from_str(percentage_text)
+        
         # Main latex buffer
         latex_buffer = misc.LatexFile()
         
@@ -275,11 +285,19 @@ class Bill:
         bill_local_vars['$cmbstartingpage$'] = str(self.data.starting_page)
         bill_local_vars['$cmbbilltext$'] = self.data.bill_text
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
+        bill_local_vars['$cmbbillpercentage$'] = percentage_text
+        bill_local_vars['$cmbbillplusminusamount$'] = str(self.bill_plusminus_amount)
+        bill_local_vars['$cmbbillnettotalamount$'] = str(self.bill_nettotal_amount)
         if self.prev_bill is not None:
-            bill_local_vars['$cmbbillprevamount$'] = str(self.prev_bill.bill_total_amount)
+            bill_local_vars['$cmbbillprevamount$'] = str(CurrencyR(self.prev_bill.bill_total_amount))
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
+        bill_local_vars['$cmbbillsinceprevamountR$'] = str(CurrencyR(self.bill_since_prev_amount))
+        if percentage:
+            bill_local_vars_vanilla['$billpercentageflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$billpercentageflag$'] = '\iffalse'
         if self.data.bill_type == misc.BILL_FINAL:
             bill_local_vars_vanilla['$finalbillflag$'] = '\iftrue'
         else:
@@ -404,8 +422,11 @@ class Bill:
         
         return latex_buffer
 
-    def get_latex_buffer_bill(self, schedule):
+    def get_latex_buffer_bill(self, schedule, project_settings_dict):
         """Return bill latex buffer"""
+        
+        percentage_text = misc.float_from_str(project_settings_dict["$cmbtenderpercentage$"])
+        
         # Main latex buffer
         latex_buffer = misc.LatexFile()
         
@@ -526,6 +547,9 @@ class Bill:
     def export_spreadsheet_bill(self, filename, project_settings_dict, schedule, cmbs):
         """Export bill to spreadsheet file"""
         spreadsheet = Workbook()
+        
+        estimated_cost = misc.float_from_str(project_settings_dict["$cmbestimatedcost$"])
+        percentage = misc.float_from_str(project_settings_dict["$cmbtenderpercentage$"])
 
         ## SHEET 1 DATA
         sheet = spreadsheet.active
@@ -631,15 +655,17 @@ class Bill:
                             '=IF(ABS(INDIRECT(ADDRESS(ROW(),8)))>' + str(misc.DEV_LIMIT_STATEMENT) + ',' + \
                             str(self.item_normal_qty[itemno] - item.qty) + ',0)'
                     sheet2.cell(row=count+rowend+1, column=15).value = self.data.item_excess_rates[itemno]
-                    
-                sheet2.cell(row=count+rowend+1, column=12).value = item.rate
+                if item.percentage:
+                    sheet2.cell(row=count+rowend+1, column=12).value = Currency(item.rate * (100 + percentage)/100)
+                else:
+                    sheet2.cell(row=count+rowend+1, column=12).value = item.rate
                 sheet2.cell(row=count+rowend+1, column=8).value = percent_dev
                 # Fill in formulas
                 sheet2.cell(row=count+rowend+1, column=13).value = \
-                    '=INDIRECT(ADDRESS(ROW(),11))*INDIRECT(ADDRESS(ROW(),12))'
+                    '=ROUND(INDIRECT(ADDRESS(ROW(),11))*INDIRECT(ADDRESS(ROW(),12)), 2)'
                 sheet2.cell(row=count+rowend+1, column=14).value = '=INDIRECT(ADDRESS(ROW(),10))'
                 sheet2.cell(row=count+rowend+1, column=16).value = \
-                    '=INDIRECT(ADDRESS(ROW(),14))*INDIRECT(ADDRESS(ROW(),15))'
+                    '=ROUND(INDIRECT(ADDRESS(ROW(),14))*INDIRECT(ADDRESS(ROW(),15)), 2)'
                 sheet2.cell(row=count+rowend+1, column=17).value = \
                     '=ABS(INDIRECT(ADDRESS(ROW(),13)))+ABS(INDIRECT(ADDRESS(ROW(),16)))'
             # Formatings
@@ -674,6 +700,7 @@ class Bill:
         sheet2['C3'] = project_settings_dict["$cmbnameofwork$"]
         sheet2['C4'] = project_settings_dict["$cmbagency$"]
         sheet2['C5'] = project_settings_dict["$cmbagmntno$"]
+        sheet2['C6'] = Currency(estimated_cost * (percentage + 100)/100)
         
         
         ## SHEET 3 ABSTRACT
@@ -682,7 +709,7 @@ class Bill:
         template = load_workbook(filename = misc.abs_path('ods_templates','abs.xlsx'))
         rowend = 12
         colend = 7
-        rowend_end = 3
+        rowend_end = 6
         
         # Copy all from Abstract start
         template_start_sheet = template['start']
@@ -708,6 +735,7 @@ class Bill:
         
         itemnos = schedule.get_itemnos()
         row_item = rowend+2
+        rownums_per_items = []
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
@@ -759,6 +787,8 @@ class Bill:
                     sheet['E' + str(row_item)] = item.rate
                     sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
+                    if item.percentage:
+                        rownums_per_items.append(row_item)
                     row_item += 1
                     sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
@@ -774,6 +804,8 @@ class Bill:
                     sheet['E' + str(row_item)] = item.rate
                     sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
+                    if item.percentage:
+                        rownums_per_items.append(row_item)
                     row_item += 2
             
             # If item not measured, include in bill if final bill
@@ -790,6 +822,8 @@ class Bill:
                 sheet['E' + str(row_item)] = item.rate
                 sheet['F' + str(row_item)] = Currency(item.rate*self.data.item_part_percentage[itemno]/100)
                 sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
+                if item.percentage:
+                    rownums_per_items.append(row_item)
                 row_item += 1
             
         # Copy all from abs end
@@ -802,17 +836,22 @@ class Bill:
                 sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
-        sheet.cell(row=1+row_item, column=7).value = '=SUM(G13:G' + str(row_item) + ')'
+        sheet.cell(row=1+row_item, column=7).value = '=SUM(G13:G' + str(row_item) + ')'  # Up to date amount
+        percentage_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + ')*' + str(percentage/100) + ', 2)'
+        sheet.cell(row=2+row_item, column=7).value = percentage_eq  # Percentage amount
+        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Net up to date amount
         if self.prev_bill != None:
-            sheet.cell(row=2+row_item, column=7).value = self.prev_bill.bill_total_amount
-        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '-G' + str(row_item+2)
+            sheet.cell(row=4+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
+        sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
+        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ')'  # Since previous amount rounded
         
         # Fill in text
-        sheet.cell(row=5+row_item, column=2).value = self.data.bill_text
+        sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
+        sheet.cell(row=8+row_item, column=2).value = self.data.bill_text
         
-        # Abstract formatings
+        # Abstract formatting
         for column in range(1,colend+1):
-            # copy coumn widths
+            # copy column widths
             sheet.column_dimensions[get_column_letter(column)].width = \
                 template_start_sheet.column_dimensions[get_column_letter(column)].width
         sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
@@ -1041,7 +1080,7 @@ class Bill:
         spreadsheet.save(filename)
 
     def get_text(self):
-        total = [str(self.bill_total_amount), str(self.bill_since_prev_amount)]
+        total = [str(self.bill_nettotal_amount), str(self.bill_since_prev_amount)]
         if self.data.bill_type == misc.BILL_NORMAL:
             return '<b>' + misc.clean_markup(self.data.title) + '</b> | CMB.No.<b>' + misc.clean_markup(
                 self.data.cmb_name) + ' dated ' + misc.clean_markup(self.data.bill_date) + '</b> | TOTAL: <b>' + str(

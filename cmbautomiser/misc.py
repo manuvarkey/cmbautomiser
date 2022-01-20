@@ -947,3 +947,18 @@ def clean_markup(text):
         text = text.replace(splchar, replspelchar)
     return text
     
+def float_from_str(text):
+    """Get formatted float from str with undefined values treated as zero"""
+    try:
+        value = float(eval(text))
+    except:
+        value = 0.0
+    return value
+        
+def int_from_str(text):
+    """Get formatted int from str with undefined values treated as zero"""
+    try:
+        value = int(eval(text))
+    except:
+        value = 0
+    return value
