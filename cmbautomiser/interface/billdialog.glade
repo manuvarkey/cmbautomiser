@@ -27,7 +27,7 @@
   <object class="GtkListStore" id="liststore_previous_bill">
     <columns>
       <!-- column-name id -->
-      <column type="gint"/>
+      <column type="gchararray"/>
       <!-- column-name description -->
       <column type="gchararray"/>
     </columns>

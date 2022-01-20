@@ -428,8 +428,8 @@ class ScheduleViewGeneric:
                 else:
                     cell.connect("edited", render_func, i)
             elif columntype == misc.MEAS_BOOL:
-                column.props.min_width = 30
-                column.props.fixed_width = 30
+                column.props.min_width = 75
+                column.props.fixed_width = 75
                 if render_func is None:
                     cell.connect("toggled", self.onScheduleCellEditedToggle, i)
                 else:
@@ -492,7 +492,7 @@ class ScheduleView(ScheduleViewGeneric):
                 schedule: Schedule Data model for storing values
         """
         log.info('ScheduleView - Initialise')
-        captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %','±']
+        captions = ['Agmt.No.','Item Description','Unit','Rate','Qty','Reference','Excess %','± %']
         columntypes = [misc.MEAS_DESC, misc.MEAS_DESC, misc.MEAS_DESC,
                        misc.MEAS_L, misc.MEAS_L, misc.MEAS_DESC, misc.MEAS_L, misc.MEAS_BOOL]
         render_funcs = [None,None,None,None,None,None,None,None]

@@ -63,3 +63,31 @@ New features:
     Added support for multiline heading items
     Added support for exporting abstract and bill to xlsx
     Added progressbar for progress display
+
+Ver 3.2.2
+=======
+Bug Fixes:
+
+New features:
+    Major interface improvements.
+    Added support for addition of text/certificate in the abstract.
+    Added support for opening project files from the file manager.
+    
+Ver 3.4
+=======
+Bug Fixes:
+
+New features:
+    Add option to generate final bill.
+    Import from spreadsheet now support basic formulas.
+    Interface improvements.
+    
+Ver 3.5
+=======
+Bug Fixes:
+
+New features:
+    Update to LuaLatex for rendering
+    Global settings support
+    Part rate statement support
+    Support for percentage rate tenders

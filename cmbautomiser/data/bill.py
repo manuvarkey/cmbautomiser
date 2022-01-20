@@ -72,7 +72,7 @@ class BillData:
                  self.mitems, self.item_part_percentage, self.item_excess_part_percentage ,
                  self.item_excess_rates, self.item_qty, self.item_normal_amount, self.item_excess_amount,
                  self.bill_type, self.bill_text]
-        return ['BillData', model]
+        return ['BillData', copy.deepcopy(model)]
     
     def set_model(self, model):
         """Set data model"""
@@ -232,7 +232,7 @@ class Bill:
                 # Determine amounts
                 self.item_normal_amount[itemno] = Currency(Decimal(self.item_normal_qty[itemno]) * normal_rate)
                 self.item_excess_amount[itemno] = Currency(Decimal(self.item_excess_qty[itemno]) * excess_rate)
-                self.item_plusminus_amount[itemno] = self.item_normal_amount[itemno] if item.percentage else 0
+                self.item_plusminus_amount[itemno] = Currency(self.item_normal_amount[itemno] if item.percentage else 0)
                 # Update cmbs refered to by the bill
                 self.cmb_ref = self.cmb_ref | set(self.item_cmb_ref[itemno])  # Add any unique cmb (find union)
 
@@ -255,7 +255,7 @@ class Bill:
             for itemno in itemnos:
                 if itemno in self.item_normal_amount:
                     item = schedule[itemno]
-                    self.item_plusminus_amount[itemno] = self.item_normal_amount[itemno] if item.percentage else 0
+                    self.item_plusminus_amount[itemno] = Currency(self.item_normal_amount[itemno] if item.percentage else 0)
             self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             self.bill_since_prev_amount = self.bill_nettotal_amount
@@ -481,10 +481,10 @@ class Bill:
                 item_paths = self.item_paths[itemno]
                 
                 if self.prev_bill is not None and itemno in self.prev_bill.item_normal_amount:
-                    sprev_item_normal_amount = self.item_normal_amount[itemno] \
-                                               - Decimal(self.prev_bill.item_normal_amount[itemno])
-                    sprev_item_excess_amount = self.item_excess_amount[itemno] \
-                                               - Decimal(self.prev_bill.item_excess_amount[itemno])
+                    sprev_item_normal_amount = Currency(self.item_normal_amount[itemno] \
+                                               - Decimal(self.prev_bill.item_normal_amount[itemno]))
+                    sprev_item_excess_amount = Currency(self.item_excess_amount[itemno] \
+                                               - Decimal(self.prev_bill.item_excess_amount[itemno]))
                 else:
                     sprev_item_normal_amount = self.item_normal_amount[itemno]
                     sprev_item_excess_amount = self.item_excess_amount[itemno]

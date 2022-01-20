@@ -142,7 +142,7 @@ class BillView:
                     model = data.bill.BillData()
                     model.set_model(itemlist[1])
                     selection = self.tree.get_selection()
-                    if selection.count_selected_rows() != 0:  # if selection exists copy at selection
+                    if selection.count_selected_rows() != 0:  # if selection exists paste at selection
                         [model_, paths] = selection.get_selected_rows()
                         path = paths[0].get_indices()
                         row = path[0]
@@ -154,8 +154,8 @@ class BillView:
                                 bill.set_model(model.get_model())
                                 bill.update(self.schedule, self.cmbs, self.bills)
                                 # Fill in values for custom bill from duplicate bill
-                                model.item_normal_amount = bill.item_normal_amount
-                                model.item_excess_amount = bill.item_excess_amount
+                                model.item_normal_amount = {x:float(bill.item_normal_amount[x]) for x in bill.item_normal_amount}
+                                model.item_excess_amount = {x:float(bill.item_excess_amount[x]) for x in bill.item_excess_amount}
                                 model.item_qty = dict()
                                 for itemno in bill.item_qty:
                                     model.item_qty[itemno] = [sum(bill.item_qty[itemno])]
@@ -164,7 +164,7 @@ class BillView:
                                 model.item_part_percentage = dict()  # part rate for exess rate items
                                 model.item_excess_part_percentage = dict()  # part rate for exess rate items
                                 model.item_excess_rates = dict()  # list of excess rates above excess_percentage
-                                # set bill type
+                                model.prev_bill = None
                                 model.bill_type = misc.BILL_CUSTOM
                         else:
                             model.mitems = dict()  # clear measured items
@@ -172,7 +172,7 @@ class BillView:
                             model.item_qty = dict()  # qtys of items b/f
                             model.item_normal_amount = dict()  # total item amount for qty at normal rate
                             model.item_excess_amount = dict()  # amounts for qty at excess rate
-                            # set bill type
+                            model.prev_bill = None
                             model.bill_type = misc.BILL_NORMAL
                             
                         self.data.edit_bill_at_row(model.get_model(), row)
@@ -494,8 +494,8 @@ class BillDialog:
                     self.measurements_view.set_colour(path, misc.MEAS_COLOR_LOCKED)
         
         # Update Data elements
-        if self.combobox_bill_last_bill.get_active() != 0:
-            self.billdata.prev_bill = self.combobox_bill_last_bill.get_active() - 1
+        if self.combobox_bill_last_bill.get_active_id() and self.combobox_bill_last_bill.get_active_id() != '0':
+            self.billdata.prev_bill = int(self.combobox_bill_last_bill.get_active_id()) - 1
         else:
             self.billdata.prev_bill = None
         self.billdata.title = self.entry_bill_title.get_text()
@@ -564,19 +564,19 @@ class BillDialog:
         # Setup cmb tree view
         self.measurements_view = measurement.MeasurementsView(self.schedule, self.data, self.treeview_bill)
         # Setup previous bill combo box list store
-        self.liststore_previous_bill.append([0, 'None'])  # Add nil entry
+        self.liststore_previous_bill.append(['0', 'None'])  # Add nil entry
         for row, bill in enumerate(self.bills):
             if row != self.this_bill:
-                self.liststore_previous_bill.append([row + 1, bill.get_text()])
+                self.liststore_previous_bill.append([str(row + 1), bill.get_text()])
 
         # Connect toggled signal of measurement view to callback
         self.measurements_view.renderer_toggle.connect("toggled", self.onToggleCellRendererToggle)
         
         # Load data
         if self.billdata.prev_bill is not None:
-            self.combobox_bill_last_bill.set_active(self.billdata.prev_bill + 1)
+            self.combobox_bill_last_bill.set_active_id(str(self.billdata.prev_bill + 1))
         else:
-            self.combobox_bill_last_bill.set_active(0)
+            self.combobox_bill_last_bill.set_active_id('0')
         self.entry_bill_title.set_text(self.billdata.title)
         self.entry_bill_cmbname.set_text(self.billdata.cmb_name)
         self.entry_bill_bill_date.set_text(self.billdata.bill_date)
