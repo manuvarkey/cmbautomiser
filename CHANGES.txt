@@ -91,3 +91,4 @@ New features:
     Global settings support
     Part rate statement support
     Support for percentage rate tenders
+    Support for outside work recoveries
