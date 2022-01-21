@@ -1,3 +1,5 @@
+# Copyright (c) 2010-2021 openpyxl
+
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
     Typed,
@@ -23,6 +25,7 @@ from openpyxl.packaging.relationship import (
     Relationship,
     get_rels_path
 )
+from .fields import Index
 
 from openpyxl.worksheet.filters import (
     AutoFilter,
@@ -96,6 +99,8 @@ class RowHierarchiesUsage(Serialisable):
 
 class PivotFilter(Serialisable):
 
+    tagname = "filter"
+
     fld = Integer()
     mpFld = Integer(allow_none=True)
     type = Set(values=(['unknown', 'count', 'percent', 'sum', 'captionEqual',
@@ -118,9 +123,9 @@ class PivotFilter(Serialisable):
     iMeasureHier = Integer(allow_none=True)
     iMeasureFld = Integer(allow_none=True)
     name = String(allow_none=True)
-    description = String()
-    stringValue1 = String()
-    stringValue2 = String()
+    description = String(allow_none=True)
+    stringValue1 = String(allow_none=True)
+    stringValue2 = String(allow_none=True)
     autoFilter = Typed(expected_type=AutoFilter, )
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
 
@@ -153,7 +158,6 @@ class PivotFilter(Serialisable):
         self.stringValue1 = stringValue1
         self.stringValue2 = stringValue2
         self.autoFilter = autoFilter
-        self.extLst = extLst
 
 
 class PivotFilters(Serialisable):
@@ -486,14 +490,14 @@ class Format(Serialisable):
     tagname = "format"
 
     action = NoneSet(values=(['blank', 'formatting', 'drill', 'formula']))
-    dxfId = Integer()
+    dxfId = Integer(allow_none=True)
     pivotArea = Typed(expected_type=PivotArea, )
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
 
     __elements__ = ('pivotArea',)
 
     def __init__(self,
-                 action=None,
+                 action="formatting",
                  dxfId=None,
                  pivotArea=None,
                  extLst=None,
@@ -549,7 +553,7 @@ class PageField(Serialisable):
 
     fld = Integer()
     item = Integer(allow_none=True)
-    hier = Integer()
+    hier = Integer(allow_none=True)
     name = String(allow_none=True)
     cap = String(allow_none=True)
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
@@ -581,7 +585,7 @@ class RowColItem(Serialisable):
                      'blank']))
     r = Integer()
     i = Integer()
-    x = NestedInteger(allow_none=True, attribute="v")
+    x = Sequence(expected_type=Index, attribute="v")
 
     __elements__ = ('x',)
 
@@ -589,7 +593,7 @@ class RowColItem(Serialisable):
                  t="data",
                  r=0,
                  i=0,
-                 x=None,
+                 x=(),
                 ):
         self.t = t
         self.r = r

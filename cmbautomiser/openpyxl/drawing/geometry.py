@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -34,6 +33,9 @@ from openpyxl.xml.constants import DRAWING_NS
 
 class Point2D(Serialisable):
 
+    tagname = "off"
+    namespace = DRAWING_NS
+
     x = Coordinate()
     y = Coordinate()
 
@@ -46,6 +48,9 @@ class Point2D(Serialisable):
 
 
 class PositiveSize2D(Serialisable):
+
+    tagname = "ext"
+    namespace = DRAWING_NS
 
     """
     Dimensions in EMUs
@@ -67,14 +72,17 @@ class PositiveSize2D(Serialisable):
 class Transform2D(Serialisable):
 
     tagname = "xfrm"
+    namespace = DRAWING_NS
 
     rot = Integer(allow_none=True)
     flipH = Bool(allow_none=True)
     flipV = Bool(allow_none=True)
     off = Typed(expected_type=Point2D, allow_none=True)
     ext = Typed(expected_type=PositiveSize2D, allow_none=True)
+    chOff = Typed(expected_type=Point2D, allow_none=True)
+    chExt = Typed(expected_type=PositiveSize2D, allow_none=True)
 
-    __elements__ = ('off', 'ext')
+    __elements__ = ('off', 'ext', 'chOff', 'chExt')
 
     def __init__(self,
                  rot=None,
@@ -82,15 +90,54 @@ class Transform2D(Serialisable):
                  flipV=None,
                  off=None,
                  ext=None,
+                 chOff=None,
+                 chExt=None,
                 ):
         self.rot = rot
         self.flipH = flipH
         self.flipV = flipV
         self.off = off
         self.ext = ext
+        self.chOff = chOff
+        self.chExt = chExt
+
+
+class GroupTransform2D(Serialisable):
+
+    tagname = "xfrm"
+    namespace = DRAWING_NS
+
+    rot = Integer(allow_none=True)
+    flipH = Bool(allow_none=True)
+    flipV = Bool(allow_none=True)
+    off = Typed(expected_type=Point2D, allow_none=True)
+    ext = Typed(expected_type=PositiveSize2D, allow_none=True)
+    chOff = Typed(expected_type=Point2D, allow_none=True)
+    chExt = Typed(expected_type=PositiveSize2D, allow_none=True)
+
+    __elements__ = ("off", "ext", "chOff", "chExt")
+
+    def __init__(self,
+                 rot=0,
+                 flipH=None,
+                 flipV=None,
+                 off=None,
+                 ext=None,
+                 chOff=None,
+                 chExt=None,
+                ):
+        self.rot = rot
+        self.flipH = flipH
+        self.flipV = flipV
+        self.off = off
+        self.ext = ext
+        self.chOff = chOff
+        self.chExt = chExt
 
 
 class SphereCoords(Serialisable):
+
+    tagname = "sphereCoords" # usually
 
     lat = Integer()
     lon = Integer()
@@ -131,7 +178,7 @@ class Camera(Serialisable):
          'perspectiveHeroicLeftFacing', 'perspectiveHeroicRightFacing',
          'perspectiveHeroicExtremeLeftFacing', 'perspectiveHeroicExtremeRightFacing',
          'perspectiveRelaxed', 'perspectiveRelaxedModerately'])
-    fov = Typed(expected_type=Integer, allow_none=True)
+    fov = Integer(allow_none=True)
     zoom = Typed(expected_type=Percentage, allow_none=True)
     rot = Typed(expected_type=SphereCoords, allow_none=True)
 
@@ -173,9 +220,11 @@ class LightRig(Serialisable):
 
 class Vector3D(Serialisable):
 
-    dx = Typed(expected_type=Coordinate, )
-    dy = Typed(expected_type=Coordinate, )
-    dz = Typed(expected_type=Coordinate, )
+    tagname = "vector"
+
+    dx = Integer() # can be in or universl measure :-/
+    dy = Integer()
+    dz = Integer()
 
     def __init__(self,
                  dx=None,
@@ -189,9 +238,11 @@ class Vector3D(Serialisable):
 
 class Point3D(Serialisable):
 
-    x = Typed(expected_type=Coordinate, )
-    y = Typed(expected_type=Coordinate, )
-    z = Typed(expected_type=Coordinate, )
+    tagname = "anchor"
+
+    x = Integer()
+    y = Integer()
+    z = Integer()
 
     def __init__(self,
                  x=None,
@@ -423,7 +474,7 @@ class CustomGeometry2D(Serialisable):
     gdLst = Typed(expected_type=GeomGuideList, allow_none=True)
     ahLst = Typed(expected_type=AdjustHandleList, allow_none=True)
     cxnLst = Typed(expected_type=ConnectionSiteList, allow_none=True)
-    rect = Typed(expected_type=GeomRect, allow_none=True)
+    #rect = Typed(expected_type=GeomRect, allow_none=True)
     pathLst = Typed(expected_type=Path2DList, )
 
     def __init__(self,
@@ -438,7 +489,7 @@ class CustomGeometry2D(Serialisable):
         self.gdLst = gdLst
         self.ahLst = ahLst
         self.cxnLst = cxnLst
-        self.rect = rect
+        self.rect = None
         self.pathLst = pathLst
 
 

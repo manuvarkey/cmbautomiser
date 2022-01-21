@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -30,20 +29,19 @@ from openpyxl.drawing.image import Image
 from openpyxl.xml.constants import SHEET_DRAWING_NS
 
 from openpyxl.chart._chart import ChartBase
-from .shapes import (
-    Point2D,
-    PositiveSize2D,
-    PresetGeometry2D,
+from .xdr import (
+    XDRPoint2D,
+    XDRPositiveSize2D,
 )
 from .fill import Blip
+from .connector import Shape
 from .graphic import (
     GroupShape,
     GraphicFrame,
-    Shape,
-    PictureFrame,
-    ChartRelation,
-    Shape,
     )
+from .geometry import PresetGeometry2D
+from .picture import PictureFrame
+from .relation import ChartRelation
 
 
 class AnchorClientData(Serialisable):
@@ -122,8 +120,8 @@ class AbsoluteAnchor(_AnchorBase):
 
     tagname = "absoluteAnchor"
 
-    pos = Typed(expected_type=Point2D)
-    ext = Typed(expected_type=PositiveSize2D)
+    pos = Typed(expected_type=XDRPoint2D)
+    ext = Typed(expected_type=XDRPositiveSize2D)
 
     sp = _AnchorBase.sp
     grpSp = _AnchorBase.grpSp
@@ -141,10 +139,10 @@ class AbsoluteAnchor(_AnchorBase):
                  **kw
                 ):
         if pos is None:
-            pos = Point2D(0, 0)
+            pos = XDRPoint2D(0, 0)
         self.pos = pos
         if ext is None:
-            ext = PositiveSize2D(0, 0)
+            ext = XDRPositiveSize2D(0, 0)
         self.ext = ext
         super(AbsoluteAnchor, self).__init__(**kw)
 
@@ -154,7 +152,7 @@ class OneCellAnchor(_AnchorBase):
     tagname = "oneCellAnchor"
 
     _from = Typed(expected_type=AnchorMarker)
-    ext = Typed(expected_type=PositiveSize2D)
+    ext = Typed(expected_type=XDRPositiveSize2D)
 
     sp = _AnchorBase.sp
     grpSp = _AnchorBase.grpSp
@@ -176,7 +174,7 @@ class OneCellAnchor(_AnchorBase):
             _from = AnchorMarker()
         self._from = _from
         if ext is None:
-            ext = PositiveSize2D(0, 0)
+            ext = XDRPositiveSize2D(0, 0)
         self.ext = ext
         super(OneCellAnchor, self).__init__(**kw)
 
@@ -222,7 +220,7 @@ def _check_anchor(obj):
     """
     anchor = obj.anchor
     if not isinstance(anchor, _AnchorBase):
-        row, col = coordinate_to_tuple(anchor)
+        row, col = coordinate_to_tuple(anchor.upper())
         anchor = OneCellAnchor()
         anchor._from.row = row -1
         anchor._from.col = col -1
@@ -272,7 +270,6 @@ class SpreadsheetDrawing(Serialisable):
     def __bool__(self):
         return bool(self.charts) or bool(self.images)
 
-    __nonzero__ = __bool__
 
 
     def _write(self):
@@ -287,7 +284,11 @@ class SpreadsheetDrawing(Serialisable):
                 anchor.graphicFrame = self._chart_frame(idx)
             elif isinstance(obj, Image):
                 rel = Relationship(type="image", Target=obj.path)
-                anchor.pic = self._picture_frame(idx)
+                child = anchor.pic or anchor.groupShape and anchor.groupShape.pic
+                if not child:
+                    anchor.pic = self._picture_frame(idx)
+                else:
+                    child.blipFill.blip.embed = "rId{0}".format(idx)
 
             anchors.append(anchor)
             self._rels.append(rel)
@@ -306,7 +307,7 @@ class SpreadsheetDrawing(Serialisable):
 
 
     def _chart_frame(self, idx):
-        chart_rel = ChartRelation("rId%s" % idx)
+        chart_rel = ChartRelation(f"rId{idx}")
         frame = GraphicFrame()
         nv = frame.nvGraphicFramePr.cNvPr
         nv.id = idx
@@ -356,4 +357,25 @@ class SpreadsheetDrawing(Serialisable):
                     rel.anchor = anchor
                     rel.anchor.graphicFrame = None
                     rels.append(rel)
+        return rels
+
+
+    @property
+    def _blip_rels(self):
+        """
+        Get relationship information for each blip and bind anchor to it
+
+        Images that are not part of the XLSX package will be ignored.
+        """
+        rels = []
+        anchors = self.absoluteAnchor + self.oneCellAnchor + self.twoCellAnchor
+
+        for anchor in anchors:
+            child = anchor.pic or anchor.groupShape and anchor.groupShape.pic
+            if child and child.blipFill:
+                rel = child.blipFill.blip
+                if rel is not None and rel.embed:
+                    rel.anchor = anchor
+                    rels.append(rel)
+
         return rels

@@ -1,7 +1,5 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
-from openpyxl.compat import unicode
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -54,7 +52,7 @@ class SeriesLabel(Serialisable):
     tagname = "tx"
 
     strRef = Typed(expected_type=StrRef, allow_none=True)
-    v = NestedText(expected_type=unicode, allow_none=True)
+    v = NestedText(expected_type=str, allow_none=True)
     value = Alias('v')
 
     __elements__ = ('strRef', 'v')
@@ -164,10 +162,12 @@ class Series(Serialisable):
         self.smooth = smooth
         self.explosion = explosion
 
+
     def to_tree(self, tagname=None, idx=None):
+        """The index can need rebasing"""
         if idx is not None:
             if self.order == self.idx:
-                self.order = idx
+                self.order = idx # rebase the order if the index has been rebased
             self.idx = idx
         return super(Series, self).to_tree(tagname)
 

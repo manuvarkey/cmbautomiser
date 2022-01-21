@@ -1,9 +1,7 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
 from collections import OrderedDict
-
-from openpyxl.compat import basestring
+from operator import attrgetter
 
 from openpyxl.descriptors import (
     Typed,
@@ -11,11 +9,10 @@ from openpyxl.descriptors import (
     Alias,
     MinMax,
     Bool,
+    Set,
 )
-from openpyxl.descriptors.nested import Nested
-from openpyxl.descriptors.sequence import NestedSequence, ValueSequence
+from openpyxl.descriptors.sequence import ValueSequence
 from openpyxl.descriptors.serialisable import Serialisable
-from openpyxl.xml.constants import PACKAGE_CHARTS
 
 from ._3d import _3DBase
 from .data_source import AxDataSource, NumRef
@@ -50,7 +47,8 @@ class ChartBase(Serialisable):
     layout = Typed(expected_type=Layout, allow_none=True)
     roundedCorners = Bool(allow_none=True)
     axId = ValueSequence(expected_type=int)
-    visible_cells_only = Bool()
+    visible_cells_only = Bool(allow_none=True)
+    display_blanks = Set(values=['span', 'gap', 'zero'])
 
     _series_type = ""
     ser = ()
@@ -78,7 +76,13 @@ class ChartBase(Serialisable):
         self.style = None
         self.plot_area = PlotArea()
         self.axId = axId
-        super(ChartBase, self).__init__(**kw)
+        self.display_blanks = 'gap'
+        self.pivotSource = None
+        self.pivotFormats = ()
+        self.visible_cells_only = True
+        self.idx_base = 0
+        super(ChartBase, self).__init__()
+
 
     def __hash__(self):
         """
@@ -104,11 +108,23 @@ class ChartBase(Serialisable):
         return super(ChartBase, self).to_tree(tagname, idx)
 
 
+    def _reindex(self):
+        """
+        Normalise and rebase series: sort by order and then rebase order
+
+        """
+        # sort data series in order and rebase
+        ds = sorted(self.series, key=attrgetter("order"))
+        for idx, s in enumerate(ds):
+            s.order = idx
+        self.series = ds
+
+
     def _write(self):
         from .chartspace import ChartSpace, ChartContainer
         self.plot_area.layout = self.layout
 
-        idx_base = 0
+        idx_base = self.idx_base
         for chart in self._charts:
             if chart not in self.plot_area._charts:
                 chart.idx_base = idx_base
@@ -122,9 +138,12 @@ class ChartBase(Serialisable):
             container.sideWall = chart.sideWall
             container.backWall = chart.backWall
         container.plotVisOnly = self.visible_cells_only
+        container.dispBlanksAs = self.display_blanks
+        container.pivotFmts = self.pivotFormats
         cs = ChartSpace(chart=container)
         cs.style = self.style
         cs.roundedCorners = self.roundedCorners
+        cs.pivotSource = self.pivotSource
         return cs.to_tree()
 
 
@@ -160,10 +179,9 @@ class ChartBase(Serialisable):
         else:
             values = data.cols
 
-        for v in values:
-            range_string = u"{0}!{1}:{2}".format(data.sheetname, v[0], v[-1])
-            series = SeriesFactory(range_string, title_from_data=titles_from_data)
-            self.ser.append(series)
+        for ref in values:
+            series = SeriesFactory(ref, title_from_data=titles_from_data)
+            self.series.append(series)
 
 
     def append(self, value):

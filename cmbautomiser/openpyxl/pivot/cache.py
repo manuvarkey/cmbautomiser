@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors import (
@@ -110,7 +110,7 @@ class CalculatedMember(Serialisable):
     set = Bool()
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
 
-    __elements__ = ('extLst',)
+    __elements__ = ()
 
     def __init__(self,
                  name=None,
@@ -129,7 +129,7 @@ class CalculatedMember(Serialisable):
         self.parent = parent
         self.solveOrder = solveOrder
         self.set = set
-        self.extLst = extLst
+        #self.extLst = extLst
 
 
 class CalculatedItem(Serialisable):
@@ -159,6 +159,7 @@ class ServerFormat(Serialisable):
 
     tagname = "serverFormat"
 
+    culture = String(allow_none=True)
     format = String(allow_none=True)
 
     def __init__(self,
@@ -169,19 +170,25 @@ class ServerFormat(Serialisable):
         self.format = format
 
 
-class ServerFormats(Serialisable):
+class ServerFormatList(Serialisable):
 
-    count = Integer()
-    serverFormat = Typed(expected_type=ServerFormat, allow_none=True)
+    tagname = "serverFormats"
+
+    serverFormat = Sequence(expected_type=ServerFormat, allow_none=True)
 
     __elements__ = ('serverFormat',)
+    __attrs__ = ('count',)
 
     def __init__(self,
                  count=None,
                  serverFormat=None,
                 ):
-        self.count = count
         self.serverFormat = serverFormat
+
+
+    @property
+    def count(self):
+        return len(self.serverFormat)
 
 
 class Query(Serialisable):
@@ -300,7 +307,7 @@ class TupleCache(Serialisable):
     entries = Typed(expected_type=PCDSDTCEntries, allow_none=True)
     sets = Typed(expected_type=OLAPSets, allow_none=True)
     queryCache = Typed(expected_type=QueryCache, allow_none=True)
-    serverFormats = Typed(expected_type=ServerFormats, allow_none=True)
+    serverFormats = Typed(expected_type=ServerFormatList, allow_none=True)
     extLst = Typed(expected_type=ExtensionList, allow_none=True)
 
     __elements__ = ('entries', 'sets', 'queryCache', 'serverFormats', 'extLst')
@@ -521,12 +528,12 @@ class CacheHierarchy(Serialisable):
     attribute = Bool()
     time = Bool()
     keyAttribute = Bool()
-    defaultMemberUniqueName = String()
-    allUniqueName = String()
-    allCaption = String()
-    dimensionUniqueName = String()
-    displayFolder = String()
-    measureGroup = String()
+    defaultMemberUniqueName = String(allow_none=True)
+    allUniqueName = String(allow_none=True)
+    allCaption = String(allow_none=True)
+    dimensionUniqueName = String(allow_none=True)
+    displayFolder = String(allow_none=True)
+    measureGroup = String(allow_none=True)
     measures = Bool()
     count = Integer()
     oneField = Bool()
@@ -541,12 +548,12 @@ class CacheHierarchy(Serialisable):
     __elements__ = ('fieldsUsage', 'groupLevels')
 
     def __init__(self,
-                 uniqueName=None,
+                 uniqueName="",
                  caption=None,
                  measure=None,
                  set=None,
                  parentSet=None,
-                 iconSet=None,
+                 iconSet=0,
                  attribute=None,
                  time=None,
                  keyAttribute=None,
@@ -664,7 +671,7 @@ class RangePr(Serialisable):
     def __init__(self,
                  autoStart=True,
                  autoEnd=True,
-                 groupBy=range,
+                 groupBy="range",
                  startNum=None,
                  endNum=None,
                  startDate=None,

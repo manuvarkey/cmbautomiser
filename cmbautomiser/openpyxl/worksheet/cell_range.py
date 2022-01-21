@@ -1,9 +1,10 @@
-from __future__ import absolute_import, unicode_literals
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
-from openpyxl.compat.strings import safe_repr
+from copy import copy
+
 from openpyxl.descriptors import Strict
 from openpyxl.descriptors import MinMax, Sequence
+from openpyxl.descriptors.serialisable import Serialisable
 
 from openpyxl.utils import (
     range_boundaries,
@@ -13,7 +14,7 @@ from openpyxl.utils import (
 )
 
 
-class CellRange(Strict):
+class CellRange(Serialisable):
     """
     Represents a range in a sheet: title and coordinates.
 
@@ -46,9 +47,9 @@ class CellRange(Strict):
     def __init__(self, range_string=None, min_col=None, min_row=None,
                  max_col=None, max_row=None, title=None):
         if range_string is not None:
-            try:
+            if "!" in range_string:
                 title, (min_col, min_row, max_col, max_row) = range_to_tuple(range_string)
-            except ValueError:
+            else:
                 min_col, min_row, max_col, max_row = range_boundaries(range_string)
 
         self.min_col = min_col
@@ -76,7 +77,7 @@ class CellRange(Strict):
     @property
     def coord(self):
         """
-        Excel style representation of the range
+        Excel-style representation of the range
         """
         fmt = "{min_col}{min_row}:{max_col}{max_row}"
         if (self.min_col == self.max_col
@@ -89,6 +90,29 @@ class CellRange(Strict):
             max_col=get_column_letter(self.max_col),
             max_row=self.max_row
         )
+
+    @property
+    def rows(self):
+        """
+        Return cell coordinates as rows
+        """
+        for row in range(self.min_row, self.max_row+1):
+            yield [(row, col) for col in range(self.min_col, self.max_col+1)]
+
+
+    @property
+    def cols(self):
+        """
+        Return cell coordinates as columns
+        """
+        for col in range(self.min_col, self.max_col+1):
+            yield [(row, col) for row in range(self.min_row, self.max_row+1)]
+
+
+    @property
+    def cells(self):
+        from itertools import product
+        return product(range(self.min_row, self.max_row+1), range(self.min_col, self.max_col+1))
 
 
     def _check_title(self, other):
@@ -108,23 +132,16 @@ class CellRange(Strict):
         fmt = u"<{cls} {coord}>"
         if self.title:
             fmt = u"<{cls} {title!r}!{coord}>"
-        return safe_repr(fmt.format(cls=self.__class__.__name__, title=self.title, coord=self.coord))
-
-
-    def _get_range_string(self):
-        fmt = "{coord}"
-        title = self.title
-        if self.title:
-            fmt = u"{title}!{coord}"
-            title = quote_sheetname(self.title)
-        return fmt.format(title=title, coord=self.coord)
-
-    __unicode__ = _get_range_string
+        return fmt.format(cls=self.__class__.__name__, title=self.title, coord=self.coord)
 
 
     def __str__(self):
-        coord = self._get_range_string()
-        return safe_repr(coord)
+        fmt = "{coord}"
+        title = self.title
+        if title:
+            fmt = u"{title}!{coord}"
+            title = quote_sheetname(title)
+        return fmt.format(title=title, coord=self.coord)
 
 
     def __copy__(self):
@@ -135,7 +152,7 @@ class CellRange(Strict):
 
     def shift(self, col_shift=0, row_shift=0):
         """
-        Shift the range according to the shift values (*col_shift*, *row_shift*).
+        Shift the focus of the range according to the shift values (*col_shift*, *row_shift*).
 
         :type col_shift: int
         :param col_shift: number of columns to be moved by, can be negative
@@ -157,7 +174,7 @@ class CellRange(Strict):
         """
         Test whether the ranges are not equal.
 
-        :type other: CellRange
+        :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range
         :return: ``True`` if *range* != *other*.
         """
@@ -171,14 +188,14 @@ class CellRange(Strict):
             or self.max_row != other.max_row
             or other.min_col != self.min_col
             or self.max_col != other.max_col
-                )
+        )
 
 
     def __eq__(self, other):
         """
         Test whether the ranges are equal.
 
-        :type other: CellRange
+        :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range
         :return: ``True`` if *range* == *other*.
         """
@@ -187,26 +204,22 @@ class CellRange(Strict):
 
     def issubset(self, other):
         """
-        Test whether every element in the range is in *other*.
+        Test whether every cell in this range is also in *other*.
 
-        :type other: SheetRange
+        :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range
         :return: ``True`` if *range* <= *other*.
         """
         self._check_title(other)
 
-        return (
-            (other.min_row <= self.min_row <= self.max_row <= other.max_row)
-            and
-            (other.min_col <= self.min_col <= self.max_col <= other.max_col)
-        )
+        return other.__superset(self)
 
     __le__ = issubset
 
 
     def __lt__(self, other):
         """
-        Test whether every element in the range is in *other*, but not all.
+        Test whether *other* contains every cell of this range, and more.
 
         :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range
@@ -215,22 +228,25 @@ class CellRange(Strict):
         return self.__le__(other) and self.__ne__(other)
 
 
-    def issuperset(self, other):
-        """
-        Test whether every element in *other* is in the range.
-
-        :type other: openpyxl.worksheet.cell_range.CellRange or tuple[int, int]
-        :param other: Other sheet range or cell index (*row_idx*, *col_idx*).
-        :return: ``True`` if *range* >= *other* (or *other* in *range*).
-        """
-        self._check_title(other)
-
+    def __superset(self, other):
         return (
             (self.min_row <= other.min_row <= other.max_row <= self.max_row)
             and
             (self.min_col <= other.min_col <= other.max_col <= self.max_col)
         )
 
+
+    def issuperset(self, other):
+        """
+        Test whether every cell in *other* is in this range.
+
+        :type other: openpyxl.worksheet.cell_range.CellRange
+        :param other: Other sheet range
+        :return: ``True`` if *range* >= *other* (or *other* in *range*).
+        """
+        self._check_title(other)
+
+        return self.__superset(other)
 
     __ge__ = issuperset
 
@@ -240,14 +256,12 @@ class CellRange(Strict):
         Check whether the range contains a particular cell coordinate
         """
         cr = self.__class__(coord)
-        if cr.title is None:
-            cr.title = self.title
-        return self.issuperset(cr)
+        return self.__superset(cr)
 
 
     def __gt__(self, other):
         """
-        Test whether every element in *other* is in the range, but not all.
+        Test whether this range contains every cell in *other*, and more.
 
         :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range
@@ -258,36 +272,36 @@ class CellRange(Strict):
 
     def isdisjoint(self, other):
         """
-        Return ``True`` if the range has no elements in common with other.
+        Return ``True`` if this range has no cell in common with *other*.
         Ranges are disjoint if and only if their intersection is the empty range.
 
         :type other: openpyxl.worksheet.cell_range.CellRange
         :param other: Other sheet range.
-        :return: `True`` if the range has no elements in common with other.
+        :return: ``True`` if the range has no cells in common with other.
         """
         self._check_title(other)
 
-        # sort by top-left vertex
+        # Sort by top-left vertex
         if self.bounds > other.bounds:
-            i = self
-            self = other
-            other = i
+            self, other = other, self
 
-        return (self.max_col, self.max_row) < (other.min_col, other.max_row)
+        return (self.max_col < other.min_col
+                or self.max_row < other.min_row
+                or other.max_row < self.min_row)
 
 
     def intersection(self, other):
         """
-        Return a new range with elements common to the range and another
+        Return a new range with cells common to this range and *other*
 
-        :type others: tuple[openpyxl.worksheet.cell_range.CellRange]
-        :param others: Other sheet ranges.
-        :return: the current sheet range.
-        :raise: :class:`ValueError` if an *other* range don't intersect
-            with the current range.
+        :type other: openpyxl.worksheet.cell_range.CellRange
+        :param other: Other sheet range.
+        :return: the intersecting sheet range.
+        :raise: :class:`ValueError` if the *other* range doesn't intersect
+            with this range.
         """
         if self.isdisjoint(other):
-            raise ValueError("Range {0} don't intersect {0}".format(self, other))
+            raise ValueError("Range {0} doesn't intersect {0}".format(self, other))
 
         min_row = max(self.min_row, other.min_row)
         max_row = min(self.max_row, other.max_row)
@@ -302,11 +316,13 @@ class CellRange(Strict):
 
     def union(self, other):
         """
-        Return a new range with elements from the range and all *others*.
+        Return the minimal superset of this range and *other*. This new range
+        will contain all cells from this range, *other*, and any additional
+        cells required to form a rectangular ``CellRange``.
 
-        :type others: tuple[openpyxl.worksheet.cell_range.CellRange]
-        :param others: Other sheet ranges.
-        :return: the current sheet range.
+        :type other: openpyxl.worksheet.cell_range.CellRange
+        :param other: Other sheet range.
+        :return: a ``CellRange`` that is a superset of this and *other*.
         """
         self._check_title(other)
 
@@ -317,8 +333,18 @@ class CellRange(Strict):
         return CellRange(min_col=min_col, min_row=min_row, max_col=max_col,
                          max_row=max_row, title=self.title)
 
-
     __or__ = union
+
+
+    def __iter__(self):
+        """
+        For use as a dictionary elsewhere in the library.
+        """
+        for x in self.__attrs__:
+            if x == "title":
+                continue
+            v = getattr(self, x)
+            yield x, v
 
 
     def expand(self, right=0, down=0, left=0, up=0):
@@ -361,10 +387,34 @@ class CellRange(Strict):
 
     @property
     def size(self):
-        """ Return the size of the range as a dicitionary of rows and columns. """
+        """ Return the size of the range as a dictionary of rows and columns. """
         cols = self.max_col + 1 - self.min_col
         rows = self.max_row + 1 - self.min_row
         return {'columns':cols, 'rows':rows}
+
+
+    @property
+    def top(self):
+        """A list of cell coordinates that comprise the top of the range"""
+        return [(self.min_row, col) for col in range(self.min_col, self.max_col+1)]
+
+
+    @property
+    def bottom(self):
+        """A list of cell coordinates that comprise the bottom of the range"""
+        return [(self.max_row, col) for col in range(self.min_col, self.max_col+1)]
+
+
+    @property
+    def left(self):
+        """A list of cell coordinates that comprise the left-side of the range"""
+        return [(row, self.min_col) for row in range(self.min_row, self.max_row+1)]
+
+
+    @property
+    def right(self):
+        """A list of cell coordinates that comprise the right-side of the range"""
+        return [(row, self.max_col) for row in range(self.min_row, self.max_row+1)]
 
 
 class MultiCellRange(Strict):
@@ -380,8 +430,10 @@ class MultiCellRange(Strict):
 
 
     def __contains__(self, coord):
+        if isinstance(coord, str):
+            coord = CellRange(coord)
         for r in self.ranges:
-            if coord in r:
+            if coord <= r:
                 return True
         return False
 
@@ -395,21 +447,25 @@ class MultiCellRange(Strict):
         ranges = u" ".join([str(r) for r in self.ranges])
         return ranges
 
-    __unicode__ = __str__
+    __str__ = __str__
 
 
     def add(self, coord):
         """
-        Add a cell coordinate. Will create a new CellRange
+        Add a cell coordinate or CellRange
         """
-        if coord not in self:
+        cr = coord
+        if isinstance(coord, str):
             cr = CellRange(coord)
-            ranges = self.ranges
-            ranges.append(cr)
-            self.ranges = ranges
-        return self
+        elif not isinstance(coord, CellRange):
+            raise ValueError("You can only add CellRanges")
+        if cr not in self:
+            self.ranges.append(cr)
 
-    __iadd__ = add
+
+    def __iadd__(self, coord):
+        self.add(coord)
+        return self
 
 
     def __eq__(self, other):
@@ -425,8 +481,6 @@ class MultiCellRange(Strict):
     def __bool__(self):
         return bool(self.ranges)
 
-    __nonzero__ = __bool__
-
 
     def remove(self, coord):
         if not isinstance(coord, CellRange):
@@ -437,3 +491,11 @@ class MultiCellRange(Strict):
     def __iter__(self):
         for cr in self.ranges:
             yield cr
+
+
+    def __copy__(self):
+        n = MultiCellRange()
+
+        for r in self.ranges:
+            n.ranges.append(copy(r))
+        return n

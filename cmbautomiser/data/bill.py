@@ -677,8 +677,8 @@ class Bill:
 
         # Sheet formatings
         sheet.column_dimensions['B'].width = 50
-        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
-        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_LEGAL
+        sheet.page_setup.orientation = sheet.ORIENTATION_LANDSCAPE
+        sheet.page_setup.paperSize = sheet.PAPERSIZE_LEGAL
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
 
@@ -769,8 +769,8 @@ class Bill:
             # copy coumn widths
             sheet2.column_dimensions[get_column_letter(column)].width = \
                 template_start_sheet.column_dimensions[get_column_letter(column)].width
-        sheet2.page_setup.orientation = worksheet.Worksheet.ORIENTATION_LANDSCAPE
-        sheet2.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_LEGAL
+        sheet2.page_setup.orientation = sheet.ORIENTATION_LANDSCAPE
+        sheet2.page_setup.paperSize = sheet.PAPERSIZE_LEGAL
         sheet2.page_setup.fitToHeight = 99
         sheet2.page_setup.fitToWidth = 1
         sheet2.print_options.horizontalCentered = True
@@ -922,7 +922,7 @@ class Bill:
         if self.prev_bill != None:
             sheet.cell(row=4+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
         sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
-        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ')'  # Since previous amount rounded
+        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ', 0)'  # Since previous amount rounded
         
         sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
         row_item_sp = row_item + 6
@@ -937,7 +937,7 @@ class Bill:
         # Add net amount
         if self.data.adjustments:
             sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
-            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
+            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '), 0)'
         
         # Fill in text
         sheet.cell(row=2+row_item, column=2).value = self.data.bill_text
@@ -947,8 +947,8 @@ class Bill:
             # copy column widths
             sheet.column_dimensions[get_column_letter(column)].width = \
                 template_start_sheet.column_dimensions[get_column_letter(column)].width
-        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
-        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
         sheet.print_options.horizontalCentered = True
@@ -1087,7 +1087,7 @@ class Bill:
         if self.prev_bill != None:
             sheet.cell(row=4+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
         sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
-        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ')'  # Since previous amount rounded
+        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ', 0)'  # Since previous amount rounded
         
         sheet.cell(row=1+row_item, column=8).value = '=SUM(H8:H' + str(row_item) + ')'  # Up to date amount
         percentage_eq = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_per_items]) + ')*' + str(percentage/100) + ', 2)'
@@ -1110,15 +1110,15 @@ class Bill:
         # Add net amount
         if self.data.adjustments:
             sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
-            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
+            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '), 0)'
         
         # Bill formatings
         for column in range(1,colend+1):
             # copy coumn widths
             sheet.column_dimensions[get_column_letter(column)].width = \
                 template_start_sheet.column_dimensions[get_column_letter(column)].width
-        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
-        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
         sheet.print_options.horizontalCentered = True
@@ -1195,8 +1195,8 @@ class Bill:
             # copy coumn widths
             sheet.column_dimensions[get_column_letter(column)].width = \
                 template_start_sheet.column_dimensions[get_column_letter(column)].width
-        sheet.page_setup.orientation = worksheet.Worksheet.ORIENTATION_PORTRAIT
-        sheet.page_setup.paperSize = worksheet.Worksheet.PAPERSIZE_A4
+        sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT
+        sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
         sheet.page_setup.fitToHeight = 99
         sheet.page_setup.fitToWidth = 1
         sheet.print_options.horizontalCentered = True

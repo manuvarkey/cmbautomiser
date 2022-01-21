@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-#copyright openpyxl 2010-2015
+#copyright openpyxl 2010-2018
 
 """
 Excel specific descriptors
@@ -14,11 +13,10 @@ from . import (
     MinMax,
     Integer,
     String,
-    Typed,
     Sequence,
 )
 from .serialisable import Serialisable
-from openpyxl.utils.cell import RANGE_EXPR
+
 
 class HexBinary(MatchPattern):
 
@@ -44,9 +42,17 @@ class TextPoint(MinMax):
 Coordinate = Integer
 
 
-class Percentage(MatchPattern):
+class Percentage(MinMax):
 
-    pattern = r"((100)|([0-9][0-9]?))(\.[0-9][0-9]?)?%"
+    pattern = r"((100)|([0-9][0-9]?))(\.[0-9][0-9]?)?%" # strict
+    min = -1000000
+    max = 1000000
+
+    def __set__(self, instance, value):
+        if isinstance(value, str) and "%" in value:
+            value = value.replace("%", "")
+            value = int(float(value) * 1000)
+        super(Percentage, self).__set__(instance, value)
 
 
 class Extension(Serialisable):

@@ -1,23 +1,7 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
-
-from .strings import (
-    basestring,
-    unicode,
-    bytes,
-    file,
-    tempfile,
-    safe_string,
-    safe_repr,
-    )
-from .numbers import long, NUMERIC_TYPES
-
-
-try:
-    range = xrange
-except NameError:
-    range = range
+from .numbers import NUMERIC_TYPES
+from .strings import safe_string
 
 import warnings
 from functools import wraps
@@ -45,13 +29,12 @@ def deprecated(reason):
 
             @wraps(func1)
             def new_func1(*args, **kwargs):
-                warnings.simplefilter('always', DeprecationWarning)
+                #warnings.simplefilter('default', DeprecationWarning)
                 warnings.warn(
                     fmt1.format(name=func1.__name__, reason=reason),
                     category=DeprecationWarning,
                     stacklevel=2
                 )
-                warnings.simplefilter('default', DeprecationWarning)
                 return func1(*args, **kwargs)
 
             # Enhance docstring with a deprecation note

@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-# Copyright (c) 2010-2018 openpyxl
+# Copyright (c) 2010-2021 openpyxl
 
 from openpyxl.descriptors import (
     Bool,
@@ -9,7 +8,6 @@ from openpyxl.descriptors import (
 )
 from openpyxl.descriptors.serialisable import Serialisable
 from openpyxl.descriptors.excel import (
-    HexBinary,
     Base64Binary,
 )
 from openpyxl.utils.protection import hash_password
@@ -118,6 +116,5 @@ class SheetProtection(Serialisable, _Protected):
 
 
     def  __bool__(self):
-        return self.sheet is None
+        return self.sheet
 
-    __nonzero__ = __bool__
