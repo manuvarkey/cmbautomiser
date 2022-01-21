@@ -678,7 +678,7 @@ class DataModel:
             if recursive:  # if recursive call
                 # Render all cmbs depending on the bill
                 for cmb_ref in cmb_refs:
-                    if cmb_ref is not -1:  # if not prev bill
+                    if cmb_ref != -1:  # if not prev bill
                         if progress is not None:
                             progress.add_message('Rendering CMB No.' + self.cmbs[cmb_ref].name)
                         code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)
@@ -715,7 +715,7 @@ class DataModel:
             # Render all cmbs again to rebuild indexes on recursive run
             if recursive:  # if recursive call
                 for cmb_ref in cmb_refs:
-                    if cmb_ref is not -1:  # if not prev bill
+                    if cmb_ref != -1:  # if not prev bill
                         if progress is not None:
                             progress.add_message('Rebuilding index for CMB No.' + self.cmbs[cmb_ref].name)
                         code = self.render_cmb(folder, replacement_dict, [cmb_ref], False)

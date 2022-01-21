@@ -310,6 +310,7 @@ class Bill:
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
         bill_local_vars['$cmbbillsinceprevamountR$'] = str(CurrencyR(self.bill_since_prev_amount))
         bill_local_vars['$cmbbillnetpayableamount$'] = str(CurrencyR(self.bill_netpayable_amount))
+        
         if percentage:
             bill_local_vars_vanilla['$billpercentageflag$'] = '\iftrue'
         else:
@@ -318,7 +319,11 @@ class Bill:
             bill_local_vars_vanilla['$finalbillflag$'] = '\iftrue'
         else:
             bill_local_vars_vanilla['$finalbillflag$'] = '\iffalse'
-        
+        if self.data.adjustments:
+            bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iffalse'
+            
         # Loop over each item in schedule
         for itemno in itemnos:
             item = schedule[itemno]
@@ -491,14 +496,19 @@ class Bill:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
         bill_local_vars['$cmbbillsinceprevamountR$'] = str(CurrencyR(self.bill_since_prev_amount))
-        if percentage:
-            bill_local_vars_vanilla['$billpercentageflag$'] = '\iftrue'
-        else:
-            bill_local_vars_vanilla['$billpercentageflag$'] = '\iffalse'
         bill_local_vars['$cmbbilltotalamountsp$'] = str(total_sp)
         bill_local_vars['$cmbbillplusminusamountsp$'] = str(plusminus_sp)
         bill_local_vars['$cmbbillsinceprevamountcalc$'] = str(sinceprev_calc)
         bill_local_vars['$cmbbillnetpayableamount$'] = str(CurrencyR(self.bill_netpayable_amount))
+        
+        if percentage:
+            bill_local_vars_vanilla['$billpercentageflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$billpercentageflag$'] = '\iffalse'
+        if self.data.adjustments:
+            bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iffalse'
         
         # Write each item to bill
         for itemno in itemnos:
@@ -925,8 +935,9 @@ class Bill:
                 sheet['G' + str(row_item)] = Currency(amount)
                 row_item += 1
         # Add net amount
-        sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
-        sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
+        if self.data.adjustments:
+            sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
+            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
         
         # Fill in text
         sheet.cell(row=2+row_item, column=2).value = self.data.bill_text
@@ -1097,8 +1108,9 @@ class Bill:
                 sheet['G' + str(row_item)] = Currency(amount)
                 row_item += 1
         # Add net amount
-        sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
-        sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
+        if self.data.adjustments:
+            sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
+            sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
         
         # Bill formatings
         for column in range(1,colend+1):

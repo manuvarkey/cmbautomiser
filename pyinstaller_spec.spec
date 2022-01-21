@@ -12,7 +12,7 @@ added_files = [
 		 ]
 
 a = Analysis(['cmbautomiser/main.py'],
-             pathex=['C:\\Users\\User\\Desktop\\cmbautomiser\\cmbautomiser'],
+             pathex=['C:\\msys64\\home\\HP\\cmbautomiser\\cmbautomiser'],
              binaries=None,
              datas= added_files,
              hiddenimports=[],

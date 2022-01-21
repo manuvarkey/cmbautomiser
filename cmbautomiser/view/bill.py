@@ -164,6 +164,7 @@ class BillView:
                                 model.item_part_percentage = dict()  # part rate for exess rate items
                                 model.item_excess_part_percentage = dict()  # part rate for exess rate items
                                 model.item_excess_rates = dict()  # list of excess rates above excess_percentage
+                                model.adjustments = []
                                 model.prev_bill = None
                                 model.bill_type = misc.BILL_CUSTOM
                         else:
