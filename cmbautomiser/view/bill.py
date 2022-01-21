@@ -420,6 +420,54 @@ class BillDialog:
                     self.billdata.item_qty[item[0]][0] = float(eval(records[count][4]))
                     self.billdata.item_normal_amount[item[0]] = float(eval(records[count][5]))
                     self.billdata.item_excess_amount[item[0]] = float(eval(records[count][6]))
+    
+    def onButtonAdjustmentsPressed(self, button):
+        """Create a bill adjustments dialog window"""
+        
+        # Variables
+        
+        toplevel = self.window
+        item_schedule = self.schedule
+        captions = []
+        columntypes = []
+        populated_items = []
+        cellrenderers = []
+        dimensions = [[],[]]
+            
+        # Obtain values to be passed
+        
+        for description, amount in self.billdata.adjustments:
+            populated_items.append([description, str(amount)])
+        
+        captions = ['Nature of outside work adjustment', 'Amount']
+        columntypes = [misc.MEAS_DESC, misc.MEAS_L]
+        cellrenderers = [None] * 2
+        dimensions = [[400,150],[True,False]]
+            
+        # Raise Dialog for entry of per item values
+        dialog = scheduledialog.ScheduleDialog(toplevel, item_schedule, [], captions, columntypes, cellrenderers, dimensions)
+
+        # Deactivate add and delete buttons, remarks column in dialog
+        dialog.builder.get_object("toolbutton_schedule_add_mult").set_sensitive(False)
+        dialog.builder.get_object("toolbutton_schedule_delete").set_sensitive(False)
+        dialog.builder.get_object("filechooserbutton_schedule").set_sensitive(False)
+        dialog.builder.get_object("toolbutton_schedule_import").set_sensitive(False)
+        dialog.remark_cell.set_sensitive(False)
+        
+        # Populate records
+        old_val = [[], populated_items, '', []]
+        dialog.set_model(old_val)  # modify dialog with current values of data
+
+        # Run Dialog and get modified values
+        model = dialog.run()
+        
+        # Update modified values
+        if model is not None:
+            records = model[1]
+            modified_populated_items = []
+            for description, amount in records:
+                modified_populated_items.append([description, misc.float_from_str(amount)])
+            self.billdata.adjustments = modified_populated_items
 
     def onToggleCellRendererToggle(self, toggle, path_str):
         """On toggle clicked"""
@@ -543,7 +591,7 @@ class BillDialog:
         self.builder = Gtk.Builder()
         self.builder.add_from_file(misc.abs_path("interface","billdialog.glade"))
         self.window = self.builder.get_object("dialog")
-        self.window.set_default_size(1000,500)
+        self.window.set_default_size(1150,650)
         self.window.set_transient_for(self.parent)
         self.builder.connect_signals(self)
         # Get required objects
@@ -556,6 +604,7 @@ class BillDialog:
         self.entry_bill_bill_date = self.builder.get_object("entry_bill_bill_date")
         self.entry_bill_starting_page = self.builder.get_object("entry_bill_starting_page")
         self.textview_bill_text = self.builder.get_object("textview_bill_text")
+        self.button_bill_adjustments = self.builder.get_object("button_bill_adjustments")
         # Checkbox
         self.checkbutton_final_bill = self.builder.get_object("checkbutton_final_bill")
         # Popupbutton
@@ -594,6 +643,7 @@ class BillDialog:
             self.checkbutton_final_bill.set_sensitive(False)  # Deactivate final bill selection
             self.textview_bill_text.set_sensitive(False)  # Deactivate bill text selection
             self.button_billtext.set_sensitive(False)  # Deactivate bill text selection
+            self.button_bill_adjustments.set_sensitive(False)  # Deactivate adjustments
         
         # Update GUI
         self.update_store()

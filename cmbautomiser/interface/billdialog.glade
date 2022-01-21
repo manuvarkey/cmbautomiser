@@ -348,8 +348,23 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkButton" id="button_bill_adjustments">
+                        <property name="label">Adjustments</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="onButtonAdjustmentsPressed" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">5</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkButton" id="button_bill_preferences">
-                        <property name="label">Properties</property>
+                        <property name="label">Rates</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -359,7 +374,7 @@
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
-                        <property name="position">5</property>
+                        <property name="position">6</property>
                       </packing>
                     </child>
                   </object>

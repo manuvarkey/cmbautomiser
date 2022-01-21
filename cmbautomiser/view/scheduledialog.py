@@ -198,7 +198,7 @@ class ScheduleDialog:
         self.builder.add_from_file(misc.abs_path("interface","scheduledialog.glade"))
         self.window = self.builder.get_object("dialog")
         self.window.set_transient_for(self.parent)
-        self.window.set_default_size(1000,500)
+        self.window.set_default_size(1100,600)
         self.builder.connect_signals(self)
 
         # Get required objects

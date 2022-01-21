@@ -56,6 +56,7 @@ class BillData:
         self.item_part_percentage = dict()  # part rate for exess rate items
         self.item_excess_part_percentage = dict()  # part rate for exess rate items
         self.item_excess_rates = dict()  # list of excess rates above excess_percentage
+        self.adjustments = []
 
         # Additional elements for custom bill
         self.item_qty = dict()  # qtys of items b/f
@@ -71,7 +72,7 @@ class BillData:
         model = [self.prev_bill, self.cmb_name, self.title, self.bill_date, self.starting_page,
                  self.mitems, self.item_part_percentage, self.item_excess_part_percentage ,
                  self.item_excess_rates, self.item_qty, self.item_normal_amount, self.item_excess_amount,
-                 self.bill_type, self.bill_text]
+                 self.bill_type, self.bill_text, self.adjustments]
         return ['BillData', copy.deepcopy(model)]
     
     def set_model(self, model):
@@ -98,6 +99,11 @@ class BillData:
                 self.bill_text = model[1][13]
             else:
                 self.bill_text = ''
+            # HACK for supporting adjustments field to be backward compatible
+            if len(model[1]) > 14:
+                self.adjustments = model[1][14]
+            else:
+                self.adjustments = []
 
 
 class Bill:
@@ -123,6 +129,7 @@ class Bill:
         self.bill_plusminus_amount = 0 # amount corresponding to plusminus items
         self.bill_nettotal_amount = 0 # net amount of work done uptodate after plusminus
         self.bill_since_prev_amount = 0  # since previous amount of work done
+        self.bill_netpayable_amount = 0  # Net payable amount after outside work adjustments
 
     def clear(self, clear_all = False):
         """Clear bill data
@@ -150,6 +157,7 @@ class Bill:
         self.bill_plusminus_amount = 0 # component corresponding to plusminus items
         self.bill_nettotal_amount = 0 # net amount of work done uptodate after plusminus
         self.bill_since_prev_amount = 0  # since previous amount of work done
+        self.bill_netpayable_amount = 0  # Net payable amount after outside work adjustments
 
     def get_model(self):
         """Return base model"""
@@ -244,6 +252,11 @@ class Bill:
                 self.bill_since_prev_amount = Currency(self.bill_nettotal_amount) - CurrencyR(self.prev_bill.bill_nettotal_amount)
             else:
                 self.bill_since_prev_amount = Currency(self.bill_nettotal_amount)
+            
+            self.bill_netpayable_amount = self.bill_since_prev_amount
+            for description, amount in self.data.adjustments:
+                self.bill_netpayable_amount += Currency(amount)
+            self.bill_netpayable_amount = CurrencyR(self.bill_netpayable_amount)
         
         # If bill is a Custom bill
         elif self.data.bill_type == misc.BILL_CUSTOM:
@@ -259,6 +272,7 @@ class Bill:
             self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             self.bill_since_prev_amount = self.bill_nettotal_amount
+            self.bill_netpayable_amount = self.bill_since_prev_amount
 
     def get_latex_buffer(self, thisbillpath, schedule, project_settings_dict):
         """Return abstract latex buffer"""
@@ -295,6 +309,7 @@ class Bill:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
         bill_local_vars['$cmbbillsinceprevamountR$'] = str(CurrencyR(self.bill_since_prev_amount))
+        bill_local_vars['$cmbbillnetpayableamount$'] = str(CurrencyR(self.bill_netpayable_amount))
         if percentage:
             bill_local_vars_vanilla['$billpercentageflag$'] = '\iftrue'
         else:
@@ -415,6 +430,20 @@ class Bill:
                 # Make item substitutions
                 latex_buffer.replace_and_clean(item_local_vars)
                 latex_buffer.replace(item_local_vars_vanilla)
+        
+        # Add sum blocks
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endabstract1.tex'))
+        
+        # Add adjustments
+        for description, amount in self.data.adjustments:
+            item_local_vars = {}            
+            # Add all values to substitution dict
+            item_local_vars['$cmbbilladjdesc$'] = description
+            item_local_vars['$cmbbilladjamount$'] = str(CurrencyR(amount))
+            # Write entries
+            latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'abstractadjustmentitem.tex')) # Read item template
+            # Make item substitutions
+            latex_buffer.replace_and_clean(item_local_vars)
                 
         # Add abstract end latex block
         latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endabstract.tex'))
@@ -469,6 +498,7 @@ class Bill:
         bill_local_vars['$cmbbilltotalamountsp$'] = str(total_sp)
         bill_local_vars['$cmbbillplusminusamountsp$'] = str(plusminus_sp)
         bill_local_vars['$cmbbillsinceprevamountcalc$'] = str(sinceprev_calc)
+        bill_local_vars['$cmbbillnetpayableamount$'] = str(CurrencyR(self.bill_netpayable_amount))
         
         # Write each item to bill
         for itemno in itemnos:
@@ -559,8 +589,24 @@ class Bill:
                 # Make item substitutions
                 latex_buffer.replace_and_clean(item_local_vars)
                 latex_buffer.replace(item_local_vars_vanilla)
-        # Read suffix
+        
+        # Add sum blocks
+        latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endbill1.tex'))
+        
+        # Add adjustments
+        for description, amount in self.data.adjustments:
+            item_local_vars = {}            
+            # Add all values to substitution dict
+            item_local_vars['$cmbbilladjdesc$'] = description
+            item_local_vars['$cmbbilladjamount$'] = str(CurrencyR(amount))
+            # Write entries
+            latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'billadjustmentitem.tex')) # Read item template
+            # Make item substitutions
+            latex_buffer.replace_and_clean(item_local_vars)
+                
+        # Add bill end latex block
         latex_buffer.add_suffix_from_file(misc.abs_path('latex', 'endbill.tex'))
+        
         # Make replacements
         latex_buffer.replace_and_clean(bill_local_vars)
         latex_buffer.replace(bill_local_vars_vanilla)
@@ -868,9 +914,22 @@ class Bill:
         sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
         sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ')'  # Since previous amount rounded
         
-        # Fill in text
         sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
-        sheet.cell(row=8+row_item, column=2).value = self.data.bill_text
+        row_item_sp = row_item + 6
+        row_item += 8
+        
+        # Add details of Adjustments
+        for description, amount in self.data.adjustments:
+            if amount != 0:
+                sheet['B' + str(row_item)] = description
+                sheet['G' + str(row_item)] = Currency(amount)
+                row_item += 1
+        # Add net amount
+        sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
+        sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
+        
+        # Fill in text
+        sheet.cell(row=2+row_item, column=2).value = self.data.bill_text
         
         # Abstract formatting
         for column in range(1,colend+1):
@@ -1026,8 +1085,20 @@ class Bill:
         sheet.cell(row=5+row_item, column=8).value = '=H' + str(row_item+3) + '-H' + str(row_item+4)  # Since previous amount
         sheet.cell(row=6+row_item, column=8).value = '=G' + str(row_item+6)  # Since previous amount rounded
         
-        # Fill in text
         sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
+        
+        row_item_sp = row_item + 6
+        row_item += 8
+        
+        # Add details of Adjustments
+        for description, amount in self.data.adjustments:
+            if amount != 0:
+                sheet['B' + str(row_item)] = description
+                sheet['G' + str(row_item)] = Currency(amount)
+                row_item += 1
+        # Add net amount
+        sheet['B' + str(row_item)] = 'NET AMOUNT PAYABLE'
+        sheet['G' + str(row_item)] = '=ROUND(SUM(G' + str(row_item_sp) + ':G' + str(row_item-1) + '))'
         
         # Bill formatings
         for column in range(1,colend+1):
