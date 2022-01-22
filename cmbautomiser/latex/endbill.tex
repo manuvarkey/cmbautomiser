@@ -3,11 +3,171 @@ $billadjustmentsflag$
       & \multicolumn{5}{l}{\textbf{NET PAYABLE AMOUNT}} & \textbf{$cmbbillnetpayableamount$} & \\*\noalign{\vskip\doublerulesep \vskip-\arrayrulewidth} \cline{1-8}
 \else
 \fi
-\end{longtabu} \\[2cm]
+\end{longtabu}
+
+\vspace{0.5cm}
 
 \begin{longtabu} to \textwidth {X[10,l] X[30,c]}
          & \cmbvarifyingauthority \\
          & \cmbvarifyingauthorityoffice \\
 \end{longtabu}
 
+% RA bill form
+
+\newpage
+\lfoot{CPWA-26}
+\setcounter{page}{1}
+
+\begin{center}
+    \textbf{RUNNING ACCOUNT BILL}  \\
+    \emph{(Referred to in Paragraph 10-2-10 and 18-2-12)} \\
+    \emph{(Final payments must invariably be made  on forms printed on yellow paper which should not be used for intermediate payments.} \\
+    \emph{(For Contractors:- This Form provides for (1) Advance and (2) Payments for measured works. The forms of Account Secured Advances, which has been printed separately should be attached, where necessary)} \\
+\end{center}
+
+\begin{longtabu} to \textwidth {X[5,l] X[10,l] X[5,l] X[10,l]}
+    Division:- & \emph \cmbissuingauthorityoffice & Sub-Division:- & \emph \cmbvarifyingauthorityoffice
+\end{longtabu}
+
+Cash Book Voucher No ......................................................................... Dated ...........................
+
+\begin{longtabu} to \textwidth {X[10,l] X[15,l]}
+    Name of Contractor :-  & \emph \cmbagency \\
+    Name of Work :- & \emph \cmbnameofwork \\
+    Serial No. of this bill :-  & \emph \cmbheading \\
+    No. and date of previous bill for this work :-  & \emph \cmbheadingold \\
+    Reference  to Agreement No :-  & \emph \cmbagmntno \\
+    Date of written order to commence work :-  & \emph \cmbdateofstart \\
+    Date of actual completion of work :-  & \emph \cmbdateofcompletion \\
+\end{longtabu}
+
+\begin{center}
+    \textbf{I. ACCOUNT OF WORK EXECUTED}  \\
+\end{center}
+
+\begin{longtabu} to \textwidth {| X[1,c] | X[0.75,c] | X[1,r] | X[1,l] | X[1,r] | X[1,r] | X[0.75,c] |}
+    \cline{1-7}
+    \centering Items of work (grouped under \emph{sub-head} and \emph{sub-work} of estimate) & 
+    \centering Unit & 
+    \centering Rate  & 
+    \centering Quantity executed up to date as per Measurement Book & 
+    \multicolumn{2}{p{\dimexpr 2\tabucolX+2\tabcolsep+\arrayrulewidth\relax}|}{Payment on the basis of actual Measurements} & 
+    \centering Remarks \\*\cline{1-7}
+    
+    \centering  & 
+    \centering  & 
+    \centering   & 
+    \centering  & 
+    \centering Up-to date & 
+    \centering Since Previous  bill & 
+    \centering \\*\cline{1-7}
+    
+    \centering 1 & 
+    \centering 2 & 
+    \centering 3 & 
+    \centering 4 & 
+    \centering 5 & 
+    \centering 6 & 
+    \centering 7 \\*\cline{1-7}
+    
+    \centering  & 
+    \centering  & 
+    \centering  Rs. & 
+    \centering  & 
+    \centering Rs. & 
+    \centering Rs. & 
+    \centering \\*\cline{1-7}
+    
+    \endhead
+    
+     & & & & & & \\
+     & & & & & & \\
+     & & & & & & \\
+     & & & & & & \\     
+     & & & & & & \\     
+     & & & & & & \\
+     \multicolumn{4}{|c|}{\emph{As per sheet attached}} & \emph{$cmbbillnettotalamount$} & \emph{$cmbbillsinceprevamountcalc$} & \\
+     & & & & & & \\
+     & & & & & & \\     
+     & & & & & & \\
+     & & & & & & \\
+     & & & & & & \\
+     & & & & & & \\*\cline{1-7}
+     & & & C/O & \emph{$cmbbillnettotalamount$} & \emph{$cmbbillsinceprevamountcalc$} & \\*\cline{1-7}
+    
+\end{longtable}
+
+\newpage
+\lfoot{CPWA-26}
+\setcounter{page}{2}
+
+\begin{longtabu} to \textwidth {| X[1,c] | X[0.75,c] | X[1,r] | X[1,l] | X[1,r] | X[1,r] | X[0.75,c] |}
+    \cline{1-7}
+    \centering Items of work (grouped under \emph{sub-head} and \emph{sub-work} of estimate) & 
+    \centering Unit & 
+    \centering Rate  & 
+    \centering Quantity executed up to date as per Measurement Book & 
+    \multicolumn{2}{p{\dimexpr 2\tabucolX+2\tabcolsep+\arrayrulewidth\relax}|}{Payment on the basis of actual Measurements} & 
+    \centering Remarks \\*\cline{1-7}
+    
+    \centering  & 
+    \centering  & 
+    \centering   & 
+    \centering  & 
+    \centering Up-to date & 
+    \centering Since Previous  bill & 
+    \centering \\*\cline{1-7}
+    
+    \centering 1 & 
+    \centering 2 & 
+    \centering 3 & 
+    \centering 4 & 
+    \centering 5 & 
+    \centering 6 & 
+    \centering 7 \\*\cline{1-7}
+    
+    \centering  & 
+    \centering  & 
+    \centering  Rs. & 
+    \centering  & 
+    \centering Rs. & 
+    \centering Rs. & 
+    \centering \\*\cline{1-7}
+    
+    \endhead
+    
+      & & & B/F & \emph{$cmbbillnettotalamount$} & \emph{$cmbbillsinceprevamountcalc$} & \\
+     & & & & & & \\
+     & & & & & & \\     
+     & & & & & & \\*\cline{1-7}
+     \multicolumn{4}{|l|}{Total Value of work done to date (A)} & \emph{$cmbbillnettotalamount$} & \emph{$cmbbillsinceprevamountcalc$} & \\
+     \multicolumn{4}{|l|}{Deduct  Value of work  shown on previous bill} & \emph{$cmbbillprevamount$} & & \\
+     \multicolumn{4}{|l|}{Net Value of work since previous Bill} & \emph{$cmbbillsinceprevamount$} & \emph{$cmbbillsinceprevamountcalc$} & \\
+     \multicolumn{4}{|l|}{Say  (F)} & \emph{$cmbbillsinceprevamountR$} & \emph{$cmbbillsinceprevamountR$} & \\*\cline{1-7}
+\end{longtable}
+
+\emph{N.B. When there are two or more entries in column 6 relating  to each sub-head of estimate they should, in the case of works the accounts of which are kept by  sub-heads, be totalled and the total recorded in column 7 for posting  the works Abstract.}
+
+\begin{center}
+    \textbf{II. CERTIFICATE AND SIGNATURE}  \\
+\end{center}
+
+\ 1.  The measurements on which are based the entries in columns 1 to 6 of Account I, were made by \emph{\cmbissuedto} on \emph{\cmbabstractdate}  and are recorded at pages \emph{..........} to \emph{..........} \ of Measurement Book No. \emph{\cmbbookno} \\
+
+* 2.  Certified that in addition to and quite apart from the quantities of work actually executed as shown in column 4 of account 1, some work has actually been done in connection with several items and the value such work (after deduction therefrom the proportionate amount of secured advances if any, ultimately recoverable on account of the quantities of materials used therein) is in no case less than the advance payments as per item 2 of the memorandum of payments made or proposed to be made for the convenience of the contractor in anticipation of and subject to the results of, detailed measurements which will be made as soon as possible.
+
+\vspace{1cm}
+
+\begin{longtabu} to \textwidth {X[10,c] X[10,l] X[10,l]}
+    & Date signature of officer preparing the bill  &  \emph{\cmbvarifyingauthority} \newline \emph{\cmbvarifyingauthorityoffice} \\
+    & & \\
+    & & \\
+   ......................... & & \\
+   Dated signature of contractor & \$ Dated signature of officer preparing the bill  & \emph{\cmbissuingauthority} \newline \emph{\cmbissuingauthorityoffice}\\
+\end{longtabu}
+
+\vspace{2cm}
+
+\emph{* This Certificate must be signed by the Sub-Divisional or Divisional Officer} \\
+\emph{\$ This signature is necessary only when the officer who prepares the bill is not the officer who authorises the payment. In such a case the two signatures are essential.} \\
 \end{document}

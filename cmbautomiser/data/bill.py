@@ -484,8 +484,14 @@ class Bill:
         # Setup substitution dictionary
         bill_local_vars = dict()  # bill substitution dictionary
         bill_local_vars_vanilla = dict()  # bill substitution dictionary
+        bill_local_vars['$cmbbookno$'] = self.data.cmb_name
         bill_local_vars['$cmbheading$'] = self.data.title
         bill_local_vars['$cmbabstractdate$'] = self.data.bill_date
+        
+        if self.prev_bill:
+            bill_local_vars['$cmbheadingold$'] = self.prev_bill.data.title
+        else:
+            bill_local_vars['$cmbheadingold$'] = ''
         
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
         bill_local_vars['$cmbbillpercentage$'] = percentage_text
@@ -510,6 +516,10 @@ class Bill:
             bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iftrue'
         else:
             bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iffalse'
+        if self.data.bill_type == misc.BILL_FINAL:
+            bill_local_vars_vanilla['$finalbillflag$'] = '\iftrue'
+        else:
+            bill_local_vars_vanilla['$finalbillflag$'] = '\iffalse'
         
         # Write each item to bill
         for itemno in itemnos:
