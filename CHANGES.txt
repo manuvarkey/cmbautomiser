@@ -90,5 +90,6 @@ New features:
     Update to LuaLatex for rendering
     Global settings support
     Part rate statement support
+	RA bill form support
     Support for percentage rate tenders
     Support for outside work recoveries
