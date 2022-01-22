@@ -323,6 +323,7 @@ class Bill:
             bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iftrue'
         else:
             bill_local_vars_vanilla['$billadjustmentsflag$'] = '\iffalse'
+        bill_local_vars_vanilla['$completionaloneflag$'] = '\iftrue'
             
         # Loop over each item in schedule
         for itemno in itemnos:

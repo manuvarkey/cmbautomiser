@@ -450,7 +450,6 @@ class BillDialog:
 
         # Deactivate add and delete buttons, remarks column in dialog
         dialog.builder.get_object("toolbutton_schedule_add_mult").set_sensitive(False)
-        dialog.builder.get_object("toolbutton_schedule_delete").set_sensitive(False)
         dialog.builder.get_object("filechooserbutton_schedule").set_sensitive(False)
         dialog.builder.get_object("toolbutton_schedule_import").set_sensitive(False)
         dialog.remark_cell.set_sensitive(False)

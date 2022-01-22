@@ -93,10 +93,17 @@ class Cmb:
     def get_latex_buffer(self, path, schedule):
         latex_buffer = misc.LatexFile()
         cmb_local_vars = {}
+        cmb_local_vars_vanila = {}
         cmb_local_vars['$cmbbookno$'] = self.name
         cmb_local_vars['$cmbheading$'] = ' '
         cmb_local_vars['$cmbtitle$'] = 'DETAILS OF MEASUREMENTS'
         cmb_local_vars['$cmbstartingpage$'] = str(1)
+        
+        #HACK for bill with only completion certificate
+        if len(self.items) > 0 and isinstance(self.items[0], Completion):
+            cmb_local_vars_vanila['$completionaloneflag$'] = '\iffalse'
+        else:
+            cmb_local_vars_vanila['$completionaloneflag$'] = '\iftrue'
         
         latex_buffer.add_preffix_from_file(misc.abs_path('latex','preamble.tex'))
         latex_buffer.replace_and_clean(cmb_local_vars)
@@ -104,6 +111,7 @@ class Cmb:
             newpath = list(path) + [count]
             latex_buffer += item.get_latex_buffer(newpath, schedule)
         latex_buffer.add_suffix_from_file(misc.abs_path('latex','end.tex'))
+        latex_buffer.replace(cmb_local_vars_vanila)
         return latex_buffer
     
     def get_spreadsheet_buffer(self, path, schedule):
@@ -202,7 +210,7 @@ class Measurement:
             newpath = list(path) + [count]
             latex_buffer += item.get_latex_buffer(newpath, schedule)
         return latex_buffer
-    
+            
     def get_spreadsheet_buffer(self, path, schedule):
         spreadsheet = misc.Spreadsheet()
         # Set datas
