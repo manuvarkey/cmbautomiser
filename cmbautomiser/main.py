@@ -218,8 +218,8 @@ class MainWindow:
                     self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                         os.path.split(self.filename)[0]))
                     # Setup window name
-                    window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
-                    self.window.set_title(window_title)
+                    window_title = ntpath.basename(self.filename)
+                    self.window_main_headerbar.set_subtitle(window_title)
                     # Clear undo/redo stack
                     self.stack.clear()
                     # Set flags
@@ -297,8 +297,8 @@ class MainWindow:
             self.builder.get_object("filechooserbutton_bill").set_current_folder(misc.posix_path(
                 os.path.split(self.filename)[0]))
             # Setup window name
-            window_title = ntpath.basename(self.filename) + ' - ' + misc.PROGRAM_NAME
-            self.window.set_title(window_title)
+            window_title = ntpath.basename(self.filename)
+            self.window_main_headerbar.set_subtitle(window_title)
             # Save point in stack for checking change state
             self.stack.savepoint()
             
@@ -597,6 +597,7 @@ class MainWindow:
         self.builder = Gtk.Builder()
         self.builder.add_from_file(misc.abs_path("interface", "mainwindow.glade"))
         self.window = self.builder.get_object("window_main")
+        self.window_main_headerbar = self.builder.get_object("window_main_headerbar")
         self.builder.connect_signals(self)
 
         # Load global Variables 
