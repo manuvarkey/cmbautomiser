@@ -618,7 +618,7 @@ class MeasurementItemCustom(MeasurementItem):
 
     def get_tooltip(self):
         if self.remark != "":
-            return "Remark: " + self.remark
+            return misc.clean_markup("Remark: " + self.remark)
         else:
             return None
 

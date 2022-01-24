@@ -767,9 +767,12 @@ class ProgressWindow:
             return False
         GLib.idle_add(callback)
         
-    def add_message(self, message):
+    def add_message(self, message, markup=False):
         def callback():
-            itemiter = self.store.append([message])
+            if markup:
+                itemiter = self.store.append([message])
+            else:
+                itemiter = self.store.append([clean_markup(message)])
             path = self.store.get_path(itemiter)
             self.tree.scroll_to_cell(path)
             return False

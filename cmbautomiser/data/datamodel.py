@@ -561,7 +561,7 @@ class DataModel:
         filename = misc.posix_path(folder,'cmb_' + str(path[0]+1) + '.xlsx')
         spreadsheet.save(filename)
         if progress is not None:
-            progress.add_message('<b>Rendering Finished</b>')
+            progress.add_message('<b>Rendering Finished</b>', markup=True)
             progress.pulse(end=True)
         # Return status code for main application interface
         return (misc.CMB_INFO,'CMB No.' + self.cmbs[path[0]].get_name() + ' rendered successfully')
@@ -731,7 +731,7 @@ class DataModel:
                 if progress is not None:
                     progress.pulse()
                 if progress is not None:
-                    progress.add_message('<b>Rendering Finished</b>')
+                    progress.add_message('<b>Rendering Finished</b>', markup=True)
                     progress.pulse(end=True)
 
             return (misc.CMB_INFO, 'Bill: ' + self.bills[path[0]].data.title + ' rendered successfully')

@@ -304,7 +304,7 @@ class Bill:
         bill_local_vars['$cmbbillplusminusamount$'] = str(self.bill_plusminus_amount)
         bill_local_vars['$cmbbillnettotalamount$'] = str(self.bill_nettotal_amount)
         if self.prev_bill is not None:
-            bill_local_vars['$cmbbillprevamount$'] = str(CurrencyR(self.prev_bill.bill_total_amount))
+            bill_local_vars['$cmbbillprevamount$'] = str(CurrencyR(self.prev_bill.bill_nettotal_amount))
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
@@ -498,7 +498,7 @@ class Bill:
         bill_local_vars['$cmbbillplusminusamount$'] = str(self.bill_plusminus_amount)
         bill_local_vars['$cmbbillnettotalamount$'] = str(self.bill_nettotal_amount)
         if self.prev_bill is not None:
-            bill_local_vars['$cmbbillprevamount$'] = str(CurrencyR(self.prev_bill.bill_total_amount))
+            bill_local_vars['$cmbbillprevamount$'] = str(CurrencyR(self.prev_bill.bill_nettotal_amount))
         else:
             bill_local_vars['$cmbbillprevamount$'] = '0'
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
