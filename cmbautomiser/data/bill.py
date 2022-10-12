@@ -271,6 +271,11 @@ class Bill:
                     self.item_plusminus_amount[itemno] = Currency(self.item_normal_amount[itemno] if item.percentage else 0)
             self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
+            
+            # For custom bills add adjustments to bill_nettotal_amount
+            for description, amount in self.data.adjustments:
+                self.bill_nettotal_amount += Currency(amount)
+            
             self.bill_since_prev_amount = self.bill_nettotal_amount
             self.bill_netpayable_amount = self.bill_since_prev_amount
 

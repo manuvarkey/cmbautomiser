@@ -643,7 +643,6 @@ class BillDialog:
             self.checkbutton_final_bill.set_sensitive(False)  # Deactivate final bill selection
             self.textview_bill_text.set_sensitive(False)  # Deactivate bill text selection
             self.button_billtext.set_sensitive(False)  # Deactivate bill text selection
-            self.button_bill_adjustments.set_sensitive(False)  # Deactivate adjustments
         
         # Update GUI
         self.update_store()
