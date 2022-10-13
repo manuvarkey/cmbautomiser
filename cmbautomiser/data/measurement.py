@@ -500,6 +500,7 @@ class MeasurementItemCustom(MeasurementItem):
         latex_records = misc.LatexFile()
         
         data_string = [None]*self.model_width()
+        rec_no = 1
         for slno,record in enumerate(self.records):
             meascustom_rec_vars = {}
             meascustom_rec_vars_van = {}
@@ -536,7 +537,14 @@ class MeasurementItemCustom(MeasurementItem):
                     meascustom_rec_vars_van['$data' + str(i+1) + '$'] = record_code
                 else:
                     meascustom_rec_vars['$data' + str(i+1) + '$'] = data_string[i]
-            meascustom_rec_vars['$slno$'] = str(slno+1)
+            
+            # Add serial number for item only with measurement values
+            num_values = len([x for x in data_string if x != ''])
+            if num_values > 1:
+                meascustom_rec_vars['$slno$'] = str(rec_no)
+                rec_no += 1
+            else:
+                meascustom_rec_vars['$slno$'] = ''
             
             latex_record = misc.LatexFile(self.latex_record)
             latex_record.replace(meascustom_rec_vars_van)
