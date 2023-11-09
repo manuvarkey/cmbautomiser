@@ -349,7 +349,7 @@ class Bill:
                 # Include records of each item to bill
                 latex_records = misc.LatexFile()
                 for qty_item, cmb_ref, item_path in zip(qty_items, cmb_refs, item_paths):
-                    if qty_item != 0:
+                    if qty_item != 0 or (qty_item == 0 and cmb_ref != -1):
                         # Setup variables
                         item_record_vars = {}
                         item_record_vars['$cmbqtybf$'] = str(round(qty_item,3))
@@ -860,7 +860,7 @@ class Bill:
                 if qty_items:
                     for qty_item, cmb_ref, item_path in zip(qty_items, cmb_refs, item_paths):
                         # Print zero quantity items only for final bill
-                        if qty_item != 0:
+                        if qty_item != 0 or (qty_item == 0 and cmb_ref != -1):
                             if cmb_ref != -1:  # if not prev abstract
                                 sheet['B' + str(row_item)] = 'Qty B/F Mb.No.' + str(cmbs[cmb_ref].name) + ' Pg.No.'
                                 sheet['C' + str(row_item)] = qty_item
