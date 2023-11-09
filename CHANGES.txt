@@ -93,3 +93,12 @@ New features:
 	RA bill form support
     Support for percentage rate tenders
     Support for outside work recoveries
+    
+Ver 3.6
+=======
+Bug Fixes:
+    Measured items not shown in abstract if total quantity is zero.
+
+New features:
+    Show breakup of items with percentage applied and not applied.
+    
