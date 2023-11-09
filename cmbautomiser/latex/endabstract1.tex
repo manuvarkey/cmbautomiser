@@ -1,10 +1,13 @@
     \hline
       &  & &  &  &  & \\*
-      & \textbf{TOTAL UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbilltotalamount$} \\*
       $billpercentageflag$
+      & \textbf{UPTODATE AMOUNT (TENDER \% APPLICABLE)} & &  &  &  & \textbf{$cmbbilltotalamountplusminus$} \\*
+      & \textbf{UPTODATE AMOUNT (TENDER \% NOT APPLICABLE)} & &  &  &  & \textbf{$cmbbilltotalamountnonplusminus$} \\*\cline{1-7}
+      & \textbf{TOTAL UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbilltotalamount$} \\*
       & \multicolumn{3}{l}{\textbf{ADD TENDER PERCENTAGE @ $cmbbillpercentage$\%}} &  &  & \textbf{$cmbbillplusminusamount$} \\*\cline{1-7}
       & \textbf{NET UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbillnettotalamount$} \\*
       \else
+      & \textbf{TOTAL UPTODATE AMOUNT} & &  &  &  & \textbf{$cmbbilltotalamount$} \\*
       \fi
       & \textbf{LAST BILL AMOUNT} & &  &  & (-) & \textbf{$cmbbillprevamount$} \\*\cline{1-7}
       & \textbf{SINCE PREVIOUS AMOUNT} & &  &  &  & \textbf{$cmbbillsinceprevamount$} \\*

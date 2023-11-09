@@ -126,6 +126,7 @@ class Bill:
         self.prev_bill = None  # prev_bill data object
         self.cmb_ref = set()  # set containing refered cmbs
         self.bill_total_amount = 0  # total amount of work done uptodate
+        self.bill_total_amount_plus_minus = 0  # total amount of work done on which percentage applicable
         self.bill_plusminus_amount = 0 # amount corresponding to plusminus items
         self.bill_nettotal_amount = 0 # net amount of work done uptodate after plusminus
         self.bill_since_prev_amount = 0  # since previous amount of work done
@@ -154,6 +155,7 @@ class Bill:
         self.prev_bill = None  # prev_bill data object
         self.cmb_ref = set()  # set containing refered cmbs
         self.bill_total_amount = 0  # total amount of work done uptodate
+        self.bill_total_amount_plus_minus = 0  # total amount of work done on which percentage applicable
         self.bill_plusminus_amount = 0 # component corresponding to plusminus items
         self.bill_nettotal_amount = 0 # net amount of work done uptodate after plusminus
         self.bill_since_prev_amount = 0  # since previous amount of work done
@@ -246,7 +248,8 @@ class Bill:
 
             # Evaluate totals
             self.bill_total_amount = Currency(sum(self.item_normal_amount.values()) + sum(self.item_excess_amount.values()))
-            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
+            self.bill_total_amount_plus_minus = Currency(sum(self.item_plusminus_amount.values()))
+            self.bill_plusminus_amount = Currency(self.bill_total_amount_plus_minus * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             if self.prev_bill is not None:
                 self.bill_since_prev_amount = Currency(self.bill_nettotal_amount) - CurrencyR(self.prev_bill.bill_nettotal_amount)
@@ -269,7 +272,8 @@ class Bill:
                 if itemno in self.item_normal_amount:
                     item = schedule[itemno]
                     self.item_plusminus_amount[itemno] = Currency(self.item_normal_amount[itemno] if item.percentage else 0)
-            self.bill_plusminus_amount = Currency(sum(self.item_plusminus_amount.values()) * Decimal(percentage)/100)
+            self.bill_total_amount_plus_minus = Currency(sum(self.item_plusminus_amount.values()))
+            self.bill_plusminus_amount = Currency(self.bill_total_amount * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             
             # For custom bills add adjustments to bill_nettotal_amount
@@ -306,6 +310,8 @@ class Bill:
         bill_local_vars['$cmbbilltext$'] = self.data.bill_text
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
         bill_local_vars['$cmbbillpercentage$'] = percentage_text
+        bill_local_vars['$cmbbilltotalamountplusminus$'] = str(self.bill_total_amount_plus_minus)
+        bill_local_vars['$cmbbilltotalamountnonplusminus$'] = str(self.bill_total_amount - self.bill_total_amount_plus_minus)
         bill_local_vars['$cmbbillplusminusamount$'] = str(self.bill_plusminus_amount)
         bill_local_vars['$cmbbillnettotalamount$'] = str(self.bill_nettotal_amount)
         if self.prev_bill is not None:
@@ -470,6 +476,7 @@ class Bill:
         percentage = misc.float_from_str(percentage_text)
         if self.prev_bill is not None:
             total_sp = self.bill_total_amount - self.prev_bill.bill_total_amount
+            total_plus_minus_sp = self.bill_total_amount_plus_minus - self.prev_bill.bill_total_amount_plus_minus
             sinceprev_calc = self.bill_nettotal_amount - self.prev_bill.bill_nettotal_amount  # Since previous amount without rounding
             plusminus_sp = self.bill_plusminus_amount - self.prev_bill.bill_plusminus_amount
         else:
@@ -500,6 +507,8 @@ class Bill:
         
         bill_local_vars['$cmbbilltotalamount$'] = str(self.bill_total_amount)
         bill_local_vars['$cmbbillpercentage$'] = percentage_text
+        bill_local_vars['$cmbbilltotalamountplusminus$'] = str(self.bill_total_amount_plus_minus)
+        bill_local_vars['$cmbbilltotalamountnonplusminus$'] = str(self.bill_total_amount - self.bill_total_amount_plus_minus)
         bill_local_vars['$cmbbillplusminusamount$'] = str(self.bill_plusminus_amount)
         bill_local_vars['$cmbbillnettotalamount$'] = str(self.bill_nettotal_amount)
         if self.prev_bill is not None:
@@ -509,6 +518,8 @@ class Bill:
         bill_local_vars['$cmbbillsinceprevamount$'] = str(self.bill_since_prev_amount)
         bill_local_vars['$cmbbillsinceprevamountR$'] = str(CurrencyR(self.bill_since_prev_amount))
         bill_local_vars['$cmbbilltotalamountsp$'] = str(total_sp)
+        bill_local_vars['$cmbbilltotalamountplusminussp$'] = str(total_plus_minus_sp)
+        bill_local_vars['$cmbbilltotalamountnonplusminussp$'] = str(total_sp-total_plus_minus_sp)
         bill_local_vars['$cmbbillplusminusamountsp$'] = str(plusminus_sp)
         bill_local_vars['$cmbbillsinceprevamountcalc$'] = str(sinceprev_calc)
         bill_local_vars['$cmbbillnetpayableamount$'] = str(CurrencyR(self.bill_netpayable_amount))
@@ -804,7 +815,7 @@ class Bill:
         template = load_workbook(filename = misc.abs_path('ods_templates','abs.xlsx'))
         rowend = 12
         colend = 7
-        rowend_end = 6
+        rowend_end = 8
         
         # Copy all from Abstract start
         template_start_sheet = template['start']
@@ -831,6 +842,7 @@ class Bill:
         itemnos = schedule.get_itemnos()
         row_item = rowend+2
         rownums_per_items = []
+        rownums_nonper_items = []
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
@@ -884,6 +896,8 @@ class Bill:
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if item.percentage:
                         rownums_per_items.append(row_item)
+                    else:
+                        rownums_nonper_items.append(row_item)
                     row_item += 1
                     sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
@@ -891,6 +905,7 @@ class Bill:
                     sheet['E' + str(row_item)] = self.data.item_excess_rates[itemno]
                     sheet['F' + str(row_item)] = Currency(self.data.item_excess_rates[itemno]*self.data.item_excess_part_percentage[itemno]/100)
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
+                    rownums_nonper_items.append(row_item)
                     row_item += 2
                 else:
                     sheet['B' + str(row_item)] = 'TOTAL'
@@ -901,6 +916,8 @@ class Bill:
                     sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                     if item.percentage:
                         rownums_per_items.append(row_item)
+                    else:
+                        rownums_nonper_items.append(row_item)
                     row_item += 2
             
             # If item not measured, include in bill if final bill
@@ -919,6 +936,8 @@ class Bill:
                 sheet['G' + str(row_item)] = '=ROUND(C'+ str(row_item) + '*F' + str(row_item) + ',2)'
                 if item.percentage:
                     rownums_per_items.append(row_item)
+                else:
+                    rownums_nonper_items.append(row_item)
                 row_item += 1
             
         # Copy all from abs end
@@ -931,18 +950,21 @@ class Bill:
                 sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
-        sheet.cell(row=1+row_item, column=7).value = '=SUM(G13:G' + str(row_item) + ')'  # Up to date amount
-        percentage_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + ')*' + str(percentage/100) + ', 2)'
-        sheet.cell(row=2+row_item, column=7).value = percentage_eq  # Percentage amount
-        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Net up to date amount
+        percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
+        nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
+        sheet.cell(row=1+row_item, column=7).value = percentage_am_eq
+        sheet.cell(row=2+row_item, column=7).value = nonpercentage_am_eq
+        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Up to date amount
+        sheet.cell(row=4+row_item, column=7).value = '=ROUND(G' + str(row_item+1) + '*' + str(percentage/100) + ', 2)'  # Percentage amount
+        sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '+G' + str(row_item+4)  # Net up to date amount
         if self.prev_bill != None:
-            sheet.cell(row=4+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
-        sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
-        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ', 0)'  # Since previous amount rounded
+            sheet.cell(row=6+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
+        sheet.cell(row=7+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + '-G' + str(row_item+6) + ', 2)'  # Since previous amount
+        sheet.cell(row=8+row_item, column=7).value = '=ROUND(G' + str(row_item+7) + ', 0)'  # Since previous amount rounded
         
-        sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
-        row_item_sp = row_item + 6
-        row_item += 8
+        sheet.cell(row=4+row_item, column=2).value = sheet.cell(row=4+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
+        row_item_sp = row_item + 8
+        row_item += 10
         
         # Add details of Adjustments
         for description, amount in self.data.adjustments:
@@ -976,7 +998,7 @@ class Bill:
         template = load_workbook(filename = misc.abs_path('ods_templates','bill.xlsx'))
         rowend = 7
         colend = 8
-        rowend_end = 6
+        rowend_end = 8
         
         # Copy all from bill start
         template_start_sheet = template['start']
@@ -997,6 +1019,7 @@ class Bill:
         
         itemnos = schedule.get_itemnos()
         rownums_per_items = []
+        rownums_nonper_items = []
         row_item = rowend+2
         for itemno in itemnos:
             item = schedule[itemno]
@@ -1040,6 +1063,8 @@ class Bill:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     if item.percentage:
                         rownums_per_items.append(row_item)
+                    else:
+                        rownums_nonper_items.append(row_item)
                     row_item += 1
                     sheet['B' + str(row_item)] = 'Qty above deviation limit of ' + str(item.excess_rate_percent) + '%'
                     sheet['C' + str(row_item)] = self.item_excess_qty[itemno]
@@ -1051,6 +1076,7 @@ class Bill:
                         sheet['H' + str(row_item)] = self.item_excess_amount[itemno] - Decimal(self.prev_bill.item_excess_amount[itemno])
                     else:
                         sheet['H' + str(row_item)] = self.item_excess_amount[itemno]
+                    rownums_nonper_items.append(row_item)
                     row_item += 2
                 else:
                     sheet['B' + str(row_item)] = 'TOTAL'
@@ -1065,6 +1091,8 @@ class Bill:
                         sheet['H' + str(row_item)] = self.item_normal_amount[itemno]
                     if item.percentage:
                         rownums_per_items.append(row_item)
+                    else:
+                        rownums_nonper_items.append(row_item)
                     row_item += 2
             
             # If item not measured, include in bill if final bill
@@ -1084,6 +1112,8 @@ class Bill:
                 sheet['H' + str(row_item)] = 0
                 if item.percentage:
                     rownums_per_items.append(row_item)
+                else:
+                    rownums_nonper_items.append(row_item)
                 row_item += 1
                 
         # Copy all from bill end
@@ -1095,27 +1125,33 @@ class Bill:
                 sheet.cell(row=row, column=column).border = copy.copy(template_end_sheet.cell(row=row, column=column).border)
                 sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
-        # Fill in values        
-        sheet.cell(row=1+row_item, column=7).value = '=SUM(G8:G' + str(row_item) + ')'  # Up to date amount
-        percentage_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + ')*' + str(percentage/100) + ', 2)'
-        sheet.cell(row=2+row_item, column=7).value = percentage_eq  # Percentage amount
-        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Net up to date amount
+        # Fill in values
+        percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
+        nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
+        percentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_per_items]) + '), 2)'
+        nonpercentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_nonper_items]) + '), 2)'   
+        sheet.cell(row=1+row_item, column=7).value = percentage_am_eq
+        sheet.cell(row=2+row_item, column=7).value = nonpercentage_am_eq
+        sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Up to date amount
+        sheet.cell(row=4+row_item, column=7).value = '=ROUND(G' + str(row_item+1) + '*' + str(percentage/100) + ', 2)'  # Percentage amount
+        sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '+G' + str(row_item+4)  # Net up to date amount
         if self.prev_bill != None:
-            sheet.cell(row=4+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
-        sheet.cell(row=5+row_item, column=7).value = '=G' + str(row_item+3) + '-G' + str(row_item+4)  # Since previous amount
-        sheet.cell(row=6+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + ', 0)'  # Since previous amount rounded
+            sheet.cell(row=6+row_item, column=7).value = CurrencyR(self.prev_bill.bill_nettotal_amount)  # Previous bill amount
+        sheet.cell(row=7+row_item, column=7).value = '=ROUND(G' + str(row_item+5) + '-G' + str(row_item+6) + ', 2)'  # Since previous amount
+        sheet.cell(row=8+row_item, column=7).value = '=ROUND(G' + str(row_item+7) + ', 0)'  # Since previous amount rounded
         
-        sheet.cell(row=1+row_item, column=8).value = '=SUM(H8:H' + str(row_item) + ')'  # Up to date amount
-        percentage_eq = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_per_items]) + ')*' + str(percentage/100) + ', 2)'
-        sheet.cell(row=2+row_item, column=8).value = percentage_eq  # Percentage amount
-        sheet.cell(row=3+row_item, column=8).value = '=H' + str(row_item+1) + '+H' + str(row_item+2)  # Net up to date amount
-        sheet.cell(row=5+row_item, column=8).value = '=H' + str(row_item+3) + '-H' + str(row_item+4)  # Since previous amount
-        sheet.cell(row=6+row_item, column=8).value = '=G' + str(row_item+6)  # Since previous amount rounded
+        sheet.cell(row=1+row_item, column=8).value = percentage_am_eq_sp
+        sheet.cell(row=2+row_item, column=8).value = nonpercentage_am_eq_sp
+        sheet.cell(row=3+row_item, column=8).value = '=SUM(H8:H' + str(row_item) + ')'  # Up to date amount
+        sheet.cell(row=4+row_item, column=8).value = '=ROUND(H' + str(row_item+1) + '*' + str(percentage/100) + ', 2)'  # Percentage amount
+        sheet.cell(row=5+row_item, column=8).value = '=H' + str(row_item+3) + '+H' + str(row_item+4)  # Net up to date amount
+        sheet.cell(row=7+row_item, column=8).value = '=ROUND(H' + str(row_item+5) + '-H' + str(row_item+6) + ', 2)'  # Since previous amount
+        sheet.cell(row=8+row_item, column=8).value = '=G' + str(row_item+8)  # Since previous amount rounded
         
-        sheet.cell(row=2+row_item, column=2).value = sheet.cell(row=2+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
+        sheet.cell(row=4+row_item, column=2).value = sheet.cell(row=4+row_item, column=2).value + ' @ ' + str(percentage) + '%'  # Add percentage value
         
-        row_item_sp = row_item + 6
-        row_item += 8
+        row_item_sp = row_item + 8
+        row_item += 10
         
         # Add details of Adjustments
         for description, amount in self.data.adjustments:
