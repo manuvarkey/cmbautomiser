@@ -524,7 +524,7 @@ class DataModel:
         # Run latex on file
         if progress is not None:
             progress.add_message('Rendering CMB No.' + self.cmbs[path[0]].name)
-        code = misc.run_latex(misc.posix_path(folder), filename, self.program_settings['latex_path'])
+        code = misc.run_latex(misc.posix_path(folder), filename)
         if progress is not None:
             progress.pulse()
         if code == misc.CMB_ERROR:
@@ -699,14 +699,14 @@ class DataModel:
             # Render this bill
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Abstract')
-            code = misc.run_latex(misc.posix_path(folder), filename, self.program_settings['latex_path'])
+            code = misc.run_latex(misc.posix_path(folder), filename)
             if progress is not None:
                 progress.pulse()
             if code == misc.CMB_ERROR:
                 return (misc.CMB_ERROR, 'Rendering of Bill: ' + bill.data.title + ' failed')
             if progress is not None:
                 progress.add_message('Rendering Bill No.' + bill.data.cmb_name + ' Schedule')
-            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill, self.program_settings['latex_path'])
+            code_bill = misc.run_latex(misc.posix_path(folder), filename_bill)
             if progress is not None:
                 progress.pulse()
             if code_bill == misc.CMB_ERROR:

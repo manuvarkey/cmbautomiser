@@ -131,12 +131,6 @@ def init_global_platform_vars():
     
     global_settings_dict = dict()
     
-    if platform.system() == 'Linux':
-        global_settings_dict['latex_path'] = 'lualatex'
-    elif platform.system() == 'Windows':
-        global_settings_dict['latex_path'] = abs_path(
-                    'miketex\\miktex\\bin\\x64\\lualatex.exe')
-    
     global_settings_dict['$cmbissuedto$'] = ''
     global_settings_dict['$cmbvarifyingauthority$'] = ''
     global_settings_dict['$cmbvarifyingauthorityoffice$'] = ''
@@ -144,8 +138,7 @@ def init_global_platform_vars():
     global_settings_dict['$cmbissuingauthorityoffice$'] = ''
     return global_settings_dict
 
-global_platform_vars_captions = ['Latex path',
-                        'CMB Issued to (Default Value)',
+global_platform_vars_captions = ['CMB Issued to (Default Value)',
                         'Varifying Authority (Default Value)',
                         'Varifying Authority Office (Default Value)',
                         'Issuing Authority (Default Value)',
@@ -939,8 +932,12 @@ def get_file_path_from_dnd_dropped_uri(uri):
 
     return path
             
-def run_latex(folder, filename, latex_path): 
+def run_latex(folder, filename): 
     """Runs latex on file to folder in two passes"""
+    if platform.system() == 'Linux':
+        latex_path = 'lualatex'
+    elif platform.system() == 'Windows':
+        latex_path = abs_path('miketex\\miktex\\bin\\x64\\lualatex.exe')
     if filename is not None:
         latex_exec = Command([latex_path, '-interaction=batchmode', '-output-directory=' + folder, filename])
         # First Pass

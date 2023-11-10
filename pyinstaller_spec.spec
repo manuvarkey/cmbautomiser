@@ -3,12 +3,12 @@
 block_cipher = None
 
 added_files = [
-         ( 'cmbautomiser/interface/*.glade', 'interface' ),
-         ( 'cmbautomiser/templates/*.py', 'templates' ),
-         ( 'cmbautomiser/latex/*.tex', 'latex' ),
-         ( 'cmbautomiser/ods_templates/*.xlsx', 'ods_templates' ),
-         ( 'cmbautomiser/documentation/*.pdf', 'documentation' ),
-         ( 'miketex/', 'miketex' )
+         ( 'cmbautomiser/interface/*.glade', 'cmbautomiser/interface' ),
+         ( 'cmbautomiser/templates/*.py', 'cmbautomiser/templates' ),
+         ( 'cmbautomiser/latex/*.tex', 'cmbautomiser/latex' ),
+         ( 'cmbautomiser/ods_templates/*.xlsx', 'cmbautomiser/ods_templates' ),
+         ( 'cmbautomiser/documentation/*.pdf', 'cmbautomiser/documentation' ),
+         ( 'miketex/', 'cmbautomiser/miketex' )
 		 ]
 
 a = Analysis(['cmbautomiser_launcher.py'],
