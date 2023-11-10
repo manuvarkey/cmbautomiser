@@ -27,8 +27,8 @@ import logging, pickle, codecs
 from gi.repository import Gtk, Gdk, GLib, Pango
 
 # local files import
-from __main__ import misc, data, undo
-from undo import undoable
+from .. import misc, data, undo
+from ..undo import undoable
 from .cellrenderercustomtext import CellRendererTextView
 
 # Setup logger object

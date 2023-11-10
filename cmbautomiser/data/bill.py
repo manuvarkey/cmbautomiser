@@ -37,7 +37,7 @@ from openpyxl.styles import Alignment, Font, Border
 from openpyxl.utils import get_column_letter
 
 # local files import
-from __main__ import misc
+from .. import misc
 from . import measurement
 
 # Setup logger object

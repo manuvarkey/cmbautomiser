@@ -26,8 +26,8 @@ from gi.repository import Gtk, Gdk, GLib
 import os.path, copy, logging
 
 # local files import
-from __main__ import misc, undo
-from undo import undoable
+from .. import misc, undo
+from ..undo import undoable
 from . import schedule, measurement, bill
 
 # Setup logger object

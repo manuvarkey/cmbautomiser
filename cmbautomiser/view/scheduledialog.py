@@ -26,7 +26,7 @@ import copy, logging
 from gi.repository import Gtk, Gdk, GLib, Pango
 
 # local files import
-from __main__ import misc, data, undo
+from .. import misc, data, undo
 from . import schedule
 
 # Setup logger object

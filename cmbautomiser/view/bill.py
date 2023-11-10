@@ -26,7 +26,7 @@ import codecs, pickle, copy, logging
 from gi.repository import Gtk, Gdk, GLib
 
 # local files import
-from __main__ import data, misc
+from .. import data, misc
 from . import measurement, scheduledialog
 
 # Setup logger object

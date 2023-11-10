@@ -27,8 +27,8 @@ import pickle, codecs, os.path, copy, logging
 from gi.repository import Gtk, Gdk, GLib
 
 # local files import
-from __main__ import misc, data, undo
-from undo import undoable
+from .. import misc, data, undo
+from ..undo import undoable
 from .scheduledialog import ScheduleDialog
 
 # Setup logger object

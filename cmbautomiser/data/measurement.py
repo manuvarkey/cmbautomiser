@@ -26,7 +26,7 @@ from gi.repository import Gtk, Gdk, GLib
 import copy, logging
 
 # local files import
-from __main__ import misc
+from .. import misc
 
 # Setup logger object
 log = logging.getLogger(__name__)
@@ -429,9 +429,7 @@ class MeasurementItemCustom(MeasurementItem):
         # Read description from file
         if plugin is not None:
             try:
-                package = __import__('templates.' + plugin)
-                module = getattr(package, plugin)
-                self.custom_object = module.CustomItem()
+                self.custom_object = misc.load_plugin(plugin)
                 self.name = self.custom_object.name
                 self.itemtype = plugin
                 self.itemnos_mask = self.custom_object.itemnos_mask

@@ -25,7 +25,7 @@
 import logging
 
 # Local module import
-from __main__ import misc
+from .. import misc
 
 # Setup logger object
 log = logging.getLogger(__name__)

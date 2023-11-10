@@ -22,7 +22,7 @@
 #  
 #  
 
-import subprocess, threading, os, posixpath, platform, logging
+import subprocess, threading, os, sys, posixpath, platform, logging, importlib.util
 
 from gi.repository import Gtk, Gdk, GLib, Pango
 from urllib.parse import urlparse
@@ -909,6 +909,14 @@ def posix_path(*args):
             return path[1:]
         else:
             return path
+            
+def load_plugin(module_name):
+    spec = importlib.util.spec_from_file_location('templates.' + module_name, abs_path('templates', module_name + '.py'))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules['templates.' + module_name] = module
+    spec.loader.exec_module(module)
+    custom_object = module.CustomItem()
+    return custom_object
             
 def open_file(filename):
     if platform.system() == 'Linux':

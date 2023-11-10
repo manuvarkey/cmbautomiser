@@ -11,7 +11,7 @@ added_files = [
          ( 'miketex/', 'miketex' )
 		 ]
 
-a = Analysis(['cmbautomiser/main.py'],
+a = Analysis(['cmbautomiser_launcher.py'],
              pathex=['C:\\msys64\\home\\HP\\cmbautomiser\\cmbautomiser'],
              binaries=None,
              datas= added_files,
