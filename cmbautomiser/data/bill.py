@@ -481,6 +481,7 @@ class Bill:
             plusminus_sp = self.bill_plusminus_amount - self.prev_bill.bill_plusminus_amount
         else:
             total_sp = self.bill_total_amount
+            total_plus_minus_sp = 0
             sinceprev_calc = self.bill_nettotal_amount
             plusminus_sp = self.bill_plusminus_amount
         
@@ -950,8 +951,14 @@ class Bill:
                 sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
-        percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
-        nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
+        if rownums_per_items:
+            percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
+        else:
+            percentage_am_eq = 0
+        if rownums_nonper_items:
+            nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
+        else:
+            nonpercentage_am_eq = 0
         sheet.cell(row=1+row_item, column=7).value = percentage_am_eq
         sheet.cell(row=2+row_item, column=7).value = nonpercentage_am_eq
         sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Up to date amount
@@ -1126,10 +1133,18 @@ class Bill:
                 sheet.cell(row=row, column=column).alignment = copy.copy(template_end_sheet.cell(row=row, column=column).alignment)
         
         # Fill in values
-        percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
-        nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
-        percentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_per_items]) + '), 2)'
-        nonpercentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_nonper_items]) + '), 2)'   
+        if rownums_per_items:
+            percentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_per_items]) + '), 2)'
+            percentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_per_items]) + '), 2)'
+        else:
+            percentage_am_eq = 0
+            percentage_am_eq_sp = 0
+        if rownums_nonper_items:
+            nonpercentage_am_eq = '=ROUND((' + '+'.join(['G' + str(x) for x in rownums_nonper_items]) + '), 2)'
+            nonpercentage_am_eq_sp = '=ROUND((' + '+'.join(['H' + str(x) for x in rownums_nonper_items]) + '), 2)'   
+        else:
+            nonpercentage_am_eq = 0
+            nonpercentage_am_eq_sp = 0
         sheet.cell(row=1+row_item, column=7).value = percentage_am_eq
         sheet.cell(row=2+row_item, column=7).value = nonpercentage_am_eq
         sheet.cell(row=3+row_item, column=7).value = '=G' + str(row_item+1) + '+G' + str(row_item+2)  # Up to date amount
