@@ -464,8 +464,10 @@
                         <property name="can_focus">False</property>
                         <property name="tooltip_markup" translatable="yes">Add multiple items at selected location &lt;i&gt;(Ctrl+Shift+i)&lt;/i&gt;</property>
                         <property name="halign">start</property>
-                        <property name="label" translatable="yes">＋n</property>
+						<property name="is_important">True</property>
+                        <property name="label" translatable="yes">N</property>
                         <property name="use_underline">True</property>
+						<property name="icon_name">list-add-symbolic</property>
                         <signal name="clicked" handler="onButtonScheduleAddMultPressed" swapped="no"/>
                         <accelerator key="i" signal="clicked" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
