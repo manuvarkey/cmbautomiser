@@ -273,7 +273,7 @@ class Bill:
                     item = schedule[itemno]
                     self.item_plusminus_amount[itemno] = Currency(self.item_normal_amount[itemno] if item.percentage else 0)
             self.bill_total_amount_plus_minus = Currency(sum(self.item_plusminus_amount.values()))
-            self.bill_plusminus_amount = Currency(self.bill_total_amount * Decimal(percentage)/100)
+            self.bill_plusminus_amount = Currency(self.bill_total_amount_plus_minus * Decimal(percentage)/100)
             self.bill_nettotal_amount = Currency(self.bill_total_amount + self.bill_plusminus_amount)
             
             # For custom bills add adjustments to bill_nettotal_amount
@@ -543,7 +543,7 @@ class Bill:
             item = schedule[itemno]
             
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno]:
+            if (itemno in self.item_qty and self.item_qty[itemno]) or (self.prev_bill is not None and itemno in self.prev_bill.item_qty and self.prev_bill.item_qty[itemno]):
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 item_paths = self.item_paths[itemno]
@@ -560,7 +560,7 @@ class Bill:
                 item_local_vars = {}
                 item_local_vars_vanilla = {}
 
-                if self.item_excess_qty[itemno] > 0:
+                if self.item_excess_qty[itemno] > 0 or (self.prev_bill is not None and itemno in self.prev_bill.item_excess_amount and self.prev_bill.item_excess_amount[itemno] > 0):
                     excess_flag = '\iftrue'
                 else:
                     excess_flag = '\iffalse'
@@ -1031,7 +1031,7 @@ class Bill:
         for itemno in itemnos:
             item = schedule[itemno]
             # If item measured, include in bill
-            if itemno in self.item_qty and self.item_qty[itemno]:
+            if (itemno in self.item_qty and self.item_qty[itemno]) or (self.prev_bill is not None and itemno in self.prev_bill.item_qty and self.prev_bill.item_qty[itemno]):
                 # Setup required values
                 qty_items = self.item_qty[itemno]
                 cmb_refs = self.item_cmb_ref[itemno]
@@ -1053,7 +1053,7 @@ class Bill:
                 sheet['B' + str(row_item)].alignment = Alignment(wrap_text=True)
                 row_item += 1
                 
-                if self.item_excess_qty[itemno] > 0:
+                if self.item_excess_qty[itemno] > 0 or (itemno in self.prev_bill.item_excess_amount and self.prev_bill.item_excess_amount[itemno] > 0):
                     sheet['B' + str(row_item)] = 'TOTAL'
                     sheet['C' + str(row_item)] = sum(qty_items)
                     sheet['D' + str(row_item)] = item.unit
